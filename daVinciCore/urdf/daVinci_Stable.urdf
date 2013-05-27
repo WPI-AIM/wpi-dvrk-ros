@@ -1,5 +1,6 @@
 <?xml version="1.0" ?>
-<robot name="daVinci">
+<robot xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller" 
+       name="daVinci">
 
   <link name="world"/>
 
