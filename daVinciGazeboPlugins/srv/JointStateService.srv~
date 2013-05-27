@@ -1,4 +1,0 @@
-sensor_msg/JointState jnt_stat
----
-bool success                                              # return true if spawn successful
-string status_message                                     # comments if available
