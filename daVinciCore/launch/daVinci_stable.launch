@@ -13,8 +13,8 @@
   </group>
 
   <!-- send robot description to parameter sercer-->
-  <param name="robot_description" textfile="$(find daVinci)/urdf/daVinci_stable.urdf" />
+  <param name="robot_description" textfile="$(find daVinciCore)/urdf/daVinci_stable.urdf" />
 
-   <node name="daVinci" pkg="gazebo" type="spawn_model" args="-urdf -param robot_description -model daVinci" respawn="false" output="screen" />
+   <node name="daVinciCore" pkg="gazebo" type="spawn_model" args="-urdf -param robot_description -model daVinci" respawn="false" output="screen" />
   
 </launch>

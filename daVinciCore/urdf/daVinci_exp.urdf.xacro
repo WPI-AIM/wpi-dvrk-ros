@@ -20,13 +20,13 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-	<mesh filename="package://daVinci/meshes/slave_frame.stl"/>      
+	<mesh filename="package://daVinciCore/meshes/slave_frame.stl"/>      
       </geometry>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 1.0"/>
       <geometry>
-	<mesh filename="package://daVinci/meshes/slave_frame.stl"/>      
+	<mesh filename="package://daVinciCore/meshes/slave_frame.stl"/>      
       </geometry>
     </collision>
   </link>
@@ -59,7 +59,7 @@
 	    <visual>
 	      <origin rpy="0 0 0" xyz="0 0 0"/>
 	      <geometry>
-		<mesh filename="package://daVinci/meshes/mounting_base.stl"/>      
+		<mesh filename="package://daVinciCore/meshes/mounting_base.stl"/>      
 	      </geometry>
 	      <material name="green">
 		<color rgba="0 1 0 1"/>
@@ -68,7 +68,7 @@
 	    <collision>
 	      <origin rpy="0 0 0" xyz="0 0 0"/>
 	      <geometry>
-		<mesh filename="package://daVinci/meshes/mounting_base.stl"/>      
+		<mesh filename="package://daVinciCore/meshes/mounting_base.stl"/>      
 	      </geometry>
 	    </collision>
 	  </link>
@@ -91,7 +91,7 @@
 	    <visual>
 	      <origin rpy="0 0 0" xyz="0.001 -0.1 -0.1375"/>
 	      <geometry>
-		<mesh filename="package://daVinci/meshes/outer_yaw.stl"/>      
+		<mesh filename="package://daVinciCore/meshes/outer_yaw.stl"/>      
 	      </geometry>
 	      <material name="red">
 		<color rgba="1 0 0 1"/>
@@ -100,7 +100,7 @@
 	    <collision>
 	      <origin rpy="0 0 0" xyz="0.001 -0.1 -0.1375"/>
 	      <geometry>
-		<mesh filename="package://daVinci/meshes/outer_yaw.stl"/>      
+		<mesh filename="package://daVinciCore/meshes/outer_yaw.stl"/>      
 	      </geometry>
 	    </collision>
 	  </link>
@@ -123,7 +123,7 @@
 	    <visual>
 	      <origin rpy="0 0 0" xyz="-0.040 -0.130 -0.0901"/>
 	      <geometry>
-		<mesh filename="package://daVinci/meshes/outer_pitch_base.stl"/>      
+		<mesh filename="package://daVinciCore/meshes/outer_pitch_base.stl"/>      
 	      </geometry>
 	      <material name="blue">
 		<color rgba="0 0 1 1"/>
@@ -132,7 +132,7 @@
 	    <collision>
 	      <origin rpy="0 0 0" xyz="-0.040 -0.130 -0.0901"/>
 	      <geometry>
-		<mesh filename="package://daVinci/meshes/outer_pitch_base.stl"/>      
+		<mesh filename="package://daVinciCore/meshes/outer_pitch_base.stl"/>      
 	      </geometry>
 	    </collision>
 	  </link>
@@ -155,14 +155,14 @@
 	    <visual>
 	      <origin rpy="0 0 0" xyz="0 -0.066 -0.010"/>
 	      <geometry>
-		<mesh filename="package://daVinci/meshes/outer_pitch_front.stl"/>      
+		<mesh filename="package://daVinciCore/meshes/outer_pitch_front.stl"/>      
 	      </geometry>
 	      <material name="red"/>
 	    </visual>
 	    <collision>
 	      <origin rpy="0 0 0" xyz="0 -0.066 -0.010"/>
 	      <geometry>
-		<mesh filename="package://daVinci/meshes/outer_pitch_front.stl"/>      
+		<mesh filename="package://daVinciCore/meshes/outer_pitch_front.stl"/>      
 	      </geometry>
 	    </collision>
 	  </link>
@@ -185,14 +185,14 @@
 	    <visual>
 	      <origin rpy="0 0 0" xyz="0 -0.093 -0.010"/>
 	      <geometry>
-		<mesh filename="package://daVinci/meshes/outer_pitch_bottom.stl"/>      
+		<mesh filename="package://daVinciCore/meshes/outer_pitch_bottom.stl"/>      
 	      </geometry>
 	      <material name="green"/>
 	    </visual>
 	    <collision>
 	      <origin rpy="0 0 0" xyz="0 -0.093 -0.010"/>
 	      <geometry>
-		<mesh filename="package://daVinci/meshes/outer_pitch_bottom.stl"/>      
+		<mesh filename="package://daVinciCore/meshes/outer_pitch_bottom.stl"/>      
 	      </geometry>
 	    </collision>
 	  </link>
@@ -215,14 +215,14 @@
 	    <visual>
 	      <origin rpy="0 0 0" xyz="0 -0.093 -0.010"/>
 	      <geometry>
-		<mesh filename="package://daVinci/meshes/outer_pitch_top.stl"/>      
+		<mesh filename="package://daVinciCore/meshes/outer_pitch_top.stl"/>      
 	      </geometry>
 	      <material name="green"/>
 	    </visual>
 	    <collision>
 	      <origin rpy="0 0 0" xyz="0 -0.093 -0.010"/>
 	      <geometry>
-		<mesh filename="package://daVinci/meshes/outer_pitch_top.stl"/>      
+		<mesh filename="package://daVinciCore/meshes/outer_pitch_top.stl"/>      
 	      </geometry>
 	    </collision>
 	  </link>
@@ -245,14 +245,14 @@
 	    <visual>
 	      <origin rpy="0 0 0" xyz="-0.031 -0.086 -0.070"/>
 	      <geometry>
-		<mesh filename="package://daVinci/meshes/outer_insertion.stl"/>
+		<mesh filename="package://daVinciCore/meshes/outer_insertion.stl"/>
 	      </geometry>
 	      <material name="blue"/>
 	    </visual>
 	    <collision>
 	      <origin rpy="0 0 0" xyz="-0.031 -0.086 -0.070"/>
 	      <geometry>
-		<mesh filename="package://daVinci/meshes/outer_insertion.stl"/>      
+		<mesh filename="package://daVinciCore/meshes/outer_insertion.stl"/>      
 	      </geometry>
 	    </collision>
 	  </link>
@@ -275,14 +275,14 @@
 	    <visual>
 	      <origin rpy="0 0 0" xyz="0 -0.041 0"/>
 	      <geometry>
-		<mesh filename="package://daVinci/meshes/tool_adaptor.stl"/>
+		<mesh filename="package://daVinciCore/meshes/tool_adaptor.stl"/>
 	      </geometry>
 	      <material name="green"/>
 	    </visual>
 	    <collision>
 	      <origin rpy="0 0 0" xyz="0 -0.041 0"/>
 	      <geometry>
-		<mesh filename="package://daVinci/meshes/tool_adaptor.stl"/>
+		<mesh filename="package://daVinciCore/meshes/tool_adaptor.stl"/>
 	      </geometry>
 	    </collision>
 	  </link>
@@ -302,14 +302,14 @@
 	    <visual>
 	      <origin rpy="0 0 0" xyz="0 -0.034 0"/>
 	      <geometry>
-		<mesh filename="package://daVinci/meshes/tool_asm.stl"/>      
+		<mesh filename="package://daVinciCore/meshes/tool_asm.stl"/>      
 	      </geometry>
 	      <material name="red"/>
 	    </visual>
 	    <collision>
 	      <origin rpy="0 0 0" xyz="0 -0.034 0"/>
 	      <geometry>
-		<mesh filename="package://daVinci/meshes/tool_asm.stl"/>      
+		<mesh filename="package://daVinciCore/meshes/tool_asm.stl"/>      
 	      </geometry>
 	    </collision>
 	  </link>
