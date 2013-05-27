@@ -1,2 +1,0 @@
-rosrun gazebo spawn_model -file daVinci.urdf -urdf -model daVinci
-
