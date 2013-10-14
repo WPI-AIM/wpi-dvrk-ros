@@ -16,5 +16,8 @@
   <param name="robot_description" command="$(find xacro)/xacro.py '$(find daVinciCore)/urdf/daVinci_exp.urdf.xacro'" />
 
    <node name="daVinciCore" pkg="gazebo" type="spawn_model" args="-urdf -param robot_description -model daVinci" respawn="false" output="screen" />
+
+		<!-- lauch the talker node in the beginner tutorials-->
+		<node name="vMasterNode" pkg="virtual_master" type="vmaster"/>
   
 </launch>
