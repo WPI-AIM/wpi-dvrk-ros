@@ -1,0 +1,15 @@
+/home/adnan/Desktop/rosdir/rosdavinci/qtcreator-build/CMakeFiles/ROSBUILD_genmsg_cpp.dir
+/home/adnan/Desktop/rosdir/rosdavinci/qtcreator-build/CMakeFiles/ROSBUILD_genmsg_lisp.dir
+/home/adnan/Desktop/rosdir/rosdavinci/qtcreator-build/CMakeFiles/ROSBUILD_gensrv_cpp.dir
+/home/adnan/Desktop/rosdir/rosdavinci/qtcreator-build/CMakeFiles/ROSBUILD_gensrv_lisp.dir
+/home/adnan/Desktop/rosdir/rosdavinci/qtcreator-build/CMakeFiles/clean-test-results.dir
+/home/adnan/Desktop/rosdir/rosdavinci/qtcreator-build/CMakeFiles/rosbuild_precompile.dir
+/home/adnan/Desktop/rosdir/rosdavinci/qtcreator-build/CMakeFiles/rosbuild_premsgsrvgen.dir
+/home/adnan/Desktop/rosdir/rosdavinci/qtcreator-build/CMakeFiles/rospack_genmsg.dir
+/home/adnan/Desktop/rosdir/rosdavinci/qtcreator-build/CMakeFiles/rospack_genmsg_libexe.dir
+/home/adnan/Desktop/rosdir/rosdavinci/qtcreator-build/CMakeFiles/rospack_gensrv.dir
+/home/adnan/Desktop/rosdir/rosdavinci/qtcreator-build/CMakeFiles/test.dir
+/home/adnan/Desktop/rosdir/rosdavinci/qtcreator-build/CMakeFiles/test-future.dir
+/home/adnan/Desktop/rosdir/rosdavinci/qtcreator-build/CMakeFiles/test-results.dir
+/home/adnan/Desktop/rosdir/rosdavinci/qtcreator-build/CMakeFiles/test-results-run.dir
+/home/adnan/Desktop/rosdir/rosdavinci/qtcreator-build/CMakeFiles/tests.dir
