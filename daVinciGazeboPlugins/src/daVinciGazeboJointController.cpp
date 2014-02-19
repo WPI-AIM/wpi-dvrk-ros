@@ -30,7 +30,7 @@
 namespace gazebo
 {
 
-	GZ_REGISTER_MODEL_PLUGIN(daVinciGazeboJointController);
+    GZ_REGISTER_MODEL_PLUGIN(daVinciGazeboJointController);
 
 	//Constructor
 	daVinciGazeboJointController::daVinciGazeboJointController()
@@ -82,12 +82,13 @@ namespace gazebo
 		this->joint_state_publisher = this->node->advertise<sensor_msgs::JointState>("/daVinci/set_joint_states", 1000);
 
 		//initialize SetJointState service
-		std::string set_joint_states_service_name("set_joint_states");
-		ros::AdvertiseServiceOptions set_joint_states_aso = ros::AdvertiseServiceOptions::create<daVinciGazeboPlugins::SetJointState>(
-		set_joint_states_service_name,boost::bind(&daVinciGazeboJointController::UpdateJointStates,this,_1,_2),
-		ros::VoidPtr(), NULL);
+        std::string set_joint_states_service_name("/psm1/set_joint_states");
+        ros::AdvertiseServiceOptions set_joint_states_aso = ros::AdvertiseServiceOptions::create<daVinciGazeboPlugins::SetJointState>(
+        set_joint_states_service_name,boost::bind(&daVinciGazeboJointController::UpdateJointStates,this,_1,_2),
+        ros::VoidPtr(), NULL);
 
-		this->SetJointStateService = this->node->advertiseService(set_joint_states_aso);
+
+        this->SetJointStateService = this->node->advertiseService(set_joint_states_aso);
 
 		this->updateConnection = event::Events::ConnectWorldUpdateStart(boost::bind(&daVinciGazeboJointController::OnUpdate , this));
 
@@ -107,13 +108,13 @@ namespace gazebo
 
 	}
 
-	bool daVinciGazeboJointController::UpdateJointStates(daVinciGazeboPlugins::SetJointState::Request  &req,daVinciGazeboPlugins::SetJointState::Response &res)
+    bool daVinciGazeboJointController::UpdateJointStates(daVinciGazeboPlugins::SetJointState::Request  &req,daVinciGazeboPlugins::SetJointState::Response &res)
 	{
 		printf("UpdateJointStates service called...\n");
 
 		//put these new joint values in the joint_positions map which is refered by joint_controller
 		for( unsigned int i=0;i<req.joint_state.name.size();i++)
-		{
+        {
 			this->joint_positions[req.joint_state.name[i]] = req.joint_state.position[i];
 			if( req.joint_state.name[i] == "left_arm_outer_pitch_base_joint") //this is parallel link mechanism so we have to simulate it
 			{
@@ -135,12 +136,12 @@ namespace gazebo
 		return true;
 	}
 
-	void daVinciGazeboJointController::ROSCallback(const sensor_msgs::JointState::ConstPtr& msg)
+    void daVinciGazeboJointController::ROSCallback(const sensor_msgs::JointState::ConstPtr& msg)
 	{
 		printf("subscriber got a new messge\n");
 
 		//put these new joint values in the joint_positions map which is refered by joint_controller
-		for( unsigned int i=0;i<msg->name.size();i++)
+        for( unsigned int i=0;i<msg->name.size();i++)
 		{
 			this->joint_positions[msg->name[i]] = msg->position[i];
 			if( msg->name[i] == "left_arm_outer_pitch_base_joint") //this is parallel link mechanism so we have to simulate it
@@ -191,7 +192,7 @@ namespace gazebo
 					this->jc->AddJoint(jnt);
 					this->jc->SetJointPosition( jnt->GetName() , this->joint_positions[jnt->GetName()] );
 
-					//printf( "Joint %d is %s \n " , i , this->myParent->GetJoint(i)->GetName().c_str());
+//                    printf( "Joint %d is %s \n " , i , this->myParent->GetJoint(i)->GetName().c_str());
 				}
 			}
 		}

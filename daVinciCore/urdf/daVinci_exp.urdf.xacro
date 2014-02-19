@@ -366,13 +366,13 @@
   <xacro:daVinci_arm arm_name="right_arm" parent="mounting_platform" X="0.38114" Y="1.03237" Z="1.60767" />
 
   <!--create Right arm-->
+	<gazebo>
+		<controller:daVinciGazeboJointController name="daVinciGazeboJointController" plugin="libdaVinciGazeboJointController.so">
+			<alwaysOn>true</alwaysOn>
+			<updateRate>100.0</updateRate>
+		</controller:daVinciGazeboJointController>
+ </gazebo>
 
- <gazebo>
-	<controller:daVinciGazeboJointController name="daVinciGazeboJointController" plugin="libdaVinciGazeboJointController.so">
-		<alwaysOn>true</alwaysOn>
-		<updateRate>100.0</updateRate>
-	</controller:daVinciGazeboJointController>
-  </gazebo>
 
 </robot>
 

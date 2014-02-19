@@ -11,6 +11,7 @@
   <depend package="std_msgs"/>
   <depend package="rospy"/>
   <depend package="roscpp"/>
+		<depend package="irk_model" />
  <depend package="sensor_msgs"/>
 
 </package>

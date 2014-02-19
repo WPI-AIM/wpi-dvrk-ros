@@ -19,6 +19,7 @@ jstate.name[0] = "left_arm_outer_yaw_joint";
 jstate.position.resize(1);
 jstate.position[0]  = 0;
 
+
 while (ros::ok())
 {
 jstate.position[0] +=0.1;
