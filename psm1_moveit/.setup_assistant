@@ -1,0 +1,8 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: irk_model
+    relative_path: model/psm_one.urdf.xacro
+  SRDF:
+    relative_path: config/irk_psm.srdf
+  CONFIG:
+    generated_timestamp: 1394434380
