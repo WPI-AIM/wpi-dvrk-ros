@@ -4,8 +4,8 @@
 /*
   $Id: mtsROSBridge.h 4367 2013-07-17 02:47:21Z zchen24 $
 
-  Author(s):  Anton Deguet, Zihan Chen
-  Created on: 2013-05-21
+  Author(s):  Anton Deguet, Zihan Chen, Adnan Munawar(Edits)
+  Created on: 2014-03-15
 
   (C) Copyright 2013 Johns Hopkins University (JHU), All Rights
   Reserved.
@@ -29,16 +29,10 @@ http://www.cisst.org/cisst/license.txt.
 
 // ros include
 #include <ros/ros.h>
-#include <std_msgs/Empty.h>
 
 // conversion methods
 #include "cisst_ros_bridge/mtsCISSTToROS.h"
 #include "cisst_ros_bridge/mtsROSToCISST.h"
-
-
-// ----------------------------------------------------
-// Publisher
-// ----------------------------------------------------
 
 class mtsROSPublisherBase
 {
@@ -59,7 +53,7 @@ public:
         Publisher = node.advertise<_rosType>(rosTopicName, 5);
     }
     ~mtsROSPublisher() {
-        //! \todo, how to remove the topic from the node?
+        // \todo, how to remove the topic from the node?
     }
 
     bool Execute(void) {
@@ -70,6 +64,7 @@ public:
             Publisher.publish(ROSData);
             return true;
         }
+//        std::cerr << "we need to log with ROS and cisst?" << std::endl;
     }
 
 protected:
@@ -77,51 +72,6 @@ protected:
     _rosType ROSData;
 };
 
-class mtsROSEventVoidPublisher: public mtsROSPublisherBase
-{
-public:
-    mtsROSEventVoidPublisher(const std::string & rosTopicName, ros::NodeHandle & node)
-    {
-        Publisher = node.advertise<std_msgs::Empty>(rosTopicName, 5);
-    }
-    ~mtsROSEventVoidPublisher(){
-        //! \todo remove the topic from the node
-    }
-    bool Execute(void){return true;}
-
-    void EventHandler(){
-        Publisher.publish(mEmptyMsg);
-    }
-private:
-    std_msgs::Empty mEmptyMsg;
-};
-
-
-template <typename _mtsType, typename _rosType>
-class mtsROSEventWritePublisher: public mtsROSPublisherBase
-{
-public:
-    mtsROSEventWritePublisher(const std::string & rosTopicName, ros::NodeHandle & node){
-      Publisher = node.advertise<_rosType>(rosTopicName, 5);
-    }
-    ~mtsROSEventWritePublisher(){}
-
-    bool Execute(void){return true;}
-
-    void EventHandler(const _mtsType& CISSTData)
-    {
-        mtsCISSTToROS(CISSTData, ROSData);
-        Publisher.publish(ROSData);
-    }
-
-protected:
-    _rosType ROSData;
-};
-
-
-// ----------------------------------------------------
-// Subscriber
-// ----------------------------------------------------
 
 class mtsROSSubscriberBase
 {
@@ -139,7 +89,7 @@ public:
     typedef mtsROSSubscriber<_mtsType, _rosType> ThisType;
     mtsROSSubscriber(const std::string & rosTopicName, ros::NodeHandle & node) {
         Subscriber = node.subscribe(rosTopicName, 1, &ThisType::Callback, this);
-
+//        this->numberOfJoints = numberOfAxis;
         std::cout << "topic: " << rosTopicName << std::endl;
     }
     ~mtsROSSubscriber() {
@@ -160,6 +110,7 @@ public:
 protected:
     _mtsType CISSTData;
     _rosType ROSData;
+    int numberOfJoints;
 };
 
 
@@ -187,15 +138,6 @@ public:
                                      const std::string & functionName,
                                      const std::string & topicName);
 
-    bool AddPublisherFromEventVoid(const std::string & interfaceRequiredName,
-                                   const std::string & eventName,
-                                   const std::string & topicName);
-
-    template <typename _mtsType, typename _rosType>
-    bool AddPublisherFromEventWrite(const std::string & interfaceRequiredName,
-                                    const std::string & eventName,
-                                    const std::string & topicName);
-
 protected:
     //! list of publishers
     typedef std::list<mtsROSPublisherBase*> PublishersType;
@@ -210,6 +152,8 @@ protected:
 
     //! spin flag, if set call spinOnce() in run
     bool mSpin;
+    //! Number of Axes for the Arm Type
+    int numberOfAxis;
 };
 
 template <typename _mtsType, typename _rosType>
@@ -257,6 +201,49 @@ bool mtsROSBridge::AddSubscriberToWriteCommand(const std::string & interfaceRequ
                                  << interfaceRequiredName << "\"" << std::endl;
         return false;
     }
+//    switch (arm_name)
+//    {
+//    case "PSM1":
+//        this->numberOfAxis = 7;
+//        break;
+//    case "PSM2":
+//        this->numberOfAxis = 7;
+//        break;
+//    case "PSM":
+//        this->numberOfAxis = 7;
+//        break;
+//    case "psm1":
+//        this->numberOfAxis = 7;
+//        break;
+//    case "psm2":
+//        this->numberOfAxis = 7;
+//        break;
+//    case "psm":
+//        this->numberOfAxis = 7;
+//        break;
+//    case "MTML":
+//        this->numberOfAxis = 8;
+//        break;
+//    case "MTMR":
+//        this->numberOfAxis = 8;
+//        break;
+//    case "MTM":
+//        this->numberOfAxis = 8;
+//        break;
+//    case "mtml":
+//        this->numberOfAxis = 8;
+//        break;
+//    case "mtmr":
+//        this->numberOfAxis = 8;
+//        break;
+//    case "mrm":
+//        this->numberOfAxis = 8;
+//        break;
+//    default:
+//        ROS_ERROR("Unknow Arm Type ? (MTM/PSM), Unable to specify number of axes");
+//        return false;
+//        break;
+//    }
     mtsROSSubscriberBase * newSubscriber = new mtsROSSubscriber<_mtsType, _rosType>(topicName, *(this->Node));
     if (!interfaceRequired->AddFunction(functionName, newSubscriber->Function)) {
         ROS_ERROR("mtsROS::AddSubscriberToWriteCommand: failed to create function.");
@@ -268,32 +255,6 @@ bool mtsROSBridge::AddSubscriberToWriteCommand(const std::string & interfaceRequ
     Subscribers.push_back(newSubscriber);
     return true;
 }
-
-
-template <typename _mtsType, typename _rosType>
-bool mtsROSBridge::AddPublisherFromEventWrite(const std::string &interfaceRequiredName,
-                                              const std::string &eventName,
-                                              const std::string &topicName)
-{
-    // check if the interface exists of try to create one
-    mtsInterfaceRequired * interfaceRequired = this->GetInterfaceRequired(interfaceRequiredName);
-    if (!interfaceRequired) {
-        interfaceRequired = this->AddInterfaceRequired(interfaceRequiredName);
-    }
-
-    mtsROSEventWritePublisher<_mtsType, _rosType>* newPublisher = new mtsROSEventWritePublisher<_mtsType, _rosType>(topicName, *(this->Node));
-    if (!interfaceRequired->AddEventHandlerWrite(&mtsROSEventWritePublisher<_mtsType, _rosType>::EventHandler, newPublisher, eventName))
-    {
-        ROS_ERROR("mtsROS::mtsROSEventWritePublisher: failed to create required interface.");
-        CMN_LOG_CLASS_INIT_ERROR << "mtsROSEventWritePublisher: faild to create required interface \""
-                                 << interfaceRequiredName << "\"" << std::endl;
-        delete newPublisher;
-        return false;
-    }
-    Publishers.push_back(newPublisher);
-    return true;
-}
-
 
 CMN_DECLARE_SERVICES_INSTANTIATION(mtsROSBridge);
 

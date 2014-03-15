@@ -37,14 +37,6 @@ void mtsCISSTToROS(const std::string &cisstData, std_msgs::String &rosData)
     rosData.data = cisstData;
 }
 
-void mtsCISSTToROS(const prmEventButton &cisstData, std_msgs::Bool &rosData)
-{
-  if (cisstData.Type() == prmEventButton::PRESSED)
-      rosData.data = true;
-  else if (cisstData.Type() == prmEventButton::RELEASED)
-      rosData.data = false;
-}
-
 void mtsCISSTToROS(const prmPositionCartesianGet & cisstData, geometry_msgs::Transform & rosData)
 {
     vctQuatRot3 quat(cisstData.Position().Rotation(), VCT_NORMALIZE);

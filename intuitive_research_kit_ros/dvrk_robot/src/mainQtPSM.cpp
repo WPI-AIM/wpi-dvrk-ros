@@ -120,7 +120,8 @@ int main(int argc, char** argv)
   //-------------------------------------------------------
   // Start ROS Bridge
   // ------------------------------------------------------
-
+  ROS_INFO("\n Name is :%s \n :%s \n :%s \n :%s \n ",config_name.c_str(),config_pid.c_str(),config_io.c_str()
+           ,config_kinematics.c_str());
   // ros wrapper
   mtsROSBridge robotBridge("RobotBridge", 20 * cmn_ms, true);
 
@@ -137,16 +138,14 @@ int main(int argc, char** argv)
   robotBridge.AddPublisherFromReadCommand<prmPositionCartesianGet, geometry_msgs::Pose>(
         config_name, "GetPositionCartesian", "/dvrk_psm/cartesian_pose_current");
 
-  // gripper position
-//  robotBridge.AddPublisherFromReadCommand<double, std_msgs::Float32>  (
-//        config_name, "GetGripperPosition", "/dvrk_psm/gripper_position");
-
-  // clutch pedal
-//  robotBridge.AddPublisherFromReadCommand<bool, std_msgs::Bool>(
-//        "Clutch", "Button", "/dvrk_footpedal/clutch_state");
+  robotBridge.AddSubscriberToWriteCommand<prmPositionJointSet, sensor_msgs::JointState>(
+              "PSM-PID","SetPositionJoint","/dvrk_psm/set_joint_position");
 
   componentManager->AddComponent(&robotBridge);
   componentManager->Connect(robotBridge.GetName(), config_name, psm->GetName(), "Robot");
+  componentManager->Connect(robotBridge.GetName(), config_name, pid->GetName(), "Controller");
+  componentManager->Connect(robotBridge.GetName(), "PSM-PID", pid->GetName(),"Controller");
+
 //  componentManager->Connect(robotBridge.GetName(), "Clutch", "io", "CLUTCH");
 
   //-------------------------------------------------------

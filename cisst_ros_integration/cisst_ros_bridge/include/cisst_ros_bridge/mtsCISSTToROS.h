@@ -27,7 +27,6 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisstVector/vctDynamicVectorTypes.h>
 #include <cisstParameterTypes/prmPositionCartesianGet.h>
 #include <cisstParameterTypes/prmPositionJointGet.h>
-#include <cisstParameterTypes/prmEventButton.h>
 
 // ros include
 #include <ros/ros.h>
@@ -46,7 +45,6 @@ http://www.cisst.org/cisst/license.txt.
 void mtsCISSTToROS(const double & cisstData, std_msgs::Float32 & rosData);
 void mtsCISSTToROS(const bool &cisstData, std_msgs::Bool &rosData);
 void mtsCISSTToROS(const std::string &cisstData, std_msgs::String &rosData);
-void mtsCISSTToROS(const prmEventButton &cisstData, std_msgs::Bool &rosData);
 
 // geometry_msgs
 void mtsCISSTToROS(const prmPositionCartesianGet & cisstData, geometry_msgs::Transform & rosData);
@@ -56,7 +54,6 @@ void mtsCISSTToROS(const vctFrm4x4 &cisstData, geometry_msgs::Pose &rosData);
 // sensor_msgs
 void mtsCISSTToROS(const prmPositionJointGet & cisstData, sensor_msgs::JointState & rosData);
 
-// cisst_msgs
 void mtsCISSTToROS(const vctDoubleVec & cisstData, cisst_msgs::vctDoubleVec & rosData);
 
 

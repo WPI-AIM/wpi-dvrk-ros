@@ -9,20 +9,6 @@ Panels:
         - /TF1
         - /RobotModel1
         - /RobotModel1/Links1
-        - /RobotModel1/Links1/outer_insertion_link1
-        - /RobotModel1/Links1/outer_pitch_back_link1
-        - /RobotModel1/Links1/outer_pitch_bottom_link1
-        - /RobotModel1/Links1/outer_pitch_front_link1
-        - /RobotModel1/Links1/outer_pitch_top_link1
-        - /RobotModel1/Links1/outer_yaw_link1
-        - /RobotModel1/Links1/psm_base_link1
-        - /RobotModel1/Links1/tool_main_link1
-        - /RobotModel1/Links1/tool_wrist_link1
-        - /RobotModel1/Links1/tool_wrist_sca_ee_link_11
-        - /RobotModel1/Links1/tool_wrist_sca_ee_link_21
-        - /RobotModel1/Links1/tool_wrist_sca_link1
-        - /RobotModel1/Links1/tool_wrist_sca_shaft_link1
-        - /RobotModel1/Links1/tool_wrist_shaft_link1
       Splitter Ratio: 0.687097
     Tree Height: 447
   - Class: rviz/Selection
@@ -77,76 +63,85 @@ Visualization Manager:
       Collision Enabled: false
       Enabled: true
       Links:
-        outer_insertion_link:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        one_outer_insertion_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        outer_pitch_back_link:
+        one_outer_pitch_back_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        outer_pitch_bottom_link:
+        one_outer_pitch_bottom_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        outer_pitch_front_link:
+        one_outer_pitch_front_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        outer_pitch_top_link:
+        one_outer_pitch_top_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        outer_yaw_link:
+        one_outer_yaw_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        psm_base_link:
+        one_psm_base_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        tool_main_link:
+        one_tool_main_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        tool_wrist_link:
+        one_tool_wrist_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        tool_wrist_sca_ee_link_1:
+        one_tool_wrist_sca_ee_link_1:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        tool_wrist_sca_ee_link_2:
+        one_tool_wrist_sca_ee_link_2:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        tool_wrist_sca_link:
+        one_tool_wrist_sca_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        tool_wrist_sca_shaft_link:
+        one_tool_wrist_sca_shaft_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        tool_wrist_shaft_link:
+        one_tool_wrist_shaft_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
+        world:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
       Name: RobotModel
       Robot Description: robot_description
       TF Prefix: ""
@@ -156,7 +151,8 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: /world
+    Fixed Frame: world
+    Frame Rate: 30
   Name: root
   Tools:
     - Class: rviz/Interact
@@ -193,10 +189,10 @@ Visualization Manager:
         Z: 0.0384061
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.704801
+      Pitch: 0.934801
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.07041
+      Yaw: 4.12541
     Saved: ~
 Window Geometry:
   Displays:
@@ -212,5 +208,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1004
-  X: 587
-  Y: 143
+  X: 897
+  Y: 156

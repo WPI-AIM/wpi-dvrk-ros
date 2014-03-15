@@ -136,7 +136,7 @@ int main(int argc, char** argv)
 
   // joint position
   robotBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
-        "pid", "GetPositionJoint", "/dvrk_mtm/joint_position_current");
+        config_name, "GetPositionJoint", "/dvrk_mtm/joint_position_current");
 
   // cartesian position
   robotBridge.AddPublisherFromReadCommand<prmPositionCartesianGet, geometry_msgs::Pose>(
@@ -149,10 +149,15 @@ int main(int argc, char** argv)
   // clutch pedal
 //  robotBridge.AddPublisherFromReadCommand<bool, std_msgs::Bool>(
 //        "Clutch", "Button", "/dvrk_footpedal/clutch_state");
+  robotBridge.AddSubscriberToWriteCommand<prmPositionCartesianGet, geometry_msgs::Pose>(
+              config_name, "SetPositionCartesian", "/dvrk_mtm/set_position_cartesian");
+
+  robotBridge.AddSubscriberToWriteCommand<prmPositionJointSet, sensor_msgs::JointState>(
+              "MTM-PID","SetPositionJoint","/dvrk_psm/set_joint_position");
 
   componentManager->AddComponent(&robotBridge);
   componentManager->Connect(robotBridge.GetName(), config_name, mtm->GetName(), "Robot");
-  componentManager->Connect(robotBridge.GetName(), "pid", pid->GetName(), "Controller");
+  componentManager->Connect(robotBridge.GetName(), "MTM-PID", pid->GetName(), "Controller");
 //  componentManager->Connect(robotBridge.GetName(), "Clutch", "io", "CLUTCH");
 
   //-------------------------------------------------------

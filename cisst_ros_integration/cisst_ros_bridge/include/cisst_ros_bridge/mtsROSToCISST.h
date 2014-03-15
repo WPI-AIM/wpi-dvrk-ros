@@ -4,8 +4,8 @@
 /*
   $Id: mtsROSToCISST.h 4375 2013-07-26 16:13:06Z zchen24 $
 
-  Author(s):  Anton Deguet, Zihan Chen
-  Created on: 2013-05-21
+  Author(s):  Anton Deguet, Zihan Chen, Adnan Munawar
+  Created on: 2013-03-15
 
   (C) Copyright 2013 Johns Hopkins University (JHU), All Rights
   Reserved.
@@ -27,6 +27,8 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisstVector/vctDynamicVectorTypes.h>
 #include <cisstParameterTypes/prmPositionCartesianGet.h>
 #include <cisstParameterTypes/prmPositionJointGet.h>
+#include <cisstParameterTypes/prmPositionCartesianSet.h>
+#include <cisstParameterTypes/prmPositionJointSet.h>
 
 // ros include
 #include <ros/ros.h>
@@ -50,8 +52,8 @@ void mtsROSToCISST(const geometry_msgs::Pose &rosData, prmPositionCartesianGet &
 void mtsROSToCISST(const geometry_msgs::Pose &rosData, vctFrm4x4 &cisstData);
 void mtsROSToCISST(const geometry_msgs::Transform & rosData, prmPositionCartesianGet & cisstData);
 
-// sensor_msgs
-
+// This Function has been implemented as a Test by Adnan Munawar
+void mtsROSToCISST(const sensor_msgs::JointState & rosData, prmPositionJointSet & cisstData);
 // vctDoubleVec
 void mtsROSToCISST(const cisst_msgs::vctDoubleVec & rosData, vctDoubleVec & cisstData);
 

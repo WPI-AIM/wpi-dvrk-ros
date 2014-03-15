@@ -248,6 +248,21 @@ int main(int argc, char ** argv)
         componentManager->Connect(pidMasterGUI->GetName(), "Controller", mtm->PIDComponentName(), "Controller");
         tabWidget->addTab(pidMasterGUI, masterPIDName.c_str());
 
+
+        ROS_INFO("\n\n\n Name of :%s\n PID component :%s\n IO component :%s \\n\n",mtm->Name().c_str(), mtm->PIDComponentName().c_str()
+                 , mtm->IOComponentName().c_str());
+
+        std::vector<std::string> io_interface_provided = io->GetNamesOfInterfacesProvided();
+        for (int i=0;i<io_interface_provided.size();i++)
+        {
+            ROS_INFO("Provided IO Interface %d is %s",i,io_interface_provided[i].c_str());
+        }
+        std::vector<std::string> io_interface_required = io->GetNamesOfInterfacesRequired();
+        for (int i=0;i<io_interface_required.size();i++)
+        {
+            ROS_INFO("Required IO Interface %d is %s",i,io_interface_required[i].c_str());
+        }
+
         // PID Slave GUI
         std::string slavePIDName = slaveName + " PID";
         mtsPIDQtWidget * pidSlaveGUI = new mtsPIDQtWidget(slavePIDName, 7);
@@ -293,6 +308,10 @@ int main(int argc, char ** argv)
     mtsROSBridge rosBridge("RobotBridge", 20 * cmn_ms, true);
     rosBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
                 "MTML", "GetPositionJoint", "/dvrk_mtml/joint_position_current");
+
+    rosBridge.AddSubscriberToWriteCommand<prmPositionJointSet, sensor_msgs::JointState>(
+                "PSM1", "SetPositionJoint", "/dvrk_psm1/set_position_joint");
+
     rosBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
                 "MTMR", "GetPositionJoint", "/dvrk_mtmr/joint_position_current");
     rosBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
@@ -302,6 +321,7 @@ int main(int argc, char ** argv)
 
     componentManager->AddComponent(&rosBridge);
     componentManager->Connect(rosBridge.GetName(), "MTML", "MTML", "Robot");
+    componentManager->Connect(rosBridge.GetName(),"PSM1","PSM1-PID","Controller");
     componentManager->Connect(rosBridge.GetName(), "MTMR", "MTMR", "Robot");
     componentManager->Connect(rosBridge.GetName(), "PSM1", "PSM1", "Robot");
     componentManager->Connect(rosBridge.GetName(), "PSM2", "PSM2", "Robot");

@@ -4,8 +4,8 @@
 /*
   $Id: mtsROSBridge.cpp 4363 2013-07-16 20:32:30Z zchen24 $
 
-  Author(s):  Anton Deguet, Zihan Chen
-  Created on: 2013-05-21
+  Author(s):  Anton Deguet, Zihan Chen, Adnan Munawar(Edits)
+  Created on: 2014-03-15
 
   (C) Copyright 2013 Johns Hopkins University (JHU), All Rights
   Reserved.
@@ -66,31 +66,3 @@ void mtsROSBridge::Run(void)
 
     if (mSpin) ros::spinOnce();
 }
-
-bool mtsROSBridge::AddPublisherFromEventVoid(const std::string &interfaceRequiredName,
-                                             const std::string &eventName,
-                                             const std::string &topicName)
-{
-    // check if the interface exists of try to create one
-    mtsInterfaceRequired * interfaceRequired = this->GetInterfaceRequired(interfaceRequiredName);
-    if (!interfaceRequired) {
-        interfaceRequired = this->AddInterfaceRequired(interfaceRequiredName);
-    }
-
-    mtsROSEventVoidPublisher* newPublisher = new mtsROSEventVoidPublisher(topicName, *(this->Node));
-    if (!interfaceRequired->AddEventHandlerVoid(&mtsROSEventVoidPublisher::EventHandler, newPublisher, eventName))
-    {
-        ROS_ERROR("mtsROS::AddPublisherFromEventVoid: failed to create required interface.");
-        CMN_LOG_CLASS_INIT_ERROR << "AddPublisherFromEventVoid: faild to create required interface \""
-                                 << interfaceRequiredName << "\"" << std::endl;
-        delete newPublisher;
-        return false;
-    }
-    Publishers.push_back(newPublisher);
-    return true;
-}
-
-
-
-
-

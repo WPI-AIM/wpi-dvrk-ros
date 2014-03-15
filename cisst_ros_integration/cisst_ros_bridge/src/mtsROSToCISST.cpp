@@ -4,8 +4,8 @@
 /*
   $Id: mtsROSToCISST.cpp 4375 2013-07-26 16:13:06Z zchen24 $
 
-  Author(s):  Anton Deguet, Zihan Chen
-  Created on: 2013-05-21
+  Author(s):  Anton Deguet, Zihan Chen, Adnan Munawar
+  Created on: 2013-03-15
 
   (C) Copyright 2013 Johns Hopkins University (JHU), All Rights
   Reserved.
@@ -78,6 +78,18 @@ void mtsROSToCISST(const geometry_msgs::Transform & rosData, prmPositionCartesia
     quat.W() = rosData.rotation.w;
     vctMatRot3 rotation(quat, VCT_NORMALIZE);
     cisstData.Position().Rotation().Assign(rotation);
+}
+
+// This function has been implemented as a TEST BY ADNAN MUNAWAR
+void mtsROSToCISST(const sensor_msgs::JointState & rosData, prmPositionJointSet &cisstData)
+{
+    vctDoubleVec DesiredPosition;
+    DesiredPosition.SetSize(rosData.position.size());
+    DesiredPosition.SetAll(0.0);
+    for (unsigned int i = 0; i < rosData.position.size(); ++i) {
+        DesiredPosition.at(i) = rosData.position[i];
+    }
+    cisstData.SetGoal(DesiredPosition);
 }
 
 void mtsROSToCISST(const cisst_msgs::vctDoubleVec & rosData, vctDoubleVec & cisstData)
