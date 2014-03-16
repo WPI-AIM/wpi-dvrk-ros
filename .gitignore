@@ -4,3 +4,5 @@ lib
 srv_gen
 *.txt.user
 *~
+.cproject
+.project
