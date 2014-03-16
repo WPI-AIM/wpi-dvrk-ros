@@ -1,0 +1,22 @@
+controller_list:
+  - name: fake_end_effector_controller
+    joints:
+      - one_outer_wrist_yaw_joint
+      - one_outer_wrist_open_angle_joint_1
+  - name: fake_full_chain_controller
+    joints:
+      - one_outer_yaw_joint
+      - one_outer_pitch_joint_1
+      - one_outer_insertion_joint
+      - one_outer_roll_joint
+      - one_outer_wrist_pitch_joint
+      - one_outer_wrist_yaw_joint
+  - name: fake_full_arm_controller
+    joints:
+      - one_outer_yaw_joint
+      - one_outer_pitch_joint_1
+      - one_outer_insertion_joint
+      - one_outer_roll_joint
+      - one_outer_wrist_pitch_joint
+      - one_outer_wrist_yaw_joint
+      - one_outer_wrist_open_angle_joint_1

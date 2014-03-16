@@ -24,7 +24,7 @@ int main(int argc, char ** argv)
     robot_model_loader::RobotModelLoader rml = robot_model_loader::RobotModelLoader("robot_description");
     robot_model::RobotModelPtr psm_model = rml.getModel();
     robot_state::RobotStatePtr psm_state (new robot_state::RobotState(psm_model));
-    robot_model::JointModelGroup* joint_model_group = psm_model->getJointModelGroup("full_chain");
+    robot_model::JointModelGroup* joint_model_group = psm_model->getJointModelGroup("full_arm");
     std::vector<std::string> link_names =joint_model_group->getLinkModelNames();
     std::vector<std::string> joint_names = joint_model_group->getVariableNames();
         for(int i=0;i<link_names.size();i++)
