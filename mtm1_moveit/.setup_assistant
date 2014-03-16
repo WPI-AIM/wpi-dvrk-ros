@@ -1,8 +1,0 @@
-moveit_setup_assistant_config:
-  URDF:
-    package: irk_model
-    relative_path: model/mtm_right.urdf.xacro
-  SRDF:
-    relative_path: config/master.srdf
-  CONFIG:
-    generated_timestamp: 1393014163
