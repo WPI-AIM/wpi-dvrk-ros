@@ -352,13 +352,13 @@ E- Class mtsManagerLocal: File: mtsManagerLocal.cpp Line: 1730 -  WaitForStateAl
   State:active"
 E- Class mtsManagerLocal: File: mtsManagerLocal.cpp Line: 1747 -  WaitForStateAll: failed to reached state "mtsComponentState
   State:active" for all components
--W Class mtsRobotIO1394: End of task io
--W Class mtsTeleOperation: End of task MTML-PSM2
--W Class -WmtsIntuitiveResearchKitMTM: End of task MTMR
- Class mtsIntuitiveResearchKitPSM: End of task PSM2
--W-W-W Class  Class  Class mtsTeleOperationmtsIntuitiveResearchKitPSM: End of task PSM1
-: End of task MTMR-PSM1
+-W-W Class mtsTeleOperation Class : End of task MTMR-PSM1
 mtsIntuitiveResearchKitMTM: End of task MTML
+-W Class mtsRobotIO1394: End of task io
+-W-W Class  Class mtsTeleOperationmtsIntuitiveResearchKitPSM: End of task PSM1
+-W: -W Class  Class mtsIntuitiveResearchKitMTM: End of task mtsIntuitiveResearchKitPSM: End of task MTML-PSM2MTMREnd of task 
+PSM2
+
 -W Class mtsROSBridge: End of task RobotBridge
 E- Class mtsManagerLocal: File: mtsManagerLocal.cpp Line: 1730 -  WaitForStateAll: component "MTML-PID" failed to reach state "mtsComponentState
   State:finished"
