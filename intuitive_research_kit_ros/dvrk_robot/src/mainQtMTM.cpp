@@ -136,7 +136,7 @@ int main(int argc, char** argv)
 
   // joint position
   robotBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
-        config_name, "GetPositionJoint", "/dvrk_mtm/joint_position_current");
+        config_name, "GetPositionJoint", "/dvrk_mtm/joint_positions_current");
 
   // cartesian position
   robotBridge.AddPublisherFromReadCommand<prmPositionCartesianGet, geometry_msgs::Pose>(
@@ -153,7 +153,7 @@ int main(int argc, char** argv)
               config_name, "SetPositionCartesian", "/dvrk_mtm/set_position_cartesian");
 
   robotBridge.AddSubscriberToWriteCommand<prmPositionJointSet, sensor_msgs::JointState>(
-              "MTM-PID","SetPositionJoint","/dvrk_psm/set_joint_position");
+              "MTM-PID","SetPositionJoint","/dvrk_mtm/set_joint_positions");
 
   componentManager->AddComponent(&robotBridge);
   componentManager->Connect(robotBridge.GetName(), config_name, mtm->GetName(), "Robot");
