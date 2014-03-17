@@ -2,9 +2,9 @@
 /* ex: set filetype=cpp softtabstop=4 shiftwidth=4 tabstop=4 cindent expandtab: */
 /*
   $Id: mainQtTeleOperationJSON.cpp 4692 2014-02-14 06:27:55Z pkazanz1 $
-
-  Author(s):  Zihan Chen, Anton Deguet
-  Created on: 2013-02-07
+  Modified From Original File By Adnan Munawar (WPI)
+  Original Author(s):  Zihan Chen, Anton Deguet
+  Created on: 2014-03-07
 
   (C) Copyright 2013-2014 Johns Hopkins University (JHU), All Rights Reserved.
 
@@ -249,19 +249,19 @@ int main(int argc, char ** argv)
         tabWidget->addTab(pidMasterGUI, masterPIDName.c_str());
 
 
-        ROS_INFO("\n\n\n Name of :%s\n PID component :%s\n IO component :%s \\n\n",mtm->Name().c_str(), mtm->PIDComponentName().c_str()
-                 , mtm->IOComponentName().c_str());
+//        ROS_INFO("\n\n\n Name of :%s\n PID component :%s\n IO component :%s \\n\n",mtm->Name().c_str(), mtm->PIDComponentName().c_str()
+//                 , mtm->IOComponentName().c_str());
 
-        std::vector<std::string> io_interface_provided = io->GetNamesOfInterfacesProvided();
-        for (int i=0;i<io_interface_provided.size();i++)
-        {
-            ROS_INFO("Provided IO Interface %d is %s",i,io_interface_provided[i].c_str());
-        }
-        std::vector<std::string> io_interface_required = io->GetNamesOfInterfacesRequired();
-        for (int i=0;i<io_interface_required.size();i++)
-        {
-            ROS_INFO("Required IO Interface %d is %s",i,io_interface_required[i].c_str());
-        }
+//        std::vector<std::string> io_interface_provided = io->GetNamesOfInterfacesProvided();
+//        for (int i=0;i<io_interface_provided.size();i++)
+//        {
+//            ROS_INFO("Provided IO Interface %d is %s",i,io_interface_provided[i].c_str());
+//        }
+//        std::vector<std::string> io_interface_required = io->GetNamesOfInterfacesRequired();
+//        for (int i=0;i<io_interface_required.size();i++)
+//        {
+//            ROS_INFO("Required IO Interface %d is %s",i,io_interface_required[i].c_str());
+//        }
 
         // PID Slave GUI
         std::string slavePIDName = slaveName + " PID";
