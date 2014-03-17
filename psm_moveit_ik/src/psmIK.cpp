@@ -68,7 +68,7 @@ int main(int argc, char ** argv)
     {
         for (std::size_t j=0; j<variable_names.size(); j++)
         {
-            if(joint_names.at(i) == variable_names.at(j))
+            if (joint_names.at(i) == variable_names.at(j))
             {
                 joint_values.push_back(variable_values[j]);
                 break;
