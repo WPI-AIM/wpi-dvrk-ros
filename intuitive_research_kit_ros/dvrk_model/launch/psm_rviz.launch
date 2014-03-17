@@ -3,7 +3,7 @@
 
  	<arg name="model" default="$(find dvrk_model)/model/psm_one.urdf.xacro" />
   <arg name="gui" default="true" />
-  <arg name="rate" default="20" />
+  <arg name="rate" default="100" />
 
   <param name="robot_description"
          command="rosrun xacro xacro.py $(arg model)"/>
