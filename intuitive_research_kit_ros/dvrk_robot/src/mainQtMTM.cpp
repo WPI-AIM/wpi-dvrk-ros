@@ -149,7 +149,7 @@ int main(int argc, char** argv)
   // clutch pedal
 //  robotBridge.AddPublisherFromReadCommand<bool, std_msgs::Bool>(
 //        "Clutch", "Button", "/dvrk_footpedal/clutch_state");
-  robotBridge.AddSubscriberToWriteCommand<prmPositionCartesianGet, geometry_msgs::Pose>(
+  robotBridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>(
               config_name, "SetPositionCartesian", "/dvrk_mtm/set_position_cartesian");
 
   robotBridge.AddSubscriberToWriteCommand<prmPositionJointSet, sensor_msgs::JointState>(
