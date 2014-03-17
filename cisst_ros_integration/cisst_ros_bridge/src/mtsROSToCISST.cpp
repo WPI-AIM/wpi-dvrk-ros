@@ -37,19 +37,23 @@ void mtsROSToCISST(const std_msgs::String &rosData, std::string &cisstData)
     cisstData = rosData.data;
 }
 
-
-void mtsROSToCISST(const geometry_msgs::Pose &rosData, prmPositionCartesianGet &cisstData)
+// This Function has been modified by Adnan Munawar and now works to set
+// the cartesian Positions of the MTM. Still under work for setting cartesian
+// Position of the PSMs
+void mtsROSToCISST(const geometry_msgs::Pose &rosData, prmPositionCartesianSet &cisstData)
 {
-    cisstData.Position().Translation().X() = rosData.position.x;
-    cisstData.Position().Translation().Y() = rosData.position.y;
-    cisstData.Position().Translation().Z() = rosData.position.z;
+    vctDoubleFrm3 frm;
+    frm.Translation().X() = rosData.position.x;
+    frm.Translation().Y() = rosData.position.y;
+    frm.Translation().Z() = rosData.position.z;
     vctQuatRot3 quat;
     quat.X() = rosData.orientation.x;
     quat.Y() = rosData.orientation.y;
     quat.Z() = rosData.orientation.z;
     quat.W() = rosData.orientation.w;
     vctMatRot3 rotation(quat, VCT_NORMALIZE);
-    cisstData.Position().Rotation().Assign(rotation);
+    frm.Rotation() = rotation;
+    cisstData.SetGoal(frm);
 }
 
 void mtsROSToCISST(const geometry_msgs::Pose &rosData, vctFrm4x4 &cisstData)

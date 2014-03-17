@@ -48,11 +48,16 @@ void mtsROSToCISST(const std_msgs::Bool & rosData, bool & cisstData);
 void mtsROSToCISST(const std_msgs::String &rosData, std::string &cisstData);
 
 // geometry_msgs
-void mtsROSToCISST(const geometry_msgs::Pose &rosData, prmPositionCartesianGet &cisstData);
+// This Function has been modified by Adnan Munawar and now works to set
+// the cartesian Positions of the MTM. Still under work for setting cartesian
+// Position of the PSMs
+void mtsROSToCISST(const geometry_msgs::Pose &rosData, prmPositionCartesianSet &cisstData);
 void mtsROSToCISST(const geometry_msgs::Pose &rosData, vctFrm4x4 &cisstData);
 void mtsROSToCISST(const geometry_msgs::Transform & rosData, prmPositionCartesianGet & cisstData);
 
 // This Function has been implemented as a Test by Adnan Munawar
+// This Functions works for the PSM now, however still under work for working
+// on the MTMs
 void mtsROSToCISST(const sensor_msgs::JointState & rosData, prmPositionJointSet & cisstData);
 // vctDoubleVec
 void mtsROSToCISST(const cisst_msgs::vctDoubleVec & rosData, vctDoubleVec & cisstData);
