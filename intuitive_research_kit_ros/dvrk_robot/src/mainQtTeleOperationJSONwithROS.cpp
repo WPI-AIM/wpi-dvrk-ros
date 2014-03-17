@@ -2,9 +2,9 @@
 /* ex: set filetype=cpp softtabstop=4 shiftwidth=4 tabstop=4 cindent expandtab: */
 /*
   $Id: mainQtTeleOperationJSON.cpp 4692 2014-02-14 06:27:55Z pkazanz1 $
-
-  Author(s):  Zihan Chen, Anton Deguet
-  Created on: 2013-02-07
+  Modified From Original File By Adnan Munawar (WPI)
+  Original Author(s):  Zihan Chen, Anton Deguet
+  Created on: 2014-03-07
 
   (C) Copyright 2013-2014 Johns Hopkins University (JHU), All Rights Reserved.
 
