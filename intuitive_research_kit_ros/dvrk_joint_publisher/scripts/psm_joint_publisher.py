@@ -48,13 +48,13 @@ def main():
         jnt_vel_cb)
 
     # initialize jnt_msg
-    jnt_msg.name = ['outer_yaw_joint',
-                    'outer_pitch_joint_1',
-                    'outer_insertion_joint', 
-                    'outer_roll_joint',
-                    'outer_wrist_pitch_joint',
-                    'outer_wrist_yaw_joint',
-		    'outer_wrist_open_angle_joint_1']
+    jnt_msg.name = ['one_outer_yaw_joint',
+                    'one_outer_pitch_joint_1',
+                    'one_outer_insertion_joint', 
+                    'one_outer_roll_joint',
+                    'one_outer_wrist_pitch_joint',
+                    'one_outer_wrist_yaw_joint',
+		    'one_outer_wrist_open_angle_joint_1']
 
     # loop until ctrl-c
     rate = rospy.Rate(50);     # 50 hz
