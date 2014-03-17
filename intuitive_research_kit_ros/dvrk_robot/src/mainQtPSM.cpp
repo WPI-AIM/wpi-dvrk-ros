@@ -138,12 +138,15 @@ int main(int argc, char** argv)
   robotBridge.AddPublisherFromReadCommand<prmPositionCartesianGet, geometry_msgs::Pose>(
         config_name, "GetPositionCartesian", "/dvrk_psm/cartesian_pose_current");
 
+  robotBridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>(
+              config_name, "SetPositionCartesian", "/dvrk_psm/set_position_cartesian");
+
   robotBridge.AddSubscriberToWriteCommand<prmPositionJointSet, sensor_msgs::JointState>(
               "PSM-PID","SetPositionJoint","/dvrk_psm/set_joint_position");
 
   componentManager->AddComponent(&robotBridge);
   componentManager->Connect(robotBridge.GetName(), config_name, psm->GetName(), "Robot");
-  componentManager->Connect(robotBridge.GetName(), config_name, pid->GetName(), "Controller");
+//  componentManager->Connect(robotBridge.GetName(), config_name, pid->GetName(), "Controller");
   componentManager->Connect(robotBridge.GetName(), "PSM-PID", pid->GetName(),"Controller");
 
 //  componentManager->Connect(robotBridge.GetName(), "Clutch", "io", "CLUTCH");
