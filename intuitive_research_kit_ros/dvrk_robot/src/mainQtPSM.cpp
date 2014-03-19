@@ -141,6 +141,9 @@ int main(int argc, char** argv)
   robotBridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>(
               config_name, "SetPositionCartesian", "/dvrk_psm/set_position_cartesian");
 
+  robotBridge.AddSubscriberToWriteCommand<bool, std_msgs::Bool>(
+              "PSM-PID","Enable","/dvrk_psm/enable_pid");
+
   robotBridge.AddSubscriberToWriteCommand<prmPositionJointSet, sensor_msgs::JointState>(
               "PSM-PID","SetPositionJoint","/dvrk_psm/set_joint_position");
 

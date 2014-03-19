@@ -309,19 +309,25 @@ int main(int argc, char ** argv)
     rosBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
                 "MTML", "GetPositionJoint", "/dvrk_mtml/joint_position_current");
 
-    rosBridge.AddSubscriberToWriteCommand<prmPositionJointSet, sensor_msgs::JointState>(
-                "PSM1", "SetPositionJoint", "/dvrk_psm1/set_position_joint");
-
     rosBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
                 "MTMR", "GetPositionJoint", "/dvrk_mtmr/joint_position_current");
     rosBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
                 "PSM1", "GetPositionJoint", "/dvrk_psm1/joint_position_current");
+
+    rosBridge.AddPublisherFromReadCommand<prmPositionCartesianGet, geometry_msgs::Pose>(
+                "PSM1", "GetPositionCartesian", "/dvrk_psm1/joint_position_cartesian");
+
+    rosBridge.AddSubscriberToWriteCommand<std::string , std_msgs::String>(
+                "PSM1", "SetRobotControlState", "/dvrk_psm1/set_robot_state");
+
+    rosBridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>(
+                "PSM1", "SetPositionCartesian", "/dvrk_psm1/set_cartesian_pose");
+
     rosBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
                 "PSM2", "GetPositionJoint", "/dvrk_psm2/joint_position_current");
 
     componentManager->AddComponent(&rosBridge);
     componentManager->Connect(rosBridge.GetName(), "MTML", "MTML", "Robot");
-    componentManager->Connect(rosBridge.GetName(),"PSM1","PSM1-PID","Controller");
     componentManager->Connect(rosBridge.GetName(), "MTMR", "MTMR", "Robot");
     componentManager->Connect(rosBridge.GetName(), "PSM1", "PSM1", "Robot");
     componentManager->Connect(rosBridge.GetName(), "PSM2", "PSM2", "Robot");
