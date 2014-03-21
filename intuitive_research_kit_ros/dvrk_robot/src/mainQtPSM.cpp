@@ -130,6 +130,12 @@ int main(int argc, char** argv)
   robotBridge.AddSubscriberToWriteCommand<std::string, std_msgs::String>(
         config_name, "SetRobotControlState", "/dvrk_psm/set_robot_state");
 
+  robotBridge.AddSubscriberToWriteCommand<bool, std_msgs::Bool>(
+              "PSM-PID","Enable","/dvrk_psm/enable_pid");
+
+  robotBridge.AddSubscriberToWriteCommand<prmPositionJointSet, sensor_msgs::JointState>(
+              "PSM-PID","SetPositionJoint","/dvrk_psm/set_position_joint");
+
   // joint position
   robotBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
         config_name, "GetPositionJoint", "/dvrk_psm/joint_position_current");
@@ -141,15 +147,8 @@ int main(int argc, char** argv)
   robotBridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>(
               config_name, "SetPositionCartesian", "/dvrk_psm/set_position_cartesian");
 
-  robotBridge.AddSubscriberToWriteCommand<bool, std_msgs::Bool>(
-              "PSM-PID","Enable","/dvrk_psm/enable_pid");
-
-  robotBridge.AddSubscriberToWriteCommand<prmPositionJointSet, sensor_msgs::JointState>(
-              "PSM-PID","SetPositionJoint","/dvrk_psm/set_joint_position");
-
   componentManager->AddComponent(&robotBridge);
   componentManager->Connect(robotBridge.GetName(), config_name, psm->GetName(), "Robot");
-//  componentManager->Connect(robotBridge.GetName(), config_name, pid->GetName(), "Controller");
   componentManager->Connect(robotBridge.GetName(), "PSM-PID", pid->GetName(),"Controller");
 
 //  componentManager->Connect(robotBridge.GetName(), "Clutch", "io", "CLUTCH");

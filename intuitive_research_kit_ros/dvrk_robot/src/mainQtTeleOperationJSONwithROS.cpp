@@ -308,23 +308,37 @@ int main(int argc, char ** argv)
     mtsROSBridge rosBridge("RobotBridge", 20 * cmn_ms, true);
     rosBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
                 "MTML", "GetPositionJoint", "/dvrk_mtml/joint_position_current");
-
     rosBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
                 "MTMR", "GetPositionJoint", "/dvrk_mtmr/joint_position_current");
     rosBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
                 "PSM1", "GetPositionJoint", "/dvrk_psm1/joint_position_current");
-
+    rosBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
+                "PSM2", "GetPositionJoint", "/dvrk_psm2/joint_position_current");
     rosBridge.AddPublisherFromReadCommand<prmPositionCartesianGet, geometry_msgs::Pose>(
                 "PSM1", "GetPositionCartesian", "/dvrk_psm1/joint_position_cartesian");
+    rosBridge.AddPublisherFromReadCommand<prmPositionCartesianGet, geometry_msgs::Pose>(
+                "PSM2", "GetPositionCartesian", "/dvrk_psm2/joint_position_cartesian");
+    rosBridge.AddPublisherFromReadCommand<prmPositionCartesianGet, geometry_msgs::Pose>(
+                "MTML", "GetPositionCartesian", "/dvrk_mtml/joint_position_cartesian");
+    rosBridge.AddPublisherFromReadCommand<prmPositionCartesianGet, geometry_msgs::Pose>(
+                "MTMR", "GetPositionCartesian", "/dvrk_mtmr/joint_position_cartesian");
 
     rosBridge.AddSubscriberToWriteCommand<std::string , std_msgs::String>(
                 "PSM1", "SetRobotControlState", "/dvrk_psm1/set_robot_state");
-
     rosBridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>(
                 "PSM1", "SetPositionCartesian", "/dvrk_psm1/set_cartesian_pose");
-
-    rosBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
-                "PSM2", "GetPositionJoint", "/dvrk_psm2/joint_position_current");
+    rosBridge.AddSubscriberToWriteCommand<std::string , std_msgs::String>(
+                "PSM2", "SetRobotControlState", "/dvrk_psm2/set_robot_state");
+    rosBridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>(
+                "PSM2", "SetPositionCartesian", "/dvrk_psm2/set_cartesian_pose");
+    rosBridge.AddSubscriberToWriteCommand<std::string , std_msgs::String>(
+                "MTML", "SetRobotControlState", "/dvrk_mtml/set_robot_state");
+    rosBridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>(
+                "MTML", "SetPositionCartesian", "/dvrk_mtml/set_cartesian_pose");
+    rosBridge.AddSubscriberToWriteCommand<std::string , std_msgs::String>(
+                "MTMR", "SetRobotControlState", "/dvrk_mtmr/set_robot_state");
+    rosBridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>(
+                "MTMR", "SetPositionCartesian", "/dvrk_mtmr/set_cartesian_pose");
 
     componentManager->AddComponent(&rosBridge);
     componentManager->Connect(rosBridge.GetName(), "MTML", "MTML", "Robot");

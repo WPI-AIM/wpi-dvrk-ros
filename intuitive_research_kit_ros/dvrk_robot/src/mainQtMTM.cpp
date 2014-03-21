@@ -128,15 +128,18 @@ int main(int argc, char** argv)
   // set robot state
   robotBridge.AddSubscriberToWriteCommand<std::string, std_msgs::String>(
               config_name, "SetRobotControlState", "/dvrk_mtm/set_robot_state");
+  // clutch pedal
+  //  robotBridge.AddPublisherFromReadCommand<bool, std_msgs::Bool>(
+  //        "Clutch", "Button", "/dvrk_footpedal/clutch_state");
+    robotBridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>(
+                config_name, "SetPositionCartesian", "/dvrk_mtm/set_position_cartesian");
 
-// robotBridge.AddSubscriberToWriteCommand<prmPositionCartesianGet, sensor_msgs::JointState>(
-//             "pid", "SetRobotJointPosition", "/dvrk_mtm/set_robot_joint_positions");
-
-
+    robotBridge.AddSubscriberToWriteCommand<prmPositionJointSet, sensor_msgs::JointState>(
+                "MTM-PID","SetPositionJoint","/dvrk_mtm/set_position_joint");
 
   // joint position
   robotBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
-        config_name, "GetPositionJoint", "/dvrk_mtm/joint_positions_current");
+        config_name, "GetPositionJoint", "/dvrk_mtm/joint_position_current");
 
   // cartesian position
   robotBridge.AddPublisherFromReadCommand<prmPositionCartesianGet, geometry_msgs::Pose>(
@@ -144,16 +147,7 @@ int main(int argc, char** argv)
 
   // gripper position
   robotBridge.AddPublisherFromReadCommand<double, std_msgs::Float32>  (
-        config_name, "GetGripperPosition", "/dvrk_mtm/gripper_position");
-
-  // clutch pedal
-//  robotBridge.AddPublisherFromReadCommand<bool, std_msgs::Bool>(
-//        "Clutch", "Button", "/dvrk_footpedal/clutch_state");
-  robotBridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>(
-              config_name, "SetPositionCartesian", "/dvrk_mtm/set_position_cartesian");
-
-  robotBridge.AddSubscriberToWriteCommand<prmPositionJointSet, sensor_msgs::JointState>(
-              "MTM-PID","SetPositionJoint","/dvrk_mtm/set_joint_positions");
+        config_name, "GetGripperPosition", "/dvrk_mtm/gripper_position_current");
 
   componentManager->AddComponent(&robotBridge);
   componentManager->Connect(robotBridge.GetName(), config_name, mtm->GetName(), "Robot");
