@@ -22,6 +22,38 @@ int main(int argc, char ** argv)
     moveit::planning_interface::PlanningSceneInterface scene_interface;
     ros::Publisher display_publisher = node.advertise<moveit_msgs::DisplayTrajectory>("/move_group/display_planned_path", 1, true);
     moveit_msgs::DisplayTrajectory display_trajectory;
+    ros::Publisher planning_scene_diff_publisher = node.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
+    while(planning_scene_diff_publisher.getNumSubscribers() < 1)
+    {
+      ros::WallDuration sleep_t(0.5);
+      sleep_t.sleep();
+    }
+    ROS_INFO("Entering Collision Placing Code");
+    moveit_msgs::CollisionObject collision_object;
+    collision_object.id = "box";
+
+    shape_msgs::SolidPrimitive prim;
+    prim.type = prim.BOX;
+    prim.dimensions.resize(3);
+    prim.dimensions[0] = 0.05;
+    prim.dimensions[1] = 0.05;
+    prim.dimensions[2] = 0.05;
+
+    collision_object.primitives.push_back(prim);
+
+    geometry_msgs::Pose prim_pose;
+    prim_pose.orientation.w = 1.0;
+    prim_pose.position.x = -0.22;
+    prim_pose.position.y = -0.45;
+    prim_pose.position.z = 0.43;
+
+    collision_object.primitive_poses.push_back(prim_pose);
+
+    ROS_INFO("Adding the object into the world at the location of the right wrist.");
+    moveit_msgs::PlanningScene planning_scene;
+    planning_scene.world.collision_objects.push_back(collision_object);
+    planning_scene.is_diff = true;
+    planning_scene_diff_publisher.publish(planning_scene);
     ROS_INFO("Reference frame: %s", group.getPlanningFrame().c_str());
     ROS_INFO("End Effector name is %s ", group.getEndEffectorLink().c_str());
 
@@ -49,38 +81,8 @@ int main(int argc, char ** argv)
     target_pose.position.z +=0.1;
     waypoints.push_back(target_pose);  // down and right (back to start)
     moveit_msgs::RobotTrajectory trajectory;
-    double fraction = group.computeCartesianPath(waypoints,0.01,0.0,trajectory,0);
+    double fraction = group.computeCartesianPath(waypoints,0.01,0.0,trajectory,true);
     display_trajectory.trajectory.push_back(trajectory);
     display_publisher.publish(display_trajectory);
-
-    ros::Publisher planning_scene_diff_publisher = node.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
-    while(planning_scene_diff_publisher.getNumSubscribers() < 1)
-    {
-      ros::WallDuration sleep_t(0.5);
-      sleep_t.sleep();
-    }
-    ROS_INFO("Entering Collision Placing Code");
-    moveit_msgs::CollisionObject collision_object;
-    collision_object.id = "box";
-
-    shape_msgs::SolidPrimitive prim;
-    prim.type = prim.BOX;
-    prim.dimensions.resize(3);
-    prim.dimensions[0] = 0.1;
-    prim.dimensions[1] = 0.1;
-    prim.dimensions[2] = 0.1;
-
-    collision_object.primitives.push_back(prim);
-
-    geometry_msgs::Pose prim_pose;
-    prim_pose.orientation.w = 1.0;
-
-    collision_object.primitive_poses.push_back(prim_pose);
-
-    ROS_INFO("Adding the object into the world at the location of the right wrist.");
-    moveit_msgs::PlanningScene planning_scene;
-    planning_scene.world.collision_objects.push_back(collision_object);
-    planning_scene.is_diff = true;
-    planning_scene_diff_publisher.publish(planning_scene);
     return 0;
 }
