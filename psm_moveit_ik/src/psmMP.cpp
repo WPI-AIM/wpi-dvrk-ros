@@ -18,8 +18,8 @@ int main(int argc, char ** argv)
 {
     ros::init(argc,argv,"psm_MotionPlanning_node");
     ros::NodeHandle node;
+
     moveit::planning_interface::MoveGroup group("full_chain");
-    moveit::planning_interface::PlanningSceneInterface scene_interface;
     ros::Publisher display_publisher = node.advertise<moveit_msgs::DisplayTrajectory>("/move_group/display_planned_path", 1, true);
     moveit_msgs::DisplayTrajectory display_trajectory;
     ros::Publisher planning_scene_diff_publisher = node.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
