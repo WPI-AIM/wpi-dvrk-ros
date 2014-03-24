@@ -142,6 +142,8 @@ int main(int argc, char** argv)
   // joint position
   robotBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
               "PSM-PID", "GetPositionJoint", "/dvrk_psm/joint_position_current");
+  robotBridge.AddSubscriberToWriteCommand<prmForceTorqueJointSet , sensor_msgs::JointState>(
+              "PSM-PID", "SetTorqueJoint", "/dvrk_psm/set_joint_effort");
 
   // cartesian position
   robotBridge.AddPublisherFromReadCommand<prmPositionCartesianGet, geometry_msgs::Pose>(

@@ -29,6 +29,7 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisstParameterTypes/prmPositionJointGet.h>
 #include <cisstParameterTypes/prmPositionCartesianSet.h>
 #include <cisstParameterTypes/prmPositionJointSet.h>
+#include <cisstParameterTypes/prmForceTorqueJointSet.h>
 
 // ros include
 #include <ros/ros.h>
@@ -59,6 +60,7 @@ void mtsROSToCISST(const geometry_msgs::Transform & rosData, prmPositionCartesia
 // This Functions works for the PSM now, however still under work for working
 // on the MTMs
 void mtsROSToCISST(const sensor_msgs::JointState & rosData, prmPositionJointSet & cisstData);
+void mtsROSToCISST(const sensor_msgs::JointState & rosData, prmForceTorqueJointSet & cisstData);
 // vctDoubleVec
 void mtsROSToCISST(const cisst_msgs::vctDoubleVec & rosData, vctDoubleVec & cisstData);
 

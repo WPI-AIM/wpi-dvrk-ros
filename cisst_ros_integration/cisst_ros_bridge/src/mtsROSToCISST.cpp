@@ -95,6 +95,16 @@ void mtsROSToCISST(const sensor_msgs::JointState & rosData, prmPositionJointSet 
     }
     cisstData.SetGoal(DesiredPosition);
 }
+// This function has been implemented as a TEST BY ADNAN MUNAWAR to apply torques to Individual Joints
+void mtsROSToCISST(const sensor_msgs::JointState &rosData, prmForceTorqueJointSet &cisstData)
+{
+    vctDoubleVec newVec;
+    newVec.SetSize(rosData.effort.size());
+    for (std::size_t i = 0; i < rosData.effort.size(); ++i) {
+        newVec.at(i) = rosData.effort[i];
+    }
+    cisstData.SetForceTorque(newVec);
+}
 
 void mtsROSToCISST(const cisst_msgs::vctDoubleVec & rosData, vctDoubleVec & cisstData)
 {

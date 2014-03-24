@@ -137,6 +137,11 @@ int main(int argc, char** argv)
     robotBridge.AddSubscriberToWriteCommand<prmPositionJointSet, sensor_msgs::JointState>(
                 "MTM-PID","SetPositionJoint","/dvrk_mtm/set_position_joint");
 
+    robotBridge.AddPublisherFromReadCommand<vctDoubleVec, cisst_msgs::vctDoubleVec>(
+                "MTM-PID", "GetEffortJoint", "/dvrk_mtm/joint_effort_current");
+    robotBridge.AddSubscriberToWriteCommand<prmForceTorqueJointSet , sensor_msgs::JointState>(
+                "MTM-PID", "SetTorqueJoint", "/dvrk_mtm/set_joint_effort");
+
   // joint position
   robotBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
         config_name, "GetPositionJoint", "/dvrk_mtm/joint_position_current");
