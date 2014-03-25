@@ -131,15 +131,18 @@ int main(int argc, char** argv)
   // clutch pedal
   //  robotBridge.AddPublisherFromReadCommand<bool, std_msgs::Bool>(
   //        "Clutch", "Button", "/dvrk_footpedal/clutch_state");
-    robotBridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>(
+  robotBridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>(
                 config_name, "SetPositionCartesian", "/dvrk_mtm/set_position_cartesian");
 
-    robotBridge.AddSubscriberToWriteCommand<prmPositionJointSet, sensor_msgs::JointState>(
+  robotBridge.AddSubscriberToWriteCommand<prmPositionJointSet, sensor_msgs::JointState>(
                 "MTM-PID","SetPositionJoint","/dvrk_mtm/set_position_joint");
 
-    robotBridge.AddPublisherFromReadCommand<vctDoubleVec, cisst_msgs::vctDoubleVec>(
+  robotBridge.AddPublisherFromReadCommand<vctDoubleVec, cisst_msgs::vctDoubleVec>(
                 "MTM-PID", "GetEffortJoint", "/dvrk_mtm/joint_effort_current");
-    robotBridge.AddSubscriberToWriteCommand<prmForceTorqueJointSet , sensor_msgs::JointState>(
+
+    // Finally Working Form; However it is still unsafe since there is no safety check.
+    // Use with caution and with your hand on the E-Stop.
+  robotBridge.AddSubscriberToWriteCommand<prmForceTorqueJointSet , sensor_msgs::JointState>(
                 "MTM-PID", "SetTorqueJoint", "/dvrk_mtm/set_joint_effort");
 
   // joint position

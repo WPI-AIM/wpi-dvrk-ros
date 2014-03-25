@@ -142,6 +142,9 @@ int main(int argc, char** argv)
   // joint position
   robotBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
               "PSM-PID", "GetPositionJoint", "/dvrk_psm/joint_position_current");
+
+  // Finally Working Form; However it is still unsafe since there is no safety check.
+  // Use with caution and with your hand on the E-Stop.
   robotBridge.AddSubscriberToWriteCommand<prmForceTorqueJointSet , sensor_msgs::JointState>(
               "PSM-PID", "SetTorqueJoint", "/dvrk_psm/set_joint_effort");
 
