@@ -1,14 +1,5 @@
-<!-- PSM right  -->
+<!-- Both MTMs  -->
 <launch>
-
-    <!-- dvrk psm -->
-    <node name="dvrk_psm_ros_node"
-        pkg="dvrk_robot"
-        type="dvrk_psm_ros"
-        args="-i $(find dvrk_robot)/config/sawRobotIO1394-PSM1-28007.xml
-              -p $(find dvrk_robot)/config/sawControllersPID-PSM.xml
-              -k $(find dvrk_robot)/config/dvpsm.rob
-              -n PSM1"/>
 
     <arg name="model" default="$(find dvrk_model)/model/psm_one.urdf.xacro" />
     <arg name="gui" default="true" />
@@ -25,10 +16,5 @@
     <node name="joint_state_publisher"
           pkg="joint_state_publisher"
           type="joint_state_publisher" />
-
-    <node name="actual_psm_jp" 
-          pkg="dvrk_joint_publisher"
-          type="actual_psm_control.py"/>
-  
-  
+   
 </launch>

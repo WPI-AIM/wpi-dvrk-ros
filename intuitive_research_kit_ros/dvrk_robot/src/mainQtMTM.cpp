@@ -125,41 +125,31 @@ int main(int argc, char** argv)
   mtsROSBridge robotBridge("RobotBridge", 20 * cmn_ms, true);
 
   // connect to mtm
-  // set robot state
-  robotBridge.AddSubscriberToWriteCommand<std::string, std_msgs::String>(
-              config_name, "SetRobotControlState", "/dvrk_mtm/set_robot_state");
-  // clutch pedal
-  //  robotBridge.AddPublisherFromReadCommand<bool, std_msgs::Bool>(
-  //        "Clutch", "Button", "/dvrk_footpedal/clutch_state");
-  robotBridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>(
-                config_name, "SetPositionCartesian", "/dvrk_mtm/set_position_cartesian");
-
-  robotBridge.AddSubscriberToWriteCommand<prmPositionJointSet, sensor_msgs::JointState>(
-                "MTM-PID","SetPositionJoint","/dvrk_mtm/set_position_joint");
-
-  robotBridge.AddPublisherFromReadCommand<vctDoubleVec, cisst_msgs::vctDoubleVec>(
-                "MTM-PID", "GetEffortJoint", "/dvrk_mtm/joint_effort_current");
-
-    // Finally Working Form; However it is still unsafe since there is no safety check.
-    // Use with caution and with your hand on the E-Stop.
-  robotBridge.AddSubscriberToWriteCommand<prmForceTorqueJointSet , sensor_msgs::JointState>(
-                "MTM-PID", "SetTorqueJoint", "/dvrk_mtm/set_joint_effort");
-
-  // joint position
   robotBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
         config_name, "GetPositionJoint", "/dvrk_mtm/joint_position_current");
-
-  // cartesian position
   robotBridge.AddPublisherFromReadCommand<prmPositionCartesianGet, geometry_msgs::Pose>(
         config_name, "GetPositionCartesian", "/dvrk_mtm/cartesian_pose_current");
-
-  // gripper position
   robotBridge.AddPublisherFromReadCommand<double, std_msgs::Float32>  (
         config_name, "GetGripperPosition", "/dvrk_mtm/gripper_position_current");
+  robotBridge.AddPublisherFromReadCommand<vctDoubleVec, cisst_msgs::vctDoubleVec>(
+        pid->GetName(), "GetEffortJoint", "/dvrk_mtm/joint_effort_current");
+
+
+  // Finally Working Form; However it is still unsafe since there is no safety check.
+  // Use with caution and with your hand on the E-Stop.
+  robotBridge.AddSubscriberToWriteCommand<prmForceTorqueJointSet , sensor_msgs::JointState>(
+        pid->GetName(), "SetTorqueJoint", "/dvrk_mtm/set_joint_effort");
+  robotBridge.AddSubscriberToWriteCommand<prmPositionJointSet, sensor_msgs::JointState>(
+        pid->GetName(),"SetPositionJoint","/dvrk_mtm/set_position_joint");
+  robotBridge.AddSubscriberToWriteCommand<std::string, std_msgs::String>(
+        config_name, "SetRobotControlState", "/dvrk_mtm/set_robot_state");
+  robotBridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>(
+        config_name, "SetPositionCartesian", "/dvrk_mtm/set_position_cartesian");
+
 
   componentManager->AddComponent(&robotBridge);
   componentManager->Connect(robotBridge.GetName(), config_name, mtm->GetName(), "Robot");
-  componentManager->Connect(robotBridge.GetName(), "MTM-PID", pid->GetName(), "Controller");
+  componentManager->Connect(robotBridge.GetName(), pid->GetName(), pid->GetName(), "Controller");
 //  componentManager->Connect(robotBridge.GetName(), "Clutch", "io", "CLUTCH");
 
   //-------------------------------------------------------

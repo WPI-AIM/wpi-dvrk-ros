@@ -124,40 +124,32 @@ int main(int argc, char** argv)
            ,config_kinematics.c_str());
   // ros wrapper
   mtsROSBridge robotBridge("RobotBridge", 20 * cmn_ms, true);
-
   // connect to psm
-  // set robot state
-  robotBridge.AddSubscriberToWriteCommand<std::string, std_msgs::String>(
-        config_name, "SetRobotControlState", "/dvrk_psm/set_robot_state");
 
-  robotBridge.AddSubscriberToWriteCommand<bool, std_msgs::Bool>(
-              "PSM-PID","Enable","/dvrk_psm/enable_pid");
-
-  robotBridge.AddSubscriberToWriteCommand<prmPositionJointSet, sensor_msgs::JointState>(
-              "PSM-PID","SetPositionJoint","/dvrk_psm/set_position_joint");
-
+  robotBridge.AddPublisherFromReadCommand<prmPositionCartesianGet, geometry_msgs::Pose>(
+        config_name, "GetPositionCartesian", "/dvrk_psm/cartesian_pose_current");
   robotBridge.AddPublisherFromReadCommand<vctDoubleVec, cisst_msgs::vctDoubleVec>(
-              "PSM-PID", "GetEffortJoint", "/dvrk_psm/joint_effort_current");
-
-  // joint position
+        pid->GetName(), "GetEffortJoint", "/dvrk_psm/joint_effort_current");
   robotBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
-              "PSM-PID", "GetPositionJoint", "/dvrk_psm/joint_position_current");
+        pid->GetName(), "GetPositionJoint", "/dvrk_psm/joint_position_current");
+
 
   // Finally Working Form; However it is still unsafe since there is no safety check.
   // Use with caution and with your hand on the E-Stop.
   robotBridge.AddSubscriberToWriteCommand<prmForceTorqueJointSet , sensor_msgs::JointState>(
-              "PSM-PID", "SetTorqueJoint", "/dvrk_psm/set_joint_effort");
-
-  // cartesian position
-  robotBridge.AddPublisherFromReadCommand<prmPositionCartesianGet, geometry_msgs::Pose>(
-        config_name, "GetPositionCartesian", "/dvrk_psm/cartesian_pose_current");
-
+        pid->GetName(), "SetTorqueJoint", "/dvrk_psm/set_joint_effort");
+  robotBridge.AddSubscriberToWriteCommand<std::string, std_msgs::String>(
+        config_name, "SetRobotControlState", "/dvrk_psm/set_robot_state");
+  robotBridge.AddSubscriberToWriteCommand<bool, std_msgs::Bool>(
+        pid->GetName(),"Enable","/dvrk_psm/enable_pid");
+  robotBridge.AddSubscriberToWriteCommand<prmPositionJointSet, sensor_msgs::JointState>(
+        pid->GetName(),"SetPositionJoint","/dvrk_psm/set_position_joint");
   robotBridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>(
-              config_name, "SetPositionCartesian", "/dvrk_psm/set_position_cartesian");
+        config_name, "SetPositionCartesian", "/dvrk_psm/set_position_cartesian");
 
   componentManager->AddComponent(&robotBridge);
   componentManager->Connect(robotBridge.GetName(), config_name, psm->GetName(), "Robot");
-  componentManager->Connect(robotBridge.GetName(), "PSM-PID", pid->GetName(),"Controller");
+  componentManager->Connect(robotBridge.GetName(), pid->GetName(), pid->GetName(),"Controller");
 
 //  componentManager->Connect(robotBridge.GetName(), "Clutch", "io", "CLUTCH");
 
