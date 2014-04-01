@@ -71,9 +71,9 @@ if (cisst_FOUND_AS_REQUIRED)
     ${sawControllers_LIBRARY_DIR}
     ${sawTextToSpeech_LIBRARY_DIR})
 
-  add_executable (dvrk_mtm_ros src/mainQtMTM.cpp)
-  add_executable (dvrk_psm_ros src/mainQtPSM.cpp)
-  add_executable (dvrk_full_ros src/mainQtTeleOperationJSONwithROS.cpp)
+  add_executable (dvrk_mtm_ros src/pidMTM.cpp)
+  add_executable (dvrk_psm_ros src/pidPSM.cpp)
+  add_executable (dvrk_full_ros src/teleopJSON.cpp)
 	
   target_link_libraries (dvrk_mtm_ros
     ${sawRobotIO1394_LIBRARIES}
