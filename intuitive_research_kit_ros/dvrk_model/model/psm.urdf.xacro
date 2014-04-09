@@ -5,10 +5,24 @@
     <!-- fixed joint -->
     <joint name="${prefix}fixed_joint" type="fixed">
       <parent link="${parent_link}"/>
-      <child link="${prefix}psm_base_link"/>
+      <child link="${prefix}remote_center_link"/>
       <origin rpy="${rpy}" xyz="${xyz}"/>
     </joint>
-    
+
+    <!-- link rc: remote centre link -->
+    <link name="${prefix}remote_center_link">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+      </visual>
+    </link>    
+
+    <!-- fixed joint -->
+    <joint name="${prefix}rc_fixed_joint" type="fixed">
+      <parent link="${prefix}remote_center_link"/>
+      <child link="${prefix}psm_base_link"/>
+      <origin rpy="0 0 0" xyz="0 -0.369 0"/>
+    </joint>
+
     <!-- link 0: psm base link -->
     <link name="${prefix}psm_base_link">
       <visual>
@@ -122,7 +136,7 @@
       <parent link="${prefix}outer_pitch_bottom_link"/>
       <child link="${prefix}outer_insertion_link"/>
       <axis xyz="0 0 1"/>
-      <origin rpy="0 0 0" xyz="-0.520 0 -0.0175"/>
+      <origin rpy="0 0 0" xyz="-0.520 0 -0.0155"/>
       <mimic joint="${prefix}outer_pitch_joint_1" multiplier="1"/>
     </joint>
 
