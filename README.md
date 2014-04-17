@@ -1,8 +1,8 @@
 Authors :
-Adnan Munawar, Nirav Patel, Zihan Chen, Anton ...
+Adnan Munawar, Nirav Patel
 
 Description:
-CISST ROS Packages developed by WPI and John Hopkins.
+//To Do
 
 Packages:
-Todo
+//Todo
