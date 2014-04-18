@@ -14,6 +14,24 @@
 #include <moveit_msgs/PlanningScene.h>
 #include <ros/time.h>
 
+class Kinematic_group{
+
+public:
+    Kinematic_group();
+    moveit::planning_interface::MoveGroup * group;
+    ros::Subscriber trajectory_sub;
+    void trajectory_cb(geometry_msgs::PoseConstPtr & pose);
+
+protected:
+    ros::NodeHandle node;
+};
+
+Kinematic_group::Kinematic_group(){
+
+    this->group = new moveit::planning_interface::MoveGroup("full_chain");
+    this->trajectory_sub = node.subscribe("/mtm/trajectory_poses",1000,&Kinematic_group::trajectory_cb,this);
+}
+
 int main(int argc, char ** argv)
 {
     ros::init(argc,argv,"psm_MotionPlanning_node");
