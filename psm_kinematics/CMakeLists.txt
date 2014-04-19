@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(psm_moveit_ik)
+project(psm_kinematics)
 
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs

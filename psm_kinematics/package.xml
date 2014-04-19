@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package>
-  <name>psm_moveit_ik</name>
+  <name>psm_kinematics</name>
   <version>0.0.0</version>
-  <description>The psm_moveit_ik package</description>
+  <description>The psm_kinematics package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <!-- Example:  -->
