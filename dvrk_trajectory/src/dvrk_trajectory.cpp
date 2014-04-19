@@ -29,6 +29,7 @@ protected:
 
     ros::Publisher traj_pub;
     ros::Subscriber caog_sub;
+//    ros::Publisher traj_length_pub;
     ros::Subscriber pose_sub;
     ros::Subscriber js_sub;
     ros::Subscriber clutch_sub;
@@ -42,6 +43,7 @@ Traj::Traj()
     this->pose_sub = node.subscribe("/dvrk_mtm/cartesian_pose_current",1000, &Traj::pose_cb,this);
     this->js_sub = node.subscribe("/dvrk_mtm/joint_position_current",1000,&Traj::jointstate_cb,this);
     this->traj_pub = node.advertise<geometry_msgs::Pose>("/mtm/trajectory_poses",1);
+//    this->traj_length_pub = node.advertise<std_msgs::UInt64ConstPtr>("/mtm/trajectory_poses_size",1);
     this->clutch_sub = node.subscribe("/dvrk_footpedal/clutch_state",1000,&Traj::clutch_cb,this);
 }
 
