@@ -1,0 +1,18 @@
+<!-- Author: Adnan Munawar: Launch file for MTMs trajectory and motion planning nodes -->
+<launch>
+
+<!-- Launch plannig context with robot model-->
+  	<include file="$(find mtmr_rviz)/launch/planning_context.launch">
+    	<arg name="load_robot_description" value="true"/>
+  	</include>
+<!-- Launch movegroup for identifying the kinematic/planning groups we made for MTM -->
+	<include file="$(find mtmr_rviz)/launch/move_group.launch" />
+<!-- Launch Actual MTMR launch file -->
+  	<include file="$(find dvrk_robot)/launch/test_dvrk_mtm.launch" />
+<!-- Launch motion planning/kinematics nodes -->
+	<node name="mtm_mp_node" pkg="kinematics" type="mtmMP_node" />
+<!-- Launch trajectory listener and pose handler node -->
+	<node name="mtm_traj_node" pkg="dvrk_trajectory" type="dvrk_trajectory_node" />
+
+
+</launch>
