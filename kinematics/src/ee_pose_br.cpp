@@ -22,7 +22,7 @@ cartesian_pose::cartesian_pose()
 void cartesian_pose::listen()
 {
     try{
-        this->listener.lookupTransform("right_back_parallel_link","right_wrist_roll_link",ros::Time(0),this->tran);
+        this->listener.lookupTransform("right_back_parallel_link","right_wrist_roll_link",ros::Time(),this->tran);
     }
     catch(tf::TransformException ex)
     {
@@ -33,11 +33,14 @@ void cartesian_pose::listen()
 int main(int argc, char ** argv)
 {
     ros::init(argc,argv,"end_effector_pose_node");
+    ros::NodeHandle node;
     ros::Rate rate(500);
     cartesian_pose cart_pos;
+    cart_pos.listener.waitForTransform("right_back_parallel_link","right_wrist_roll_link",ros::Time(),ros::Duration(1.0));
     geometry_msgs::PoseStamped pose_stamped;
     while(ros::ok())
     {
+        cart_pos.listen();
         pose_stamped.header.stamp = cart_pos.tran.stamp_;
         pose_stamped.pose.position.x = cart_pos.tran.getOrigin().getX();
         pose_stamped.pose.position.y = cart_pos.tran.getOrigin().getY();
@@ -51,4 +54,6 @@ int main(int argc, char ** argv)
         ros::spinOnce();
         rate.sleep();
     }
+
+    return 0;
 }
