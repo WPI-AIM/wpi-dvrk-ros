@@ -29,7 +29,7 @@ pose_correction::pose_correction()
     this->base_tr.setOrigin(tf::Vector3(0.0,0.0,-0.190));
     this->base_tr.setRotation(tf::createQuaternionFromRPY(0.000, 0.000, 0.000));
     this->ee_tr.setOrigin(tf::Vector3(0.000, 0.000, 0.039));
-    this->ee_tr.setRotation(tf::createQuaternionFromRPY(0.0,3.142,1.571));
+    this->ee_tr.setRotation(tf::createQuaternionFromRPY(0.0,3.142,0.0));
     this->pub = this->node.advertise<geometry_msgs::PoseStamped>("/simulated_mtm/end_effector_pose",1);
 
     //Broadcast the frames in the constructor.
