@@ -10,6 +10,8 @@
 #include<std_msgs/Empty.h>
 #include<std_msgs/UInt64.h>
 #include<iostream>
+#include<geometry_msgs/Point32.h>
+#include<sensor_msgs/PointCloud.h>
 
 // Class for handling the capturing of poses from the MTM via Coag/Mono Presses and Publishing them on pressing the
 // Clutch. I plan to change that in the future to some other pedal or maybe the gripper pinch event
@@ -27,6 +29,7 @@ protected:
     std::size_t quene_size;
 // len is the number of poses that are being published in the trajectory publisher
     std_msgs::UInt64 len;
+    geometry_msgs::Point32 pc_point;
 
     std::vector<geometry_msgs::Pose> dvrk_pose;
     std::vector<sensor_msgs::JointState> dvrk_js;
@@ -37,8 +40,9 @@ protected:
     ros::Rate *rate;
 
     ros::Publisher traj_pub;
-    ros::Subscriber caog_sub;
     ros::Publisher traj_length_pub;
+
+    ros::Subscriber caog_sub;
     ros::Subscriber pose_sub;
     ros::Subscriber js_sub;
     ros::Subscriber clutch_sub;
@@ -51,9 +55,9 @@ Traj::Traj()
     this->caog_sub = node.subscribe("/dvrk_footpedal/coag_state",1000, &Traj::coag_cb, this);
     this->pose_sub = node.subscribe("/dvrk_mtm/cartesian_pose_current",1000, &Traj::pose_cb,this);
     this->js_sub = node.subscribe("/dvrk_mtm/joint_position_current",1000,&Traj::jointstate_cb,this);
+    this->clutch_sub = node.subscribe("/dvrk_footpedal/clutch_state",1000,&Traj::clutch_cb,this);
     this->traj_pub = node.advertise<geometry_msgs::Pose>("/mtm/trajectory_poses",1);
     this->traj_length_pub = node.advertise<std_msgs::UInt64>("/mtm/trajectory_poses_size",1);
-    this->clutch_sub = node.subscribe("/dvrk_footpedal/clutch_state",1000,&Traj::clutch_cb,this);
 }
 
 //This cb is called whenever a new pose is recieved.
