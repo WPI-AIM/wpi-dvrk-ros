@@ -29,6 +29,7 @@ protected:
     std::size_t quene_size;
 // len is the number of poses that are being published in the trajectory publisher
     std_msgs::UInt64 len;
+    sensor_msgs::PointCloud pc;
     geometry_msgs::Point32 pc_point;
 
     std::vector<geometry_msgs::Pose> dvrk_pose;
@@ -41,6 +42,7 @@ protected:
 
     ros::Publisher traj_pub;
     ros::Publisher traj_length_pub;
+    ros::Publisher traj_pc_pub;
 
     ros::Subscriber caog_sub;
     ros::Subscriber pose_sub;
@@ -58,6 +60,9 @@ Traj::Traj()
     this->clutch_sub = node.subscribe("/dvrk_footpedal/clutch_state",1000,&Traj::clutch_cb,this);
     this->traj_pub = node.advertise<geometry_msgs::Pose>("/mtm/trajectory_poses",1);
     this->traj_length_pub = node.advertise<std_msgs::UInt64>("/mtm/trajectory_poses_size",1);
+    this->traj_pc_pub = node.advertise<sensor_msgs::PointCloud>("/mtm/trajectory_points_pointcloud",1);
+
+    this->pc.header.frame_id = "right_base";
 }
 
 //This cb is called whenever a new pose is recieved.
@@ -79,13 +84,20 @@ void Traj::jointstate_cb(const sensor_msgs::JointStateConstPtr &js)
 
 //This cb is called whenever the coag/mono footpedal is pressed. The last pose and JointState message in quene is pushed
 //back to the corresponding vectors for storage.
-void Traj::coag_cb(const std_msgs::BoolConstPtr & state)
+void Traj::coag_cb(const std_msgs::BoolConstPtr & clutch_pressed)
 {
-    if (state->data == true){
+    if (clutch_pressed->data == true){
         if(this->dvrk_pose.size() > 0)
         {
             this->dvrk_traj_pose.push_back(this->dvrk_pose.back());
             this->dvrk_traj_js.push_back(this->dvrk_js.back());
+            this->pc_point.__connection_header = this->dvrk_pose.back().__connection_header;
+            this->pc_point.x = this->dvrk_pose.back().position.x;
+            this->pc_point.y = this->dvrk_pose.back().position.y;
+            this->pc_point.z = this->dvrk_pose.back().position.z;
+
+            this->pc.points.push_back(this->pc_point);
+            this->traj_pc_pub.publish(this->pc);
             ROS_INFO("Catching Pose: Size of Trajectory: %lu Poses", dvrk_traj_pose.size());
         }
         else{
