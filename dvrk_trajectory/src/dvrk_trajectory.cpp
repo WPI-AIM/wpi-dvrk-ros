@@ -19,10 +19,10 @@ class Traj
 {
 public:
     Traj();
-    void pose_cb(const geometry_msgs::PoseConstPtr & pose);
-    void coag_cb(const std_msgs::BoolConstPtr & state);
-    void jointstate_cb(const sensor_msgs::JointStateConstPtr & js);
-    void clutch_cb(const std_msgs::BoolConstPtr & state);
+    void mtm_ee_pose_cb(const geometry_msgs::PoseConstPtr & pose);
+    void coag_foot_pedal_cb(const std_msgs::BoolConstPtr & state);
+    void mtm_jointstate_cb(const sensor_msgs::JointStateConstPtr & js);
+    void clutch_foot_pedal_cb(const std_msgs::BoolConstPtr & state);
 
 protected:
 // quene_size decided the number of poses or joint_state messages to store before starting to store new ones and discarding old ones
@@ -32,10 +32,10 @@ protected:
     sensor_msgs::PointCloud pc;
     geometry_msgs::Point32 pc_point;
 
-    std::vector<geometry_msgs::Pose> dvrk_pose;
-    std::vector<sensor_msgs::JointState> dvrk_js;
-    std::vector<geometry_msgs::Pose> dvrk_traj_pose;
-    std::vector<sensor_msgs::JointState> dvrk_traj_js;
+    std::vector<geometry_msgs::Pose> mtm_ee_poses;
+    std::vector<sensor_msgs::JointState> mtm_joint_states;
+    std::vector<geometry_msgs::Pose> clicked_mtm_ee_pose;
+    std::vector<sensor_msgs::JointState> clicked_mtm_joint_states;
 
     ros::NodeHandle node;
     ros::Rate *rate;
@@ -54,10 +54,10 @@ Traj::Traj()
 {
     this->quene_size = 50;
     this->rate = new ros::Rate(1000);
-    this->caog_sub = node.subscribe("/dvrk_footpedal/coag_state",1000, &Traj::coag_cb, this);
-    this->pose_sub = node.subscribe("/dvrk_mtm/cartesian_pose_current",1000, &Traj::pose_cb,this);
-    this->js_sub = node.subscribe("/dvrk_mtm/joint_position_current",1000,&Traj::jointstate_cb,this);
-    this->clutch_sub = node.subscribe("/dvrk_footpedal/clutch_state",1000,&Traj::clutch_cb,this);
+    this->caog_sub = node.subscribe("/dvrk_footpedal/coag_state",1000, &Traj::coag_foot_pedal_cb, this);
+    this->pose_sub = node.subscribe("/dvrk_mtm/cartesian_pose_current",1000, &Traj::mtm_ee_pose_cb,this);
+    this->js_sub = node.subscribe("/dvrk_mtm/joint_position_current",1000,&Traj::mtm_jointstate_cb,this);
+    this->clutch_sub = node.subscribe("/dvrk_footpedal/clutch_state",1000,&Traj::clutch_foot_pedal_cb,this);
     this->traj_pub = node.advertise<geometry_msgs::Pose>("/mtm/trajectory_poses",1);
     this->traj_length_pub = node.advertise<std_msgs::UInt64>("/mtm/trajectory_poses_size",1);
     this->traj_pc_pub = node.advertise<sensor_msgs::PointCloud>("/mtm/trajectory_points_pointcloud",1);
@@ -66,39 +66,39 @@ Traj::Traj()
 }
 
 //This cb is called whenever a new pose is recieved.
-void Traj::pose_cb(const geometry_msgs::PoseConstPtr & pose)
+void Traj::mtm_ee_pose_cb(const geometry_msgs::PoseConstPtr & pose)
 {
-    if (this->dvrk_pose.size() >= quene_size){
-        this->dvrk_pose.clear();
+    if (this->mtm_ee_poses.size() >= quene_size){
+        this->mtm_ee_poses.clear();
     }
-    this->dvrk_pose.push_back(*pose.get());
+    this->mtm_ee_poses.push_back(*pose.get());
 }
 //This cb is called whenever a new JointState message is recieved.
-void Traj::jointstate_cb(const sensor_msgs::JointStateConstPtr &js)
+void Traj::mtm_jointstate_cb(const sensor_msgs::JointStateConstPtr &js)
 {
-    if (this->dvrk_pose.size() >= quene_size){
-        this->dvrk_pose.clear();
+    if (this->mtm_ee_poses.size() >= quene_size){
+        this->mtm_ee_poses.clear();
     }
-    this->dvrk_js.push_back(*js.get());
+    this->mtm_joint_states.push_back(*js.get());
 }
 
 //This cb is called whenever the coag/mono footpedal is pressed. The last pose and JointState message in quene is pushed
 //back to the corresponding vectors for storage.
-void Traj::coag_cb(const std_msgs::BoolConstPtr & clutch_pressed)
+void Traj::coag_foot_pedal_cb(const std_msgs::BoolConstPtr & clutch_pressed)
 {
     if (clutch_pressed->data == true){
-        if(this->dvrk_pose.size() > 0)
+        if(this->mtm_ee_poses.size() > 0)
         {
-            this->dvrk_traj_pose.push_back(this->dvrk_pose.back());
-            this->dvrk_traj_js.push_back(this->dvrk_js.back());
-            this->pc_point.__connection_header = this->dvrk_pose.back().__connection_header;
-            this->pc_point.x = this->dvrk_pose.back().position.x;
-            this->pc_point.y = this->dvrk_pose.back().position.y;
-            this->pc_point.z = this->dvrk_pose.back().position.z;
+            this->clicked_mtm_ee_pose.push_back(this->mtm_ee_poses.back());
+            this->clicked_mtm_joint_states.push_back(this->mtm_joint_states.back());
+            this->pc_point.__connection_header = this->mtm_ee_poses.back().__connection_header;
+            this->pc_point.x = this->mtm_ee_poses.back().position.x;
+            this->pc_point.y = this->mtm_ee_poses.back().position.y;
+            this->pc_point.z = this->mtm_ee_poses.back().position.z;
 
             this->pc.points.push_back(this->pc_point);
             this->traj_pc_pub.publish(this->pc);
-            ROS_INFO("Catching Pose: Size of Trajectory: %lu Poses", dvrk_traj_pose.size());
+            ROS_INFO("Catching Pose: Size of Trajectory: %lu Poses", clicked_mtm_ee_pose.size());
         }
         else{
             ROS_ERROR("dvrk_traj vector's size is 0, something is wrong");
@@ -107,20 +107,20 @@ void Traj::coag_cb(const std_msgs::BoolConstPtr & clutch_pressed)
 }
 
 //This cb is called whenver the clutch is pressed. This functions is used to trigger the publishing of the poses and JointStates stored
-//in the coag_cb funciton.
+//in the coag_foot_pedal_cb funciton.
 
-void Traj::clutch_cb(const std_msgs::BoolConstPtr & state)
+void Traj::clutch_foot_pedal_cb(const std_msgs::BoolConstPtr & state)
 {
     if( state->data == true)
     {
-    if (this->dvrk_traj_pose.size()>0){
-        ROS_INFO("Clutch Pressed: Publishing %lu Trajectory Poses",dvrk_traj_pose.size());
-        this->len.data = this->dvrk_traj_pose.size();
+    if (this->clicked_mtm_ee_pose.size()>0){
+        ROS_INFO("Clutch Pressed: Publishing %lu Trajectory Poses",clicked_mtm_ee_pose.size());
+        this->len.data = this->clicked_mtm_ee_pose.size();
         this->traj_length_pub.publish(len);
         this->rate->sleep();
-        for(size_t i=0 ; i < dvrk_traj_pose.size() ; i++)
+        for(size_t i=0 ; i < clicked_mtm_ee_pose.size() ; i++)
         {
-            this->traj_pub.publish(dvrk_traj_pose.at(i));
+            this->traj_pub.publish(clicked_mtm_ee_pose.at(i));
             ros::spinOnce();
             this->rate->sleep();
         }
