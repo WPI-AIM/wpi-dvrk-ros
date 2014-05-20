@@ -39,36 +39,36 @@ public:
 
 
 protected:
-    ros::NodeHandle node;
-    std::vector<geometry_msgs::Pose> waypoint;
-    moveit_msgs::RobotTrajectory path;
-    ros::Rate *rate;
-    std_msgs::UInt64 traj_size;
+    ros::NodeHandle node_;
+    std::vector<geometry_msgs::Pose> waypoint_;
+    moveit_msgs::RobotTrajectory path_;
+    ros::Rate *rate_;
+    std_msgs::UInt64 traj_size_;
 };
 
 Kinematic_group::Kinematic_group()
 {
-    this->rate = new ros::Rate(500);
+    this->rate_ = new ros::Rate(500);
     this->traj_generate = false;
     this->group = new moveit::planning_interface::MoveGroup("full_chain");
     this->group->setPoseReferenceFrame("right_base");
-    this->trajectory_sub = node.subscribe(
+    this->trajectory_sub = node_.subscribe(
                 "/mtm/trajectory_poses",1000,&Kinematic_group::trajectory_cb,this);
-    this->trajectory_size_sub = node.subscribe(
+    this->trajectory_size_sub = node_.subscribe(
                 "/mtm/trajectory_poses_size",1000,&Kinematic_group::trajectory_size_cb,this);
-    this->trajectory_pub = node.advertise<moveit_msgs::RobotTrajectory>(
+    this->trajectory_pub = node_.advertise<moveit_msgs::RobotTrajectory>(
                 "/moveit_mtm/waypoint",1);
 }
 
 void Kinematic_group::trajectory_size_cb(const std_msgs::UInt64ConstPtr &size)
 {
-    this->traj_size.data = size->data;
+    this->traj_size_.data = size->data;
 }
 
 void Kinematic_group::trajectory_cb(const geometry_msgs::PoseConstPtr &pose)
 {
-    this->waypoint.push_back(*pose.get());
-    if (this->waypoint.size() == this->traj_size.data)
+    this->waypoint_.push_back(*pose.get());
+    if (this->waypoint_.size() == this->traj_size_.data)
     {
         this->traj_generate = true;
     }
@@ -77,13 +77,13 @@ void Kinematic_group::trajectory_cb(const geometry_msgs::PoseConstPtr &pose)
 void Kinematic_group::generate_trajectory()
 {
     double fraction = this->group->computeCartesianPath(
-                this->waypoint,0.1,0,this->path);
+                this->waypoint_,0.1,0,this->path_);
 
-    if(this->path.joint_trajectory.points.size() > 0)
+    if(this->path_.joint_trajectory.points.size() > 0)
     {
-    this->trajectory_pub.publish(this->path);
+    this->trajectory_pub.publish(this->path_);
         ros::spinOnce();
-        this->rate->sleep();
+        this->rate_->sleep();
     }
     else
     {
@@ -100,7 +100,6 @@ void Kinematic_group::plan_path()
 int main(int argc, char ** argv)
 {
     ros::init(argc,argv,"mtm_kinematics_node");
-    ros::NodeHandle node;
     Kinematic_group traj;
     while(ros::ok())
     {
