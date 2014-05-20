@@ -35,6 +35,7 @@ public:
     void trajectory_size_cb(const std_msgs::UInt64ConstPtr & size);
     void generate_trajectory();
     void publish_trajectory();
+    void plan_path();
 
 
 protected:
@@ -88,6 +89,11 @@ void Kinematic_group::generate_trajectory()
     {
         ROS_INFO("Path not computed succesfully, try again");
     }
+}
+
+void Kinematic_group::plan_path()
+{
+
 }
 
 

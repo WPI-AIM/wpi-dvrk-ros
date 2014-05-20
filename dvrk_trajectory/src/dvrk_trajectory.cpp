@@ -69,7 +69,10 @@ Traj::Traj()
 void Traj::mtm_ee_pose_cb(const geometry_msgs::PoseConstPtr & pose)
 {
     if (this->mtm_ee_poses.size() >= quene_size){
-        this->mtm_ee_poses.clear();
+        // Not deleting the entire vector since the calls to ros subscriber do not seem to blocking,
+        // thus when this vector is used to fecth the last item in coag_foot_pedal_cb when its empty
+        // and just before the new value is filled in, error occurs.
+        this->mtm_ee_poses.erase(mtm_ee_poses.begin(),mtm_ee_poses.end()-1);
     }
     this->mtm_ee_poses.push_back(*pose.get());
 }
