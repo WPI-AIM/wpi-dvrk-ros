@@ -4,6 +4,7 @@
 #include <ros/ros.h>
 #include <moveit/move_group_interface/move_group.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
+#include <moveit/planning_scene/planning_scene.h>
 #include <moveit_msgs/DisplayTrajectory.h>
 #include <geometry_msgs/Transform.h>
 #include <moveit/robot_model_loader/robot_model_loader.h>
@@ -12,88 +13,107 @@
 #include <moveit/robot_state/conversions.h>
 #include <moveit/robot_state/robot_state.h>
 #include <moveit_msgs/PlanningScene.h>
+#include <moveit/collision_detection_fcl/collision_world_fcl.h>
+#include <moveit/collision_detection_fcl/collision_robot_fcl.h>
+#include <moveit/collision_detection/collision_tools.h>
 #include <ros/time.h>
 #include <std_msgs/UInt64.h>
+#include <std_msgs/Bool.h>
 
 class Kinematic_group{
 
 public:
     Kinematic_group();
     moveit::planning_interface::MoveGroup * group;
-    ros::Subscriber trajectory_sub;
-    ros::Subscriber trajectory_size_sub;
-    ros::Publisher trajectory_pub;
-    bool traj_generate;
+    moveit::planning_interface::MoveGroup::Plan plan_srv;
+    std::vector<geometry_msgs::Pose> poses_list;
+    moveit_msgs::RobotTrajectory trajectory;
+    collision_detection::CollisionRequest coll_req;
+    collision_detection::CollisionResult coll_res;
+    planning_scene::PlanningScene * g_planning_scene;
+    ros::Rate *rate_;
 
-    void trajectory_cb(const geometry_msgs::PoseConstPtr & pose);
-    void trajectory_size_cb(const std_msgs::UInt64ConstPtr & size);
-    void generate_trajectory();
-    void publish_trajectory();
+    ros::Publisher pose_pub;
+    ros::Publisher coll_marker_pub;
+
+    ros::Subscriber coag_sub;
+    ros::Subscriber clutch_sub;
+
+    void coag_cb(const std_msgs::BoolConstPtr &state);
+    void clutch_cb(const std_msgs::BoolConstPtr &state);
+    void compute_cart_path();
+
 
 protected:
     ros::NodeHandle node_;
-    std::vector<geometry_msgs::Pose> waypoint_;
     moveit_msgs::RobotTrajectory path_;
-    ros::Rate *rate_;
     std_msgs::UInt64 traj_size_;
 };
 
 Kinematic_group::Kinematic_group()
 {
-    this->rate_ = new ros::Rate(500);
-    this->traj_generate = false;
+    this->rate_ = new ros::Rate(50);
     this->group = new moveit::planning_interface::MoveGroup("full_chain");
-    this->trajectory_sub = node_.subscribe(
-                "/mtm/trajectory_poses",1000,&Kinematic_group::trajectory_cb,this);
-    this->trajectory_size_sub = node_.subscribe(
-                "/mtm/trajectory_poses_size",1000,&Kinematic_group::trajectory_size_cb,this);
-    this->trajectory_pub = node_.advertise<moveit_msgs::RobotTrajectory>(
-                "/moveit_mtm/waypoint",1);
+    this->g_planning_scene = new planning_scene::PlanningScene();
+    this->coll_req.group_name = this->group->getName();
+    this->coll_req.contacts = true;
+    this->coll_req.max_contacts = 100;
+    this->coll_req.verbose = false;
+
+
+    this->coag_sub = node_.subscribe("/dvrk_footpedal/coag_state",10,
+                                     &Kinematic_group::coag_cb, this);
+    this->clutch_sub = node_.subscribe("/dvrk_footpedal/clutch_state",10,
+                                       &Kinematic_group::clutch_cb, this);
+
+    this->pose_pub = node_.advertise<geometry_msgs::PoseStamped>
+            ("/mp_psm/cartesian_pose_current",1);
+    this->coll_marker_pub = node_.advertise<visualization_msgs::MarkerArray>
+            ("interactive_robot_marray",100);
 }
 
-void Kinematic_group::trajectory_size_cb(const std_msgs::UInt64ConstPtr &size)
+void Kinematic_group::coag_cb(const std_msgs::BoolConstPtr & state)
 {
-    this->traj_size_.data = size->data;
+    if(state->data == true){
+        this->poses_list.push_back(this->group->getCurrentPose().pose);
+    }
+
 }
 
-void Kinematic_group::trajectory_cb(const geometry_msgs::PoseConstPtr &pose)
+
+void Kinematic_group::clutch_cb(const std_msgs::BoolConstPtr & state)
 {
-    this->waypoint_.push_back(*pose.get());
-    if (this->waypoint_.size() == this->traj_size_.data)
-    {
-        this->traj_generate = true;
+    if(state->data == true){
+        this->compute_cart_path();
     }
 }
 
-void Kinematic_group::generate_trajectory()
-{
-    double fraction = this->group->computeCartesianPath(
-                this->waypoint_,0.1,0,this->path_);
+void Kinematic_group::compute_cart_path(){
 
-    if(this->path_.joint_trajectory.points.size() > 0)
-    {
-    this->trajectory_pub.publish(this->path_);
-        ros::spinOnce();
-        this->rate_->sleep();
-    }
-    else
-    {
-        ROS_INFO("Path not computed succesfully, try again");
-    }
+    double fraction = group->computeCartesianPath(this->poses_list,
+                                                 0.01,  // eef_step
+                                                 0.0,   // jump_threshold
+                                                 this->trajectory);
+
+    ROS_INFO("Cartesian path is (%.2f%% acheived)",
+          fraction * 100.0);
+    /* Sleep to give Rviz time to visualize the plan. */
+    sleep(5.0);
+
 }
 
 int main(int argc, char ** argv)
 {
-    ros::init(argc,argv,"psm_MotionPlanning_node");
+    ros::init(argc,argv,"psm_MotionPlanning");
     Kinematic_group traj;
+    geometry_msgs::PoseStamped pose;
     while(ros::ok())
     {
-        if(traj.traj_generate == true)
-        {
-            traj.generate_trajectory();
-            traj.traj_generate = false;
-        }
+        pose = traj.group->getCurrentPose();
+        traj.pose_pub.publish(pose);
+        traj.group->setStartStateToCurrentState();
         ros::spinOnce();
+        traj.rate_->sleep();
     }
 
     return 0;
