@@ -37,6 +37,7 @@ public:
     moveit_msgs::PlanningScene planning_scene_msg;
     moveit_msgs::PlanningSceneWorld world_msg;
     ros::Rate *rate_;
+    bool pose_cb_switch;
 
     ros::Publisher pose_pub;
     ros::Publisher coll_marker_pub;
@@ -51,6 +52,7 @@ public:
     void compute_cart_path();
     void publishMarkers(visualization_msgs::MarkerArray& markers);
     void planning_scene_cb(moveit_msgs::PlanningScene scene);
+    void check_collison();
 
 
 protected:
@@ -70,6 +72,7 @@ Kinematic_group::Kinematic_group()
     this->coll_req.contacts = true;
     this->coll_req.max_contacts = 100;
     this->coll_req.verbose = false;
+    this->pose_cb_switch = false;
 
     this->coag_sub = node_.subscribe(
                 "/dvrk_footpedal/coag_state",10,
@@ -91,7 +94,19 @@ void Kinematic_group::coag_cb(const std_msgs::BoolConstPtr & state)
 {
     if(state->data == true){
         this->poses_list.push_back(this->group->getCurrentPose().pose);
+
+        if(this->pose_cb_switch == false){
+            ROS_INFO("Setting Start State");
+            this->group->setStartState(*this->group->getCurrentState());
+            pose_cb_switch = true;
+        }
+        else{
+            ROS_INFO("Setting Goal State");
+            this->group->setJointValueTarget(*this->group->getCurrentState());
+            pose_cb_switch = false;
+        }
     }
+
 
 }
 
@@ -99,7 +114,9 @@ void Kinematic_group::coag_cb(const std_msgs::BoolConstPtr & state)
 void Kinematic_group::clutch_cb(const std_msgs::BoolConstPtr & state)
 {
     if(state->data == true){
-        this->compute_cart_path();
+        ROS_INFO("Planning Requested");
+        //this->compute_cart_path();
+        this->group->plan(this->plan_srv);
     }
 }
 
@@ -119,7 +136,7 @@ void Kinematic_group::compute_cart_path(){
 
 void Kinematic_group::planning_scene_cb(moveit_msgs::PlanningScene scene){
     this->world_msg = scene.world;
-    ROS_INFO("Processing Planning Scene Msg");
+    //ROS_INFO("Processing Planning Scene Msg");
     this->psm_planning_scene->processPlanningSceneWorldMsg(this->world_msg);
 }
 
@@ -142,47 +159,50 @@ void Kinematic_group::publishMarkers(visualization_msgs::MarkerArray& markers)
      coll_marker_pub.publish(psm_collision_points);
  }
 
+void Kinematic_group::check_collison(){
+
+    this->coll_res.clear();
+    this->psm_planning_scene->checkCollisionUnpadded(coll_req,coll_res,*group->getCurrentState(),
+                                            psm_planning_scene->getAllowedCollisionMatrix());
+    if (coll_res.collision)
+       {
+         ROS_INFO("COLLIDING contact_point_count=%d",(int)coll_res.contact_count);
+
+         if (coll_res.contact_count > 0)
+         {
+           std_msgs::ColorRGBA color;
+           color.r = 1.0;
+           color.g = 0.0;
+           color.b = 1.0;
+           color.a = 0.5;
+           visualization_msgs::MarkerArray markers;
+           collision_detection::getCollisionMarkersFromContacts(markers,
+                                                                group->getPlanningFrame().c_str(),
+                                                                coll_res.contacts,
+                                                                color,
+                                                                ros::Duration(), // remain until deleted
+                                                                0.01);
+           publishMarkers(markers);
+           }
+         }
+    else
+      {
+        //ROS_INFO("Not colliding");
+
+        // delete the old collision point markers
+        visualization_msgs::MarkerArray empty_marker_array;
+        publishMarkers(empty_marker_array);
+      }
+
+}
+
 int main(int argc, char ** argv)
 {
     ros::init(argc,argv,"psm_MotionPlanning");
     Kinematic_group traj;
-    geometry_msgs::PoseStamped pose;
     while(ros::ok())
     {
-        pose = traj.group->getCurrentPose();
-        traj.pose_pub.publish(pose);
-        traj.psm_planning_scene->checkCollisionUnpadded(traj.coll_req,traj.coll_res,*traj.group->getCurrentState(),
-                                                traj.psm_planning_scene->getAllowedCollisionMatrix());
-        if (traj.coll_res.collision)
-           {
-             ROS_INFO("COLLIDING contact_point_count=%d",(int)traj.coll_res.contact_count);
-
-             if (traj.coll_res.contact_count > 0)
-             {
-               std_msgs::ColorRGBA color;
-               color.r = 1.0;
-               color.g = 0.0;
-               color.b = 1.0;
-               color.a = 0.5;
-               visualization_msgs::MarkerArray markers;
-               collision_detection::getCollisionMarkersFromContacts(markers,
-                                                                    traj.group->getPlanningFrame().c_str(),
-                                                                    traj.coll_res.contacts,
-                                                                    color,
-                                                                    ros::Duration(), // remain until deleted
-                                                                    0.01);
-               traj.publishMarkers(markers);
-               }
-             }
-        else
-          {
-            //ROS_INFO("Not colliding");
-
-            // delete the old collision point markers
-            visualization_msgs::MarkerArray empty_marker_array;
-            traj.publishMarkers(empty_marker_array);
-          }
-
+        traj.check_collison();
         ros::spinOnce();
         traj.rate_->sleep();
     }
