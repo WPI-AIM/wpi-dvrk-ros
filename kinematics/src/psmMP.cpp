@@ -30,18 +30,27 @@ public:
     moveit_msgs::RobotTrajectory trajectory;
     collision_detection::CollisionRequest coll_req;
     collision_detection::CollisionResult coll_res;
-    planning_scene::PlanningScene * g_planning_scene;
+    planning_scene::PlanningScene * psm_planning_scene;
+    robot_model_loader::RobotModelLoader * robotModel;
+    robot_model::RobotModelPtr kinematic_model;
+    visualization_msgs::MarkerArray psm_collision_points;
+    moveit_msgs::PlanningScene planning_scene_msg;
+    moveit_msgs::PlanningSceneWorld world_msg;
     ros::Rate *rate_;
 
     ros::Publisher pose_pub;
     ros::Publisher coll_marker_pub;
 
+
     ros::Subscriber coag_sub;
     ros::Subscriber clutch_sub;
+    ros::Subscriber planning_scene_msg_sub;
 
     void coag_cb(const std_msgs::BoolConstPtr &state);
     void clutch_cb(const std_msgs::BoolConstPtr &state);
     void compute_cart_path();
+    void publishMarkers(visualization_msgs::MarkerArray& markers);
+    void planning_scene_cb(moveit_msgs::PlanningScene scene);
 
 
 protected:
@@ -54,22 +63,28 @@ Kinematic_group::Kinematic_group()
 {
     this->rate_ = new ros::Rate(50);
     this->group = new moveit::planning_interface::MoveGroup("full_chain");
-    this->g_planning_scene = new planning_scene::PlanningScene();
-    this->coll_req.group_name = this->group->getName();
+    this->robotModel = new robot_model_loader::RobotModelLoader("robot_description");
+    this->kinematic_model = robotModel->getModel();
+    this->psm_planning_scene = new planning_scene::PlanningScene(this->kinematic_model);
+    this->coll_req.group_name = "full_chain";
     this->coll_req.contacts = true;
     this->coll_req.max_contacts = 100;
     this->coll_req.verbose = false;
 
-
-    this->coag_sub = node_.subscribe("/dvrk_footpedal/coag_state",10,
+    this->coag_sub = node_.subscribe(
+                "/dvrk_footpedal/coag_state",10,
                                      &Kinematic_group::coag_cb, this);
-    this->clutch_sub = node_.subscribe("/dvrk_footpedal/clutch_state",10,
+    this->clutch_sub = node_.subscribe(
+                "/dvrk_footpedal/clutch_state",10,
                                        &Kinematic_group::clutch_cb, this);
+    this->planning_scene_msg_sub = node_.subscribe(
+                "/move_group/monitored_planning_scene",10,&Kinematic_group::planning_scene_cb,this);
+
 
     this->pose_pub = node_.advertise<geometry_msgs::PoseStamped>
             ("/mp_psm/cartesian_pose_current",1);
     this->coll_marker_pub = node_.advertise<visualization_msgs::MarkerArray>
-            ("interactive_robot_marray",100);
+            ("/interactive_robot_array",100);
 }
 
 void Kinematic_group::coag_cb(const std_msgs::BoolConstPtr & state)
@@ -102,6 +117,31 @@ void Kinematic_group::compute_cart_path(){
 
 }
 
+void Kinematic_group::planning_scene_cb(moveit_msgs::PlanningScene scene){
+    this->world_msg = scene.world;
+    ROS_INFO("Processing Planning Scene Msg");
+    this->psm_planning_scene->processPlanningSceneWorldMsg(this->world_msg);
+}
+
+void Kinematic_group::publishMarkers(visualization_msgs::MarkerArray& markers)
+ {
+   // delete old markers
+   if (psm_collision_points.markers.size())
+   {
+     for (int i=0; i<psm_collision_points.markers.size(); i++)
+       psm_collision_points.markers[i].action = visualization_msgs::Marker::DELETE;
+
+     coll_marker_pub.publish(psm_collision_points);
+   }
+
+   // move new markers into g_collision_points
+   std::swap(psm_collision_points.markers, markers.markers);
+
+   // draw new markers (if there are any)
+   if (psm_collision_points.markers.size())
+     coll_marker_pub.publish(psm_collision_points);
+ }
+
 int main(int argc, char ** argv)
 {
     ros::init(argc,argv,"psm_MotionPlanning");
@@ -111,10 +151,42 @@ int main(int argc, char ** argv)
     {
         pose = traj.group->getCurrentPose();
         traj.pose_pub.publish(pose);
-        traj.group->setStartStateToCurrentState();
+        traj.psm_planning_scene->checkCollisionUnpadded(traj.coll_req,traj.coll_res,*traj.group->getCurrentState(),
+                                                traj.psm_planning_scene->getAllowedCollisionMatrix());
+        if (traj.coll_res.collision)
+           {
+             ROS_INFO("COLLIDING contact_point_count=%d",(int)traj.coll_res.contact_count);
+
+             if (traj.coll_res.contact_count > 0)
+             {
+               std_msgs::ColorRGBA color;
+               color.r = 1.0;
+               color.g = 0.0;
+               color.b = 1.0;
+               color.a = 0.5;
+               visualization_msgs::MarkerArray markers;
+               collision_detection::getCollisionMarkersFromContacts(markers,
+                                                                    traj.group->getPlanningFrame().c_str(),
+                                                                    traj.coll_res.contacts,
+                                                                    color,
+                                                                    ros::Duration(), // remain until deleted
+                                                                    0.01);
+               traj.publishMarkers(markers);
+               }
+             }
+        else
+          {
+            //ROS_INFO("Not colliding");
+
+            // delete the old collision point markers
+            visualization_msgs::MarkerArray empty_marker_array;
+            traj.publishMarkers(empty_marker_array);
+          }
+
         ros::spinOnce();
         traj.rate_->sleep();
     }
+
 
     return 0;
 }
