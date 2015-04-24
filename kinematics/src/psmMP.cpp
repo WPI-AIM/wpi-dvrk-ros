@@ -38,6 +38,7 @@ public:
     moveit_msgs::PlanningSceneWorld world_msg;
     ros::Rate *rate_;
     bool pose_cb_switch;
+    bool do_planning_;
 
     ros::Publisher pose_pub;
     ros::Publisher coll_marker_pub;
@@ -73,6 +74,7 @@ Kinematic_group::Kinematic_group()
     this->coll_req.max_contacts = 100;
     this->coll_req.verbose = false;
     this->pose_cb_switch = false;
+    this->do_planning_ = false;
 
     this->coag_sub = node_.subscribe(
                 "/dvrk_footpedal/coag_state",10,
@@ -116,7 +118,7 @@ void Kinematic_group::clutch_cb(const std_msgs::BoolConstPtr & state)
     if(state->data == true){
         ROS_INFO("Planning Requested");
         //this->compute_cart_path();
-        this->group->plan(this->plan_srv);
+        this->do_planning_ = true;
     }
 }
 
@@ -200,13 +202,22 @@ int main(int argc, char ** argv)
 {
     ros::init(argc,argv,"psm_MotionPlanning");
     Kinematic_group traj;
+    ros::AsyncSpinner spinner(1);
+    spinner.start();
     while(ros::ok())
     {
         traj.check_collison();
-        ros::spinOnce();
+        if(traj.do_planning_ == true){
+           bool success =  traj.group->plan(traj.plan_srv);
+           ROS_INFO("Visualizing plan 2 (joint space goal) %s",success?"":"FAILED");
+           /* Sleep to give Rviz time to visualize the plan. */
+           sleep(5.0);
+           traj.do_planning_ = false;
+        }
+        //ros::spinOnce();
         traj.rate_->sleep();
     }
 
-
+    ros::shutdown();
     return 0;
 }
