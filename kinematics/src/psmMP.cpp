@@ -17,6 +17,8 @@
 #include <moveit/collision_detection_fcl/collision_robot_fcl.h>
 #include <moveit/collision_detection/collision_tools.h>
 #include <ros/time.h>
+#include <geometry_msgs/Point32.h>
+#include<sensor_msgs/PointCloud.h>
 #include <std_msgs/UInt64.h>
 #include <std_msgs/Bool.h>
 
@@ -36,20 +38,23 @@ public:
     visualization_msgs::MarkerArray psm_collision_points;
     moveit_msgs::PlanningScene planning_scene_msg;
     moveit_msgs::PlanningSceneWorld world_msg;
+    geometry_msgs::Point32 pc_point;
+    sensor_msgs::PointCloud pc;
     ros::Rate *rate_;
     bool pose_cb_switch;
     bool do_planning_;
 
     ros::Publisher pose_pub;
     ros::Publisher coll_marker_pub;
+    ros::Publisher traj_pc_pub;
 
 
     ros::Subscriber coag_sub;
     ros::Subscriber clutch_sub;
     ros::Subscriber planning_scene_msg_sub;
 
-    void coag_cb(const std_msgs::BoolConstPtr &state);
-    void clutch_cb(const std_msgs::BoolConstPtr &state);
+    void footpedal_cam_minus_cb(const std_msgs::BoolConstPtr &state);
+    void footpedal_camera_cb(const std_msgs::BoolConstPtr &state);
     void compute_cart_path();
     void publishMarkers(visualization_msgs::MarkerArray& markers);
     void planning_scene_cb(moveit_msgs::PlanningScene scene);
@@ -75,13 +80,14 @@ Kinematic_group::Kinematic_group()
     this->coll_req.verbose = false;
     this->pose_cb_switch = false;
     this->do_planning_ = false;
+    this->pc.header.frame_id = "world";
 
     this->coag_sub = node_.subscribe(
-                "/dvrk_footpedal/coag_state",10,
-                                     &Kinematic_group::coag_cb, this);
+                "/dvrk_footpedal/cam_minus_state",10,
+                                     &Kinematic_group::footpedal_cam_minus_cb, this);
     this->clutch_sub = node_.subscribe(
-                "/dvrk_footpedal/clutch_state",10,
-                                       &Kinematic_group::clutch_cb, this);
+                "/dvrk_footpedal/camera_state",10,
+                                       &Kinematic_group::footpedal_camera_cb, this);
     this->planning_scene_msg_sub = node_.subscribe(
                 "/move_group/monitored_planning_scene",10,&Kinematic_group::planning_scene_cb,this);
 
@@ -90,9 +96,11 @@ Kinematic_group::Kinematic_group()
             ("/mp_psm/cartesian_pose_current",1);
     this->coll_marker_pub = node_.advertise<visualization_msgs::MarkerArray>
             ("/interactive_robot_array",100);
+    this->traj_pc_pub = node_.advertise<sensor_msgs::PointCloud>
+            ("/psm/trajectory_points_pointcloud",1);
 }
 
-void Kinematic_group::coag_cb(const std_msgs::BoolConstPtr & state)
+void Kinematic_group::footpedal_cam_minus_cb(const std_msgs::BoolConstPtr & state)
 {
     if(state->data == true){
         this->poses_list.push_back(this->group->getCurrentPose().pose);
@@ -107,13 +115,24 @@ void Kinematic_group::coag_cb(const std_msgs::BoolConstPtr & state)
             this->group->setJointValueTarget(*this->group->getCurrentState());
             pose_cb_switch = false;
         }
+        this->pc_point.__connection_header = this->group->getCurrentPose().pose.__connection_header;
+        this->pc_point.x = this->group->getCurrentPose().pose.position.x;
+        this->pc_point.y = this->group->getCurrentPose().pose.position.y;
+        this->pc_point.z = this->group->getCurrentPose().pose.position.z;
+        if (this->pc.points.size() >= 2){
+            this->pc.points.clear();
+        }
+        this->pc.points.push_back(this->pc_point);
+        ROS_INFO("Publishing recorded point");
+
+        this->traj_pc_pub.publish(this->pc);
     }
 
 
 }
 
 
-void Kinematic_group::clutch_cb(const std_msgs::BoolConstPtr & state)
+void Kinematic_group::footpedal_camera_cb(const std_msgs::BoolConstPtr & state)
 {
     if(state->data == true){
         ROS_INFO("Planning Requested");
@@ -175,7 +194,7 @@ void Kinematic_group::check_collison(){
            std_msgs::ColorRGBA color;
            color.r = 1.0;
            color.g = 0.0;
-           color.b = 1.0;
+           color.b = 0.2;
            color.a = 0.5;
            visualization_msgs::MarkerArray markers;
            collision_detection::getCollisionMarkersFromContacts(markers,
@@ -183,7 +202,7 @@ void Kinematic_group::check_collison(){
                                                                 coll_res.contacts,
                                                                 color,
                                                                 ros::Duration(), // remain until deleted
-                                                                0.01);
+                                                                0.008);
            publishMarkers(markers);
            }
          }
