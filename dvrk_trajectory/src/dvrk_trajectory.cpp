@@ -94,7 +94,7 @@ void Traj::coag_foot_pedal_cb(const std_msgs::BoolConstPtr & clutch_pressed)
         {
             this->clicked_mtm_ee_pose.push_back(this->mtm_ee_poses.back());
             this->clicked_mtm_joint_states.push_back(this->mtm_joint_states.back());
-            this->pc_point.__connection_header = this->mtm_ee_poses.back().__connection_header;
+            //this->pc_point.__connection_header = this->mtm_ee_poses.back().__connection_header;
             this->pc_point.x = this->mtm_ee_poses.back().position.x;
             this->pc_point.y = this->mtm_ee_poses.back().position.y;
             this->pc_point.z = this->mtm_ee_poses.back().position.z;
