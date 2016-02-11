@@ -115,7 +115,7 @@ void Kinematic_group::footpedal_cam_minus_cb(const std_msgs::BoolConstPtr & stat
             this->group->setJointValueTarget(*this->group->getCurrentState());
             pose_cb_switch = false;
         }
-        this->pc_point.__connection_header = this->group->getCurrentPose().pose.__connection_header;
+        //this->pc_point.__connection_header = this->group->getCurrentPose().pose.__connection_header;
         this->pc_point.x = this->group->getCurrentPose().pose.position.x;
         this->pc_point.y = this->group->getCurrentPose().pose.position.y;
         this->pc_point.z = this->group->getCurrentPose().pose.position.z;
