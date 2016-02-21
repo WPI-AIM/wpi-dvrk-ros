@@ -36,12 +36,15 @@ protected:
     void cur_robot_state_cb(const std_msgs::StringConstPtr &msg);
 
     geometry_msgs::Pose cur_mtm_pose;
+    geometry_msgs::Pose pre_mtm_pose;
+    geometry_msgs::Vector3 cur_mtm_tip_vel;
     std::vector<double> cur_mtm_effort;
     std::vector<double> cur_mtm_jnt_pos;
     std::string cur_robot_state;
     std_msgs::String robot_state_cmd;
     geometry_msgs::Wrench haptic_feedback;
     geometry_msgs::Vector3 Kp;
+    geometry_msgs::Vector3 Kd;
     geometry_msgs::Vector3 dX;
 
 
@@ -63,6 +66,10 @@ MTMHaptics::MTMHaptics(){
     Kp.y = 50;
     Kp.z = 50;
 
+    Kd.x = 10;
+    Kd.y = 10;
+    Kd.z = 10;
+
     dX.x = 0.025;
     dX.y = 0.025;
     dX.z = 0.025;
@@ -78,9 +85,14 @@ void MTMHaptics::jnt_torque_cb(const sensor_msgs::JointStatePtr &msg){
 }
 
 void MTMHaptics::crt_pos_cb(const geometry_msgs::PoseConstPtr &msg){
+    pre_mtm_pose.position = cur_mtm_pose.position;
+    pre_mtm_pose.orientation = cur_mtm_pose.orientation;
     cur_mtm_pose.position = msg->position;
     cur_mtm_pose.orientation = msg->orientation;
 
+    cur_mtm_tip_vel.x = cur_mtm_pose.position.x - pre_mtm_pose.position.x;
+    cur_mtm_tip_vel.y = cur_mtm_pose.position.y - pre_mtm_pose.position.y;
+    cur_mtm_tip_vel.z = cur_mtm_pose.position.z - pre_mtm_pose.position.z;
 }
 
 void MTMHaptics::cur_robot_state_cb(const std_msgs::StringConstPtr &msg){
@@ -104,7 +116,7 @@ void MTMHaptics::haptic_feeback_plane(geometry_msgs::Point set_point, bool _coll
         if (error.y >= 0 && error.y <= dX.y){
             haptic_feedback.force.x = 0;
             haptic_feedback.force.y = 0; //Currently applying a force in the Z direction, as Z for tip point towards Y of base, and wrench is being applied in tip frame.
-            haptic_feedback.force.z = Kp.z * error.z;
+            haptic_feedback.force.z = (Kp.z * error.z) - (Kd.z *cur_mtm_tip_vel.z);
             ROS_INFO("Publishing Force");
             crt_torque_pub.publish(haptic_feedback);
         }
