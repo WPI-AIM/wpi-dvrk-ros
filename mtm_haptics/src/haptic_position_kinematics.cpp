@@ -13,6 +13,8 @@ MTM_pos_kinematics::MTM_pos_kinematics(){
     }
 
     cur_jnt_sub = node_.subscribe("/dvrk_mtm/joint_position_current", 10, &MTM_pos_kinematics::jnt_pos_cb, this);
+    mtm_joint_current.SetSize(3);  // 7 joints
+    mtm_joint_current.SetAll(0.0);
 
 }
 

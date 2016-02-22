@@ -10,7 +10,8 @@
 #include <mtm_haptics/haptic_position_kinematics.h>
 
 
-class MTMHaptics{
+class MTMHaptics: public MTM_pos_kinematics
+{
 
 public:
     MTMHaptics();
@@ -120,9 +121,9 @@ void MTMHaptics::haptic_feeback_plane(geometry_msgs::Point set_point, bool _coll
             haptic_feedback.force.y = 0; //Currently applying a force in the Z direction, as Z for tip point towards Y of base, and wrench is being applied in tip frame.
             haptic_feedback.force.z = 0;
             ROS_INFO("Publishing Force");
-            //compute_torques(haptic_feedback,torque_msg);
-            //jnt_torque_pub.publish(torque_msg);
-            crt_torque_pub.publish(haptic_feedback);
+            compute_torques(haptic_feedback,torque_msg);
+            jnt_torque_pub.publish(torque_msg);
+            //crt_torque_pub.publish(haptic_feedback);
         }
         else{
             haptic_feedback.force.x = 0;
@@ -142,12 +143,9 @@ void MTMHaptics::haptic_feeback_plane(geometry_msgs::Point set_point, bool _coll
 int main(int argc, char ** argv){
     ros::init(argc,argv,"mtm_haptics_node");
     MTMHaptics haptics;
-    MTM_pos_kinematics test;
     ros::AsyncSpinner spinner(1);
     spinner.start();
-    ROS_INFO("first check");
     sleep(2.0);
-    ROS_INFO("second check");
     geometry_msgs::Point haptic_point;
     haptic_point.y = -0.38;
     haptics.set_effort_mode();
