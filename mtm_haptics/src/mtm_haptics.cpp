@@ -7,6 +7,8 @@
 #include<geometry_msgs/Wrench.h>
 #include<std_msgs/String.h>
 
+#include <mtm_haptics/haptic_position_kinematics.h>
+
 
 class MTMHaptics{
 
@@ -46,18 +48,18 @@ protected:
     geometry_msgs::Vector3 Kp;
     geometry_msgs::Vector3 Kd;
     geometry_msgs::Vector3 dX;
+    sensor_msgs::JointState torque_msg;
 
 
 };
 
 MTMHaptics::MTMHaptics(){
-
     jnt_pos_sub = node_.subscribe("/dvrk_mtm/joint_position_current", 10, &MTMHaptics::jnt_pos_cb, this);
 //    jnt_torque_sub = node_.subscribe("/dvrk_mtm/joint_effort_current", 10, &MTMHaptics::jnt_torque_cb, this);
     crt_pos_sub = node_.subscribe("/dvrk_mtm/cartesian_pose_current", 10, &MTMHaptics::crt_pos_cb, this);
 
     crt_torque_pub = node_.advertise<geometry_msgs::Wrench>("/dvrk_mtm/set_wrench_body",10);
-    jnt_torque_pub = node_.advertise<sensor_msgs::JointState>("/dvrk_mtm/set_effort_joint",10);
+    jnt_torque_pub = node_.advertise<sensor_msgs::JointState>("/dvrk_mtm/set_effort_joint_unsinked",10);
     robot_state_pub = node_.advertise<std_msgs::String>("/dvrk_mtm/set_robot_state",10);
 
     rate_ = new ros::Rate(100);
@@ -114,10 +116,12 @@ void MTMHaptics::haptic_feeback_plane(geometry_msgs::Point set_point, bool _coll
         error.z = set_point.z - cur_mtm_pose.position.z;
 
         if (error.y >= 0 && error.y <= dX.y){
-            haptic_feedback.force.x = 0;
+            haptic_feedback.force.x = (Kp.x * error.y) - (Kd.y *cur_mtm_tip_vel.y);
             haptic_feedback.force.y = 0; //Currently applying a force in the Z direction, as Z for tip point towards Y of base, and wrench is being applied in tip frame.
-            haptic_feedback.force.z = (Kp.z * error.z) - (Kd.z *cur_mtm_tip_vel.z);
+            haptic_feedback.force.z = 0;
             ROS_INFO("Publishing Force");
+            //compute_torques(haptic_feedback,torque_msg);
+            //jnt_torque_pub.publish(torque_msg);
             crt_torque_pub.publish(haptic_feedback);
         }
         else{
@@ -137,13 +141,15 @@ void MTMHaptics::haptic_feeback_plane(geometry_msgs::Point set_point, bool _coll
 
 int main(int argc, char ** argv){
     ros::init(argc,argv,"mtm_haptics_node");
-    ros::AsyncSpinner spinner(1);
     MTMHaptics haptics;
+    MTM_pos_kinematics test;
+    ros::AsyncSpinner spinner(1);
     spinner.start();
+    ROS_INFO("first check");
     sleep(2.0);
+    ROS_INFO("second check");
     geometry_msgs::Point haptic_point;
     haptic_point.y = -0.38;
-
     haptics.set_effort_mode();
 
     while (ros::ok()){
