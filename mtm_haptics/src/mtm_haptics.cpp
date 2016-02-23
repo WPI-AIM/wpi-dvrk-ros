@@ -145,7 +145,7 @@ void MTMHaptics::haptic_feeback_plane(geometry_msgs::Point set_point, bool _coll
             F7wrt0.setZ(haptic_feedback.wrench.force.z);
 
             rot_matrix.setRotation(rot_quat);
-            F0wrt7 = rot_matrix.inverse() * F7wrt0;
+            F0wrt7 = rot_matrix.transpose() * F7wrt0;
             haptic_feedback.wrench.force.x = F0wrt7.x();
             haptic_feedback.wrench.force.y = F0wrt7.x();
             haptic_feedback.wrench.force.z = F0wrt7.z();
