@@ -5,12 +5,15 @@
 #include<geometry_msgs/Pose.h>
 #include<geometry_msgs/Vector3.h>
 #include<geometry_msgs/Wrench.h>
+#include<geometry_msgs/WrenchStamped.h>
 #include<std_msgs/String.h>
+#include<tf/LinearMath/Matrix3x3.h>
+#include<tf/LinearMath/Vector3.h>
 
 #include <mtm_haptics/haptic_position_kinematics.h>
 
 
-class MTMHaptics: public MTM_pos_kinematics
+class MTMHaptics
 {
 
 public:
@@ -19,6 +22,8 @@ public:
     ros::Publisher crt_torque_pub;
     ros::Publisher jnt_torque_pub;
     ros::Publisher robot_state_pub;
+    ros::Publisher body_force_pub;  //Force defined in tool frame
+    ros::Publisher spatial_force_pub; //Force defined in base frame
 
     ros::Subscriber jnt_pos_sub;
     ros::Subscriber jnt_torque_sub;
@@ -45,12 +50,15 @@ protected:
     std::vector<double> cur_mtm_jnt_pos;
     std::string cur_robot_state;
     std_msgs::String robot_state_cmd;
-    geometry_msgs::Wrench haptic_feedback;
+    geometry_msgs::WrenchStamped haptic_feedback;
     geometry_msgs::Vector3 Kp;
     geometry_msgs::Vector3 Kd;
     geometry_msgs::Vector3 dX;
     sensor_msgs::JointState torque_msg;
 
+    tf::Matrix3x3 rot_matrix;
+    tf::Vector3 F7wrt0,F0wrt7;
+    tf::Quaternion rot_quat;
 
 };
 
@@ -62,16 +70,18 @@ MTMHaptics::MTMHaptics(){
     crt_torque_pub = node_.advertise<geometry_msgs::Wrench>("/dvrk_mtm/set_wrench_body",10);
     jnt_torque_pub = node_.advertise<sensor_msgs::JointState>("/dvrk_mtm/set_effort_joint_unsinked",10);
     robot_state_pub = node_.advertise<std_msgs::String>("/dvrk_mtm/set_robot_state",10);
+    body_force_pub = node_.advertise<geometry_msgs::WrenchStamped>("/dvrk_mtm_haptics/body_force_feedback",10);
+    spatial_force_pub = node_.advertise<geometry_msgs::WrenchStamped>("/dvrk_mtm_haptics/spatial_force_feedback",10);
 
     rate_ = new ros::Rate(100);
 
-    Kp.x = 50;
-    Kp.y = 50;
-    Kp.z = 50;
+    Kp.x = 100;
+    Kp.y = 100;
+    Kp.z = 100;
 
-    Kd.x = 10;
-    Kd.y = 10;
-    Kd.z = 10;
+    Kd.x = 1;
+    Kd.y = 1;
+    Kd.z = 1;
 
     dX.x = 0.025;
     dX.y = 0.025;
@@ -117,19 +127,37 @@ void MTMHaptics::haptic_feeback_plane(geometry_msgs::Point set_point, bool _coll
         error.z = set_point.z - cur_mtm_pose.position.z;
 
         if (error.y >= 0 && error.y <= dX.y){
-            haptic_feedback.force.x = (Kp.x * error.y) - (Kd.y *cur_mtm_tip_vel.y);
-            haptic_feedback.force.y = 0; //Currently applying a force in the Z direction, as Z for tip point towards Y of base, and wrench is being applied in tip frame.
-            haptic_feedback.force.z = 0;
+            haptic_feedback.header.stamp = ros::Time::now();
+            haptic_feedback.header.frame_id = "right_ee_link";
+            haptic_feedback.wrench.force.x = 0;
+            haptic_feedback.wrench.force.y = (Kp.x * error.y) - (Kd.y *cur_mtm_tip_vel.y); //Currently applying a force in the Z direction, as Z for tip point towards Y of base, and wrench is being applied in tip frame.
+            haptic_feedback.wrench.force.z = 0;
+            body_force_pub.publish(haptic_feedback);
+            //ROS_INFO(" Before Fx = %f, Fy = %f, Fz = %f",haptic_feedback.force.x,haptic_feedback.force.y,haptic_feedback.force.z);
             ROS_INFO("Publishing Force");
-            compute_torques(haptic_feedback,torque_msg);
             jnt_torque_pub.publish(torque_msg);
-            //crt_torque_pub.publish(haptic_feedback);
+            rot_quat.setX(cur_mtm_pose.orientation.x);
+            rot_quat.setY(cur_mtm_pose.orientation.y);
+            rot_quat.setZ(cur_mtm_pose.orientation.z);
+            rot_quat.setW(cur_mtm_pose.orientation.w);
+            F7wrt0.setX(haptic_feedback.wrench.force.x);
+            F7wrt0.setY(haptic_feedback.wrench.force.y);
+            F7wrt0.setZ(haptic_feedback.wrench.force.z);
+
+            rot_matrix.setRotation(rot_quat);
+            F0wrt7 = rot_matrix.inverse() * F7wrt0;
+            haptic_feedback.wrench.force.x = F0wrt7.x();
+            haptic_feedback.wrench.force.y = F0wrt7.x();
+            haptic_feedback.wrench.force.z = F0wrt7.z();
+            spatial_force_pub.publish(haptic_feedback);
+            //ROS_INFO(" After Fx = %f, Fy = %f, Fz = %f",haptic_feedback.force.x,haptic_feedback.force.y,haptic_feedback.force.z);
+            crt_torque_pub.publish(haptic_feedback.wrench);
         }
         else{
-            haptic_feedback.force.x = 0;
-            haptic_feedback.force.y = 0;
-            haptic_feedback.force.z = 0;
-            crt_torque_pub.publish(haptic_feedback);
+            haptic_feedback.wrench.force.x = 0;
+            haptic_feedback.wrench.force.y = 0;
+            haptic_feedback.wrench.force.z = 0;
+            crt_torque_pub.publish(haptic_feedback.wrench);
         }
 
     }
