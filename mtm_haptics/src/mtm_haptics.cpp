@@ -42,6 +42,7 @@ protected:
     void jnt_torque_cb(const sensor_msgs::JointStatePtr &msg);
     void crt_pos_cb(const geometry_msgs::PoseConstPtr &msg);
     void cur_robot_state_cb(const std_msgs::StringConstPtr &msg);
+    void convert_bodyForcetoSpatialForce(geometry_msgs::WrenchStamped &wrench);
 
     geometry_msgs::Pose cur_mtm_pose;
     geometry_msgs::Pose pre_mtm_pose;
@@ -72,6 +73,7 @@ MTMHaptics::MTMHaptics(){
     robot_state_pub = node_.advertise<std_msgs::String>("/dvrk_mtm/set_robot_state",10);
     body_force_pub = node_.advertise<geometry_msgs::WrenchStamped>("/dvrk_mtm_haptics/body_force_feedback",10);
     spatial_force_pub = node_.advertise<geometry_msgs::WrenchStamped>("/dvrk_mtm_haptics/spatial_force_feedback",10);
+    haptic_feedback.header.frame_id = "right_ee_link";
 
     rate_ = new ros::Rate(100);
 
@@ -119,6 +121,23 @@ void MTMHaptics::set_effort_mode(){
     rate_->sleep();
 }
 
+void MTMHaptics::convert_bodyForcetoSpatialForce(geometry_msgs::WrenchStamped &body_wrench){
+
+    body_force_pub.publish(body_wrench);
+    rot_quat.setX(cur_mtm_pose.orientation.x);
+    rot_quat.setY(cur_mtm_pose.orientation.y);
+    rot_quat.setZ(cur_mtm_pose.orientation.z);
+    rot_quat.setW(cur_mtm_pose.orientation.w);
+    F7wrt0.setValue(body_wrench.wrench.force.x, body_wrench.wrench.force.y, body_wrench.wrench.force.z);
+    rot_matrix.setRotation(rot_quat);
+    F0wrt7 = rot_matrix.transpose() * F7wrt0;
+    body_wrench.wrench.force.x = F0wrt7.x();
+    body_wrench.wrench.force.y = F0wrt7.y();
+    body_wrench.wrench.force.z = F0wrt7.z();
+    spatial_force_pub.publish(body_wrench);
+
+}
+
 void MTMHaptics::haptic_feeback_plane(geometry_msgs::Point set_point, bool _collision){
     if(strcmp(this->cur_robot_state.c_str(),"DVRK_EFFORT_CARTESIAN")){
         geometry_msgs::Point error;
@@ -128,35 +147,19 @@ void MTMHaptics::haptic_feeback_plane(geometry_msgs::Point set_point, bool _coll
 
         if (error.y >= 0 && error.y <= dX.y){
             haptic_feedback.header.stamp = ros::Time::now();
-            haptic_feedback.header.frame_id = "right_ee_link";
             haptic_feedback.wrench.force.x = 0;
-            haptic_feedback.wrench.force.y = (Kp.x * error.y) - (Kd.y *cur_mtm_tip_vel.y); //Currently applying a force in the Z direction, as Z for tip point towards Y of base, and wrench is being applied in tip frame.
+            haptic_feedback.wrench.force.y = (Kp.y * error.y) - (Kd.y *cur_mtm_tip_vel.y);
             haptic_feedback.wrench.force.z = 0;
-            body_force_pub.publish(haptic_feedback);
-            //ROS_INFO(" Before Fx = %f, Fy = %f, Fz = %f",haptic_feedback.force.x,haptic_feedback.force.y,haptic_feedback.force.z);
             ROS_INFO("Publishing Force");
-            jnt_torque_pub.publish(torque_msg);
-            rot_quat.setX(cur_mtm_pose.orientation.x);
-            rot_quat.setY(cur_mtm_pose.orientation.y);
-            rot_quat.setZ(cur_mtm_pose.orientation.z);
-            rot_quat.setW(cur_mtm_pose.orientation.w);
-            F7wrt0.setX(haptic_feedback.wrench.force.x);
-            F7wrt0.setY(haptic_feedback.wrench.force.y);
-            F7wrt0.setZ(haptic_feedback.wrench.force.z);
-
-            rot_matrix.setRotation(rot_quat);
-            F0wrt7 = rot_matrix.transpose() * F7wrt0;
-            haptic_feedback.wrench.force.x = F0wrt7.x();
-            haptic_feedback.wrench.force.y = F0wrt7.x();
-            haptic_feedback.wrench.force.z = F0wrt7.z();
-            spatial_force_pub.publish(haptic_feedback);
-            //ROS_INFO(" After Fx = %f, Fy = %f, Fz = %f",haptic_feedback.force.x,haptic_feedback.force.y,haptic_feedback.force.z);
+            visualize_haptic_force();
+            convert_bodyForcetoSpatialForce(haptic_feedback);
             crt_torque_pub.publish(haptic_feedback.wrench);
         }
         else{
             haptic_feedback.wrench.force.x = 0;
             haptic_feedback.wrench.force.y = 0;
             haptic_feedback.wrench.force.z = 0;
+            //convert_bodyForcetoSpatialForce(haptic_feedback);
             crt_torque_pub.publish(haptic_feedback.wrench);
         }
 
