@@ -43,6 +43,7 @@ protected:
     void crt_pos_cb(const geometry_msgs::PoseConstPtr &msg);
     void cur_robot_state_cb(const std_msgs::StringConstPtr &msg);
     void convert_bodyForcetoSpatialForce(geometry_msgs::WrenchStamped &wrench);
+    void visualize_haptic_force(const ros::Publisher &pub);
 
     geometry_msgs::Pose cur_mtm_pose;
     geometry_msgs::Pose pre_mtm_pose;
@@ -123,7 +124,7 @@ void MTMHaptics::set_effort_mode(){
 
 void MTMHaptics::convert_bodyForcetoSpatialForce(geometry_msgs::WrenchStamped &body_wrench){
 
-    body_force_pub.publish(body_wrench);
+    visualize_haptic_force(body_force_pub);
     rot_quat.setX(cur_mtm_pose.orientation.x);
     rot_quat.setY(cur_mtm_pose.orientation.y);
     rot_quat.setZ(cur_mtm_pose.orientation.z);
@@ -134,8 +135,12 @@ void MTMHaptics::convert_bodyForcetoSpatialForce(geometry_msgs::WrenchStamped &b
     body_wrench.wrench.force.x = F0wrt7.x();
     body_wrench.wrench.force.y = F0wrt7.y();
     body_wrench.wrench.force.z = F0wrt7.z();
-    spatial_force_pub.publish(body_wrench);
+    visualize_haptic_force(spatial_force_pub);
 
+}
+
+void MTMHaptics::visualize_haptic_force(const ros::Publisher &pub){
+    pub.publish(haptic_feedback);
 }
 
 void MTMHaptics::haptic_feeback_plane(geometry_msgs::Point set_point, bool _collision){
@@ -151,7 +156,6 @@ void MTMHaptics::haptic_feeback_plane(geometry_msgs::Point set_point, bool _coll
             haptic_feedback.wrench.force.y = (Kp.y * error.y) - (Kd.y *cur_mtm_tip_vel.y);
             haptic_feedback.wrench.force.z = 0;
             ROS_INFO("Publishing Force");
-            visualize_haptic_force();
             convert_bodyForcetoSpatialForce(haptic_feedback);
             crt_torque_pub.publish(haptic_feedback.wrench);
         }
