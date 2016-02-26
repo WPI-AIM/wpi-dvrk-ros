@@ -39,6 +39,9 @@ public:
     moveit_msgs::PlanningScene planning_scene_msg;
     moveit_msgs::PlanningSceneWorld world_msg;
     geometry_msgs::Point32 pc_point;
+    geometry_msgs::Pose cur_psm_pose;
+    geometry_msgs::Pose pre_psm_pose;
+    geometry_msgs::Vector3 cur_psm_tip_vel;
     sensor_msgs::PointCloud pc;
     ros::Rate *rate_;
     bool pose_cb_switch;
@@ -52,6 +55,7 @@ public:
     ros::Subscriber coag_sub;
     ros::Subscriber clutch_sub;
     ros::Subscriber planning_scene_msg_sub;
+    ros::Subscriber psm_pose_sub;
 
     void footpedal_cam_minus_cb(const std_msgs::BoolConstPtr &state);
     void footpedal_camera_cb(const std_msgs::BoolConstPtr &state);
@@ -59,6 +63,7 @@ public:
     void publishMarkers(visualization_msgs::MarkerArray& markers);
     void planning_scene_cb(moveit_msgs::PlanningScene scene);
     void check_collison();
+    void psm_pose_cb(const geometry_msgs::PoseConstPtr &msg);
 
 
 protected:
@@ -90,6 +95,8 @@ Kinematic_group::Kinematic_group()
                                        &Kinematic_group::footpedal_camera_cb, this);
     this->planning_scene_msg_sub = node_.subscribe(
                 "/move_group/monitored_planning_scene",10,&Kinematic_group::planning_scene_cb,this);
+    this->psm_pose_sub = node_.subscribe(
+                "/dvrk_psm/cartesian_pose_current",10,&Kinematic_group::psm_pose_cb, this);
 
 
     this->pose_pub = node_.advertise<geometry_msgs::PoseStamped>
@@ -195,14 +202,14 @@ void Kinematic_group::check_collison(){
            color.r = 1.0;
            color.g = 0.0;
            color.b = 0.2;
-           color.a = 0.5;
+           color.a = 0.8;
            visualization_msgs::MarkerArray markers;
            collision_detection::getCollisionMarkersFromContacts(markers,
                                                                 group->getPlanningFrame().c_str(),
                                                                 coll_res.contacts,
                                                                 color,
                                                                 ros::Duration(), // remain until deleted
-                                                                0.008);
+                                                                0.002);
            publishMarkers(markers);
            }
          }
@@ -215,6 +222,15 @@ void Kinematic_group::check_collison(){
         publishMarkers(empty_marker_array);
       }
 
+}
+
+void Kinematic_group::psm_pose_cb(const geometry_msgs::PoseConstPtr &msg){
+    pre_psm_pose = cur_psm_pose;
+    cur_psm_pose = *msg;
+
+    cur_psm_tip_vel.x = cur_psm_pose.position.x - pre_psm_pose.position.x;
+    cur_psm_tip_vel.y = cur_psm_pose.position.y - pre_psm_pose.position.y;
+    cur_psm_tip_vel.z = cur_psm_pose.position.z - pre_psm_pose.position.z;
 }
 
 int main(int argc, char ** argv)
