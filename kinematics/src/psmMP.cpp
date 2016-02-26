@@ -42,6 +42,7 @@ public:
     geometry_msgs::Pose cur_psm_pose;
     geometry_msgs::Pose pre_psm_pose;
     geometry_msgs::Vector3 cur_psm_tip_vel;
+    geometry_msgs::Vector3 spr_collision_direction;
     sensor_msgs::PointCloud pc;
     ros::Rate *rate_;
     bool pose_cb_switch;
@@ -64,6 +65,7 @@ public:
     void planning_scene_cb(moveit_msgs::PlanningScene scene);
     void check_collison();
     void psm_pose_cb(const geometry_msgs::PoseConstPtr &msg);
+    void calculate_spr_collision_direction(visualization_msgs::MarkerArray &markers);
 
 
 protected:
@@ -210,6 +212,7 @@ void Kinematic_group::check_collison(){
                                                                 color,
                                                                 ros::Duration(), // remain until deleted
                                                                 0.002);
+           calculate_spr_collision_direction(markers);
            publishMarkers(markers);
            }
          }
@@ -222,6 +225,16 @@ void Kinematic_group::check_collison(){
         publishMarkers(empty_marker_array);
       }
 
+}
+
+void Kinematic_group::calculate_spr_collision_direction(visualization_msgs::MarkerArray &markers){
+    spr_collision_direction.x = markers.markers.at(0).pose.position.x - cur_psm_pose.position.x;
+    spr_collision_direction.y = markers.markers.at(0).pose.position.y - cur_psm_pose.position.y;
+    spr_collision_direction.z = markers.markers.at(0).pose.position.z - cur_psm_pose.position.z;
+
+    ROS_INFO("SPR Collision x:%f y:%f z:%f", spr_collision_direction.x,
+             spr_collision_direction.y,
+             spr_collision_direction.z);
 }
 
 void Kinematic_group::psm_pose_cb(const geometry_msgs::PoseConstPtr &msg){
