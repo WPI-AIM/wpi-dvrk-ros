@@ -250,9 +250,18 @@ void Kinematic_group::check_collison(){
 }
 
 void Kinematic_group::calculate_spr_collision_direction(visualization_msgs::MarkerArray &markers){
-    spr_collision_direction.x = markers.markers.at(0).pose.position.x - group->getCurrentPose().pose.position.x;
-    spr_collision_direction.y = markers.markers.at(0).pose.position.y - group->getCurrentPose().pose.position.y;
-    spr_collision_direction.z = markers.markers.at(0).pose.position.z - group->getCurrentPose().pose.position.z;
+    spr_collision_direction.x = 0;
+    spr_collision_direction.y = 0;
+    spr_collision_direction.z = 0;
+    //If more than 1 marker, add all the deflection vectors to get an average vector
+    for(size_t i = 0 ; i < markers.markers.size() ; i++){
+    spr_collision_direction.x += (markers.markers.at(i).pose.position.x - group->getCurrentPose().pose.position.x);
+    spr_collision_direction.y += (markers.markers.at(i).pose.position.y - group->getCurrentPose().pose.position.y);
+    spr_collision_direction.z += (markers.markers.at(i).pose.position.z - group->getCurrentPose().pose.position.z);
+    }
+    spr_collision_direction.x = spr_collision_direction.x/markers.markers.size();
+    spr_collision_direction.y = spr_collision_direction.y/markers.markers.size();
+    spr_collision_direction.z = spr_collision_direction.z/markers.markers.size();
 
     compute_deflection_force(spr_haptic_force.wrench);
     spr_haptic_pub.publish(spr_haptic_force);

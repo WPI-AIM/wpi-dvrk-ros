@@ -102,19 +102,19 @@
     <disable_collisions link1="one_psm_base_link" link2="one_tool_wrist_shaft_link" reason="Never" />
     <disable_collisions link1="one_tool_main_link" link2="one_tool_wrist_link" reason="Adjacent" />
     <disable_collisions link1="one_tool_main_link" link2="one_tool_wrist_sca_ee_link_1" reason="Never" />
-    <disable_collisions link1="one_tool_main_link" link2="one_tool_wrist_sca_ee_link_2" reason="Never" />
+    <disable_collisions link1="one_tool_main_link" link2="one_tool_wrist_sca_ee_link_2" reason="Default" />
     <disable_collisions link1="one_tool_main_link" link2="one_tool_wrist_sca_link" reason="Never" />
     <disable_collisions link1="one_tool_main_link" link2="one_tool_wrist_sca_shaft_link" reason="Never" />
     <disable_collisions link1="one_tool_main_link" link2="one_tool_wrist_shaft_link" reason="Never" />
-    <disable_collisions link1="one_tool_wrist_link" link2="one_tool_wrist_sca_ee_link_2" reason="Default" />
+    <disable_collisions link1="one_tool_wrist_link" link2="one_tool_wrist_sca_ee_link_2" reason="Never" />
     <disable_collisions link1="one_tool_wrist_link" link2="one_tool_wrist_sca_link" reason="Never" />
     <disable_collisions link1="one_tool_wrist_link" link2="one_tool_wrist_sca_shaft_link" reason="Never" />
     <disable_collisions link1="one_tool_wrist_link" link2="one_tool_wrist_shaft_link" reason="Adjacent" />
-    <disable_collisions link1="one_tool_wrist_sca_ee_link_1" link2="one_tool_wrist_sca_ee_link_2" reason="Default" />
+    <disable_collisions link1="one_tool_wrist_sca_ee_link_1" link2="one_tool_wrist_sca_ee_link_2" reason="Never" />
     <disable_collisions link1="one_tool_wrist_sca_ee_link_1" link2="one_tool_wrist_sca_shaft_link" reason="Adjacent" />
-    <disable_collisions link1="one_tool_wrist_sca_ee_link_2" link2="one_tool_wrist_sca_link" reason="Default" />
+    <disable_collisions link1="one_tool_wrist_sca_ee_link_2" link2="one_tool_wrist_sca_link" reason="Never" />
     <disable_collisions link1="one_tool_wrist_sca_ee_link_2" link2="one_tool_wrist_sca_shaft_link" reason="Adjacent" />
-    <disable_collisions link1="one_tool_wrist_sca_ee_link_2" link2="one_tool_wrist_shaft_link" reason="Default" />
+    <disable_collisions link1="one_tool_wrist_sca_ee_link_2" link2="one_tool_wrist_shaft_link" reason="Never" />
     <disable_collisions link1="one_tool_wrist_sca_link" link2="one_tool_wrist_sca_shaft_link" reason="Adjacent" />
     <disable_collisions link1="one_tool_wrist_sca_link" link2="one_tool_wrist_shaft_link" reason="Adjacent" />
     <disable_collisions link1="one_tool_wrist_sca_shaft_link" link2="one_tool_wrist_shaft_link" reason="Never" />
