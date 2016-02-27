@@ -19,7 +19,9 @@
 #include <ros/time.h>
 #include <geometry_msgs/Point32.h>
 #include <geometry_msgs/WrenchStamped.h>
-#include<sensor_msgs/PointCloud.h>
+#include <sensor_msgs/PointCloud.h>
+#include <tf/LinearMath/Matrix3x3.h>
+#include <geometry_msgs/Quaternion.h>
 #include <std_msgs/UInt64.h>
 #include <std_msgs/Bool.h>
 
@@ -44,7 +46,11 @@ public:
     geometry_msgs::Pose pre_psm_pose;
     geometry_msgs::Vector3 cur_psm_tip_vel;
     geometry_msgs::Vector3 spr_collision_direction;
+    double radius_SPR; //Three dimensional radii of spherical proxy region
     geometry_msgs::WrenchStamped spr_haptic_force;
+    double norm, deflection_norm;
+    double force_magnitude;
+    tf::Matrix3x3 rot_mat6wrt0;
     sensor_msgs::PointCloud pc;
     ros::Rate *rate_;
     bool pose_cb_switch;
@@ -69,6 +75,9 @@ public:
     void check_collison();
     void psm_pose_cb(const geometry_msgs::PoseConstPtr &msg);
     void calculate_spr_collision_direction(visualization_msgs::MarkerArray &markers);
+    void normalize(geometry_msgs::Vector3 &v);
+    void compute_deflection_force(geometry_msgs::Wrench &wrench);
+    void compute_norm(geometry_msgs::Vector3 &v, double &n);
 
 
 protected:
@@ -112,7 +121,14 @@ Kinematic_group::Kinematic_group()
             ("/psm/trajectory_points_pointcloud",1);
     this->spr_haptic_pub = node_.advertise<geometry_msgs::WrenchStamped>
             ("/dvrk_psm/haptics_feedback_force",1);
-    spr_haptic_force.header.frame_id = "one_tool_wrist_sca_ee_link_1";
+    spr_haptic_force.header.frame_id = "world";
+
+    rot_mat6wrt0.setRPY(-M_PI/2,0,0);
+    radius_SPR = 0.01; //If using a SPR of 20 mm Diameter
+    //radius_SPR = 0.0125; //If using a SPR of 25 mm Diameter
+    //radius_SPR = 0.015; //If using a SPR of 30 mm Diameter
+
+    group->setEndEffectorLink("one_tool_wrist_sca_ee_link_1");
 }
 
 void Kinematic_group::footpedal_cam_minus_cb(const std_msgs::BoolConstPtr & state)
@@ -237,15 +253,35 @@ void Kinematic_group::calculate_spr_collision_direction(visualization_msgs::Mark
     spr_collision_direction.x = markers.markers.at(0).pose.position.x - group->getCurrentPose().pose.position.x;
     spr_collision_direction.y = markers.markers.at(0).pose.position.y - group->getCurrentPose().pose.position.y;
     spr_collision_direction.z = markers.markers.at(0).pose.position.z - group->getCurrentPose().pose.position.z;
-    spr_haptic_force.wrench.force.x = spr_collision_direction.x;
-    spr_haptic_force.wrench.force.y = spr_collision_direction.y;
-    spr_haptic_force.wrench.force.z = spr_collision_direction.z;
 
+    compute_deflection_force(spr_haptic_force.wrench);
     spr_haptic_pub.publish(spr_haptic_force);
 
     ROS_INFO("SPR Collision x:%f y:%f z:%f", spr_collision_direction.x,
              spr_collision_direction.y,
              spr_collision_direction.z);
+}
+
+void Kinematic_group::normalize(geometry_msgs::Vector3 &v){
+    compute_norm(v,norm);
+    v.x = v.x/norm;
+    v.y = v.y/norm;
+    v.z = v.z/norm;
+
+}
+
+void Kinematic_group::compute_norm(geometry_msgs::Vector3 &v, double &n){
+    n = (v.x * v.x) + (v.y * v.y) + (v.z * v.z);
+    n = sqrt(n);
+}
+
+void Kinematic_group::compute_deflection_force(geometry_msgs::Wrench &wrench){
+    compute_norm(spr_collision_direction,deflection_norm);
+    force_magnitude = radius_SPR - deflection_norm;
+    normalize(spr_collision_direction);
+    wrench.force.x = spr_collision_direction.x * force_magnitude;
+    wrench.force.y = spr_collision_direction.y * force_magnitude;
+    wrench.force.z = spr_collision_direction.z * force_magnitude;
 }
 
 void Kinematic_group::psm_pose_cb(const geometry_msgs::PoseConstPtr &msg){
