@@ -18,6 +18,7 @@
 #include <moveit/collision_detection/collision_tools.h>
 #include <ros/time.h>
 #include <geometry_msgs/Point32.h>
+#include <geometry_msgs/WrenchStamped.h>
 #include<sensor_msgs/PointCloud.h>
 #include <std_msgs/UInt64.h>
 #include <std_msgs/Bool.h>
@@ -43,6 +44,7 @@ public:
     geometry_msgs::Pose pre_psm_pose;
     geometry_msgs::Vector3 cur_psm_tip_vel;
     geometry_msgs::Vector3 spr_collision_direction;
+    geometry_msgs::WrenchStamped spr_haptic_force;
     sensor_msgs::PointCloud pc;
     ros::Rate *rate_;
     bool pose_cb_switch;
@@ -51,6 +53,7 @@ public:
     ros::Publisher pose_pub;
     ros::Publisher coll_marker_pub;
     ros::Publisher traj_pc_pub;
+    ros::Publisher spr_haptic_pub;
 
 
     ros::Subscriber coag_sub;
@@ -107,6 +110,9 @@ Kinematic_group::Kinematic_group()
             ("/interactive_robot_array",100);
     this->traj_pc_pub = node_.advertise<sensor_msgs::PointCloud>
             ("/psm/trajectory_points_pointcloud",1);
+    this->spr_haptic_pub = node_.advertise<geometry_msgs::WrenchStamped>
+            ("/dvrk_psm/haptics_feedback_force",1);
+    spr_haptic_force.header.frame_id = "one_tool_wrist_sca_ee_link_1";
 }
 
 void Kinematic_group::footpedal_cam_minus_cb(const std_msgs::BoolConstPtr & state)
@@ -228,9 +234,14 @@ void Kinematic_group::check_collison(){
 }
 
 void Kinematic_group::calculate_spr_collision_direction(visualization_msgs::MarkerArray &markers){
-    spr_collision_direction.x = markers.markers.at(0).pose.position.x - cur_psm_pose.position.x;
-    spr_collision_direction.y = markers.markers.at(0).pose.position.y - cur_psm_pose.position.y;
-    spr_collision_direction.z = markers.markers.at(0).pose.position.z - cur_psm_pose.position.z;
+    spr_collision_direction.x = markers.markers.at(0).pose.position.x - group->getCurrentPose().pose.position.x;
+    spr_collision_direction.y = markers.markers.at(0).pose.position.y - group->getCurrentPose().pose.position.y;
+    spr_collision_direction.z = markers.markers.at(0).pose.position.z - group->getCurrentPose().pose.position.z;
+    spr_haptic_force.wrench.force.x = spr_collision_direction.x;
+    spr_haptic_force.wrench.force.y = spr_collision_direction.y;
+    spr_haptic_force.wrench.force.z = spr_collision_direction.z;
+
+    spr_haptic_pub.publish(spr_haptic_force);
 
     ROS_INFO("SPR Collision x:%f y:%f z:%f", spr_collision_direction.x,
              spr_collision_direction.y,
