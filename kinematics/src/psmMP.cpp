@@ -51,6 +51,7 @@ public:
     double norm, deflection_norm;
     double force_magnitude;
     tf::Matrix3x3 rot_mat6wrt0;
+    tf::Vector3 tf_vec3;
     sensor_msgs::PointCloud pc;
     ros::Rate *rate_;
     bool pose_cb_switch;
@@ -78,6 +79,7 @@ public:
     void normalize(geometry_msgs::Vector3 &v);
     void compute_deflection_force(geometry_msgs::Wrench &wrench);
     void compute_norm(geometry_msgs::Vector3 &v, double &n);
+    void compute_force_in_tip_frame(geometry_msgs::Wrench &wrench);
 
 
 protected:
@@ -121,7 +123,7 @@ Kinematic_group::Kinematic_group()
             ("/psm/trajectory_points_pointcloud",1);
     this->spr_haptic_pub = node_.advertise<geometry_msgs::WrenchStamped>
             ("/dvrk_psm/haptics_feedback_force",1);
-    spr_haptic_force.header.frame_id = "world";
+    spr_haptic_force.header.frame_id = "one_tool_wrist_sca_ee_link_1";
 
     rot_mat6wrt0.setRPY(-M_PI/2,0,0);
     radius_SPR = 0.01; //If using a SPR of 20 mm Diameter
@@ -264,6 +266,7 @@ void Kinematic_group::calculate_spr_collision_direction(visualization_msgs::Mark
     spr_collision_direction.z = spr_collision_direction.z/markers.markers.size();
 
     compute_deflection_force(spr_haptic_force.wrench);
+    compute_force_in_tip_frame(spr_haptic_force.wrench);
     spr_haptic_pub.publish(spr_haptic_force);
 
     ROS_INFO("SPR Collision x:%f y:%f z:%f", spr_collision_direction.x,
@@ -291,6 +294,17 @@ void Kinematic_group::compute_deflection_force(geometry_msgs::Wrench &wrench){
     wrench.force.x = spr_collision_direction.x * force_magnitude;
     wrench.force.y = spr_collision_direction.y * force_magnitude;
     wrench.force.z = spr_collision_direction.z * force_magnitude;
+}
+
+void Kinematic_group::compute_force_in_tip_frame(geometry_msgs::Wrench &wrench){
+    rot_mat6wrt0.setRPY(group->getCurrentRPY().at(0),
+                        group->getCurrentRPY().at(1),
+                        group->getCurrentRPY().at(2));
+    tf_vec3.setValue(wrench.force.x,wrench.force.y,wrench.force.z);
+    tf_vec3 = rot_mat6wrt0.transpose() * tf_vec3;
+    wrench.force.x = tf_vec3.getX();
+    wrench.force.y = tf_vec3.getY();
+    wrench.force.z = tf_vec3.getZ();
 }
 
 void Kinematic_group::psm_pose_cb(const geometry_msgs::PoseConstPtr &msg){
