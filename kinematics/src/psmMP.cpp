@@ -54,6 +54,7 @@ public:
     tf::Vector3 tf_vec3;
     sensor_msgs::PointCloud pc;
     std::vector<tf::Vector3> fcl_normals;
+    std::vector<double> collision_depth;
     ros::Rate *rate_;
     bool pose_cb_switch;
     bool do_planning_;
@@ -81,7 +82,7 @@ public:
     void compute_deflection_force(geometry_msgs::Wrench &wrench);
     void compute_norm(geometry_msgs::Vector3 &v, double &n);
     void compute_force_in_tip_frame(geometry_msgs::Wrench &wrench);
-    void get_collision_normals(const collision_detection::CollisionResult::ContactMap& con, std::vector<tf::Vector3> &n);
+    void get_collision_normals(const collision_detection::CollisionResult::ContactMap& con, std::vector<tf::Vector3> &n, std::vector<double> &d);
 
 
 protected:
@@ -238,9 +239,10 @@ void Kinematic_group::check_collison(){
                                                                 color,
                                                                 ros::Duration(), // remain until deleted
                                                                 0.002);
-           get_collision_normals(coll_res.contacts, fcl_normals);
+           get_collision_normals(coll_res.contacts, fcl_normals, collision_depth);
            ROS_INFO("Size of FCL Normals = %d", fcl_normals.size());
            ROS_INFO("Normal x: %f y: %f z:%f",fcl_normals.at(0).getX(),fcl_normals.at(0).getY(),fcl_normals.at(0).getZ());
+           ROS_INFO("Depth: %f",collision_depth.at(0));
            calculate_spr_collision_direction(markers);
            publishMarkers(markers);
            }
@@ -314,8 +316,9 @@ void Kinematic_group::compute_force_in_tip_frame(geometry_msgs::Wrench &wrench){
 
 
 // Trying this out to see if we can extract FCL collision normals for generic collision
-void Kinematic_group::get_collision_normals(const collision_detection::CollisionResult::ContactMap &con, std::vector<tf::Vector3> &n){
+void Kinematic_group::get_collision_normals(const collision_detection::CollisionResult::ContactMap &con, std::vector<tf::Vector3> &n, std::vector<double> &d){
     n.clear();
+    d.clear();
     std::map<std::string, unsigned> ns_counts;
     tf::Vector3 temp;
    for(collision_detection::CollisionResult::ContactMap::const_iterator it = con.begin(); it != con.end(); ++it)
@@ -328,6 +331,7 @@ void Kinematic_group::get_collision_normals(const collision_detection::Collision
         else
         ns_counts[ns_name]++;
         temp.setValue(it->second[i].normal.x(),it->second[i].normal.y(),it->second[i].normal.z());
+        d.push_back(it->second[i].depth);
         n.push_back(temp);
       }
    }
