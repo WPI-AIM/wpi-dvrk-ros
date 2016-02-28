@@ -53,6 +53,7 @@ public:
     tf::Matrix3x3 rot_mat6wrt0;
     tf::Vector3 tf_vec3;
     sensor_msgs::PointCloud pc;
+    std::vector<tf::Vector3> fcl_normals;
     ros::Rate *rate_;
     bool pose_cb_switch;
     bool do_planning_;
@@ -80,6 +81,7 @@ public:
     void compute_deflection_force(geometry_msgs::Wrench &wrench);
     void compute_norm(geometry_msgs::Vector3 &v, double &n);
     void compute_force_in_tip_frame(geometry_msgs::Wrench &wrench);
+    void get_collision_normals(const collision_detection::CollisionResult::ContactMap& con, std::vector<tf::Vector3> &n);
 
 
 protected:
@@ -236,6 +238,9 @@ void Kinematic_group::check_collison(){
                                                                 color,
                                                                 ros::Duration(), // remain until deleted
                                                                 0.002);
+           get_collision_normals(coll_res.contacts, fcl_normals);
+           ROS_INFO("Size of FCL Normals = %d", fcl_normals.size());
+           ROS_INFO("Normal x: %f y: %f z:%f",fcl_normals.at(0).getX(),fcl_normals.at(0).getY(),fcl_normals.at(0).getZ());
            calculate_spr_collision_direction(markers);
            publishMarkers(markers);
            }
@@ -305,6 +310,27 @@ void Kinematic_group::compute_force_in_tip_frame(geometry_msgs::Wrench &wrench){
     wrench.force.x = tf_vec3.getX();
     wrench.force.y = tf_vec3.getY();
     wrench.force.z = tf_vec3.getZ();
+}
+
+
+// Trying this out to see if we can extract FCL collision normals for generic collision
+void Kinematic_group::get_collision_normals(const collision_detection::CollisionResult::ContactMap &con, std::vector<tf::Vector3> &n){
+    n.clear();
+    std::map<std::string, unsigned> ns_counts;
+    tf::Vector3 temp;
+   for(collision_detection::CollisionResult::ContactMap::const_iterator it = con.begin(); it != con.end(); ++it)
+    {
+      for(unsigned int i = 0; i < it->second.size(); ++i)
+      {
+        std::string ns_name = it->second[i].body_name_1 + "=" + it->second[i].body_name_2;
+        if (ns_counts.find(ns_name) == ns_counts.end())
+          ns_counts[ns_name] = 0;
+        else
+        ns_counts[ns_name]++;
+        temp.setValue(it->second[i].normal.x(),it->second[i].normal.y(),it->second[i].normal.z());
+        n.push_back(temp);
+      }
+   }
 }
 
 void Kinematic_group::psm_pose_cb(const geometry_msgs::PoseConstPtr &msg){
