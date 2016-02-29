@@ -49,7 +49,7 @@ include_directories(
 add_executable(mtm_haptics_node src/mtm_haptics.cpp
                                  include/mtm_haptics/haptic_position_kinematics.h
                                  src/haptic_position_kinematics.cpp)
-add_executable(mtm_haptics_teleop_node src/mtm_teleop_haptics.cpp)
+add_executable(mtm_haptics_teleop_node src/mtm_haptics_teleop.cpp)
 
 
 ## Specify libraries to link a library or executable target against
