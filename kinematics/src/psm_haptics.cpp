@@ -237,7 +237,7 @@ bool HapticsPSM::check_collison(){
                                             psm_planning_scene->getAllowedCollisionMatrix());
     if (coll_res.collision)
        {
-         ROS_INFO("COLLIDING contact_point_count=%d",(int)coll_res.contact_count);
+         //ROS_INFO("COLLIDING contact_point_count=%d",(int)coll_res.contact_count);
 
          if (coll_res.contact_count > 0)
          {
@@ -294,17 +294,24 @@ void HapticsPSM::compute_average_normal(std::vector<tf::Vector3> &v_arr, tf::Vec
         v = v_arr.at(0);
     }
     else{
-        double x,y,z;
-        x = y = z = 0;
+        tf::Vector3 v_avg;
+        v_avg.setValue(0,0,0);
         for(size_t i ; i < v_arr.size() ; i++){
-            x += v_arr.at(i).getX();
-            y += v_arr.at(i).getY();
-            z += v_arr.at(i).getZ();
+            v_avg.setX(v_avg.getX() + v_arr.at(i).getX());
+            v_avg.setY(v_avg.getY() + v_arr.at(i).getY());
+            v_avg.setZ(v_avg.getZ() + v_arr.at(i).getZ());
         }
-        x = x/v_arr.size();
-        y = y/v_arr.size();
-        z = z/v_arr.size();
-        v.setValue(x,y,z);
+        v_avg.setX(v_avg.getX()/v_arr.size());
+        v_avg.setY(v_avg.getY()/v_arr.size());
+        v_avg.setZ(v_avg.getZ()/v_arr.size());
+
+        //Check if v_avg = 0 or in the negative direction as curr v, if it is, leave v unchanged
+        if(v.dot(v_avg) == 0 || v.dot(v_avg) + 1 > coll_psm.epsilon ){
+            //v remains unchanged
+        }
+        else{
+            v = v_avg;
+        }
     }
 }
 
