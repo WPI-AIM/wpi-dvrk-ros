@@ -58,6 +58,7 @@ public:
     moveit_msgs::PlanningSceneWorld world_msg;
     geometry_msgs::Point32 pc_point;
     geometry_msgs::WrenchStamped spr_haptic_force;
+    geometry_msgs::Vector3 haptic_deflection;
     tf::Matrix3x3 rot_mat6wrt0;
     tf::Vector3 tf_vec3;
     std::vector<double> collision_depth;
@@ -67,6 +68,7 @@ public:
     ros::Publisher coll_marker_pub;
     ros::Publisher traj_pc_pub;
     ros::Publisher spr_haptic_pub;
+    ros::Publisher haptic_deflection_pub;
 
 
     ros::Subscriber planning_scene_msg_sub;
@@ -115,6 +117,8 @@ HapticsPSM::HapticsPSM()
             ("/psm/trajectory_points_pointcloud",1);
     spr_haptic_pub = node_.advertise<geometry_msgs::WrenchStamped>
             ("/dvrk_psm/haptics_feedback_force",1);
+    haptic_deflection_pub = node_.advertise<geometry_msgs::Vector3>
+            ("/dvrk_psm/haptic_defection_vector",1);
     spr_haptic_force.header.frame_id = "one_tool_wrist_sca_ee_link_1";
 
     rot_mat6wrt0.setRPY(-M_PI/2,0,0);
@@ -326,12 +330,16 @@ void HapticsPSM::run_haptic_alg(){
             ROS_INFO("First contact Released");
             coll_psm._first_contact = true;
         }
+        coll_psm.def_along_n.setValue(0,0,0);
         coll_psm.cur_normal.setValue(0,0,0);
         spr_haptic_force.wrench.force.x=0;
         spr_haptic_force.wrench.force.y=0;
         spr_haptic_force.wrench.force.z=0;
     }
-
+    haptic_deflection.x = coll_psm.def_along_n.getX();
+    haptic_deflection.y = coll_psm.def_along_n.getY();
+    haptic_deflection.z = coll_psm.def_along_n.getZ();
+    haptic_deflection_pub.publish(haptic_deflection);
     spr_haptic_pub.publish(spr_haptic_force);
 
 
