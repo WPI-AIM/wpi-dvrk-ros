@@ -377,9 +377,11 @@ void HapticsPSM::run_haptic_alg(){
 
     }
     else{
-        coll_psm._first_contact = true;
+        if(!coll_psm._first_contact){
+            ROS_INFO("First contact Released");
+            coll_psm._first_contact = true;
+        }
         coll_psm.cur_normal.setValue(0,0,0);
-        ROS_INFO("First Contact Released");
         spr_haptic_force.wrench.force.x=0;
         spr_haptic_force.wrench.force.y=0;
         spr_haptic_force.wrench.force.z=0;
