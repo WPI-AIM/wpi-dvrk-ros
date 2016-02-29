@@ -42,14 +42,12 @@ public:
         tf::Vector3 def_total;  //total deflection from locked pose
         double epsilon; //Small value to compare the change in direction of the normals
 
-        CollisionPSM():_first_contact(true){};
+        CollisionPSM():_first_contact(true){}
     }coll_psm;
 
     HapticsPSM();
     moveit::planning_interface::MoveGroup * group;
     moveit::planning_interface::MoveGroup::Plan plan_srv;
-    std::vector<geometry_msgs::Pose> poses_list;
-    moveit_msgs::RobotTrajectory trajectory;
     collision_detection::CollisionRequest coll_req;
     collision_detection::CollisionResult coll_res;
     planning_scene::PlanningScene * psm_planning_scene;
@@ -60,14 +58,10 @@ public:
     moveit_msgs::PlanningSceneWorld world_msg;
     geometry_msgs::Point32 pc_point;
     geometry_msgs::WrenchStamped spr_haptic_force;
-    double norm;
     tf::Matrix3x3 rot_mat6wrt0;
     tf::Vector3 tf_vec3;
-    sensor_msgs::PointCloud pc;
     std::vector<double> collision_depth;
     ros::Rate *rate_;
-    bool pose_cb_switch;
-    bool do_planning_;
 
     ros::Publisher pose_pub;
     ros::Publisher coll_marker_pub;
@@ -75,13 +69,8 @@ public:
     ros::Publisher spr_haptic_pub;
 
 
-    ros::Subscriber coag_sub;
-    ros::Subscriber clutch_sub;
     ros::Subscriber planning_scene_msg_sub;
 
-    void footpedal_cam_minus_cb(const std_msgs::BoolConstPtr &state);
-    void footpedal_camera_cb(const std_msgs::BoolConstPtr &state);
-    void compute_cart_path();
     void publishMarkers(visualization_msgs::MarkerArray& markers);
     void planning_scene_cb(moveit_msgs::PlanningScene scene);
     bool check_collison();
@@ -100,42 +89,31 @@ public:
 
 protected:
     ros::NodeHandle node_;
-    moveit_msgs::RobotTrajectory path_;
-    std_msgs::UInt64 traj_size_;
 };
 
-HapticsPSM::HapticsPSM(){
-    this->rate_ = new ros::Rate(50);
-    this->group = new moveit::planning_interface::MoveGroup("full_chain");
-    this->robotModel = new robot_model_loader::RobotModelLoader("robot_description");
-    this->kinematic_model = robotModel->getModel();
-    this->psm_planning_scene = new planning_scene::PlanningScene(this->kinematic_model);
-    this->coll_req.group_name = "full_chain";
-    this->coll_req.contacts = true;
-    this->coll_req.max_contacts = 100;
-    this->coll_req.verbose = false;
-    this->pose_cb_switch = false;
-    this->do_planning_ = false;
-    this->pc.header.frame_id = "world";
+HapticsPSM::HapticsPSM()
+{
+    rate_ = new ros::Rate(250);
+    group = new moveit::planning_interface::MoveGroup("full_chain");
+    robotModel = new robot_model_loader::RobotModelLoader("robot_description");
+    kinematic_model = robotModel->getModel();
+    psm_planning_scene = new planning_scene::PlanningScene(kinematic_model);
+    coll_req.group_name = "full_chain";
+    coll_req.contacts = true;
+    coll_req.max_contacts = 100;
+    coll_req.verbose = false;
 
-
-    this->coag_sub = node_.subscribe(
-                "/dvrk_footpedal/cam_minus_state",10,
-                                     &HapticsPSM::footpedal_cam_minus_cb, this);
-    this->clutch_sub = node_.subscribe(
-                "/dvrk_footpedal/camera_state",10,
-                                       &HapticsPSM::footpedal_camera_cb, this);
-    this->planning_scene_msg_sub = node_.subscribe(
+    planning_scene_msg_sub = node_.subscribe(
                 "/move_group/monitored_planning_scene",10,&HapticsPSM::planning_scene_cb,this);
 
 
-    this->pose_pub = node_.advertise<geometry_msgs::PoseStamped>
+    pose_pub = node_.advertise<geometry_msgs::PoseStamped>
             ("/mp_psm/cartesian_pose_current",1);
-    this->coll_marker_pub = node_.advertise<visualization_msgs::MarkerArray>
+    coll_marker_pub = node_.advertise<visualization_msgs::MarkerArray>
             ("/interactive_robot_array",100);
-    this->traj_pc_pub = node_.advertise<sensor_msgs::PointCloud>
+    traj_pc_pub = node_.advertise<sensor_msgs::PointCloud>
             ("/psm/trajectory_points_pointcloud",1);
-    this->spr_haptic_pub = node_.advertise<geometry_msgs::WrenchStamped>
+    spr_haptic_pub = node_.advertise<geometry_msgs::WrenchStamped>
             ("/dvrk_psm/haptics_feedback_force",1);
     spr_haptic_force.header.frame_id = "one_tool_wrist_sca_ee_link_1";
 
@@ -145,51 +123,11 @@ HapticsPSM::HapticsPSM(){
     coll_psm.epsilon = 0.0001;
 }
 
-void HapticsPSM::footpedal_cam_minus_cb(const std_msgs::BoolConstPtr & state)
-{
-    if(state->data == true){
-        this->poses_list.push_back(this->group->getCurrentPose().pose);
-
-        if(this->pose_cb_switch == false){
-            ROS_INFO("Setting Start State");
-            this->group->setStartState(*this->group->getCurrentState());
-            pose_cb_switch = true;
-        }
-        else{
-            ROS_INFO("Setting Goal State");
-            this->group->setJointValueTarget(*this->group->getCurrentState());
-            pose_cb_switch = false;
-        }
-        //this->pc_point.__connection_header = this->group->getCurrentPose().pose.__connection_header;
-        this->pc_point.x = this->group->getCurrentPose().pose.position.x;
-        this->pc_point.y = this->group->getCurrentPose().pose.position.y;
-        this->pc_point.z = this->group->getCurrentPose().pose.position.z;
-        if (this->pc.points.size() >= 2){
-            this->pc.points.clear();
-        }
-        this->pc.points.push_back(this->pc_point);
-        ROS_INFO("Publishing recorded point");
-
-        this->traj_pc_pub.publish(this->pc);
-    }
-
-
-}
-
-void HapticsPSM::footpedal_camera_cb(const std_msgs::BoolConstPtr & state)
-{
-    if(state->data == true){
-        ROS_INFO("Planning Requested");
-        //this->compute_cart_path();
-        this->do_planning_ = true;
-    }
-}
-
 
 void HapticsPSM::planning_scene_cb(moveit_msgs::PlanningScene scene){
-    this->world_msg = scene.world;
+    world_msg = scene.world;
     //ROS_INFO("Processing Planning Scene Msg");
-    this->psm_planning_scene->processPlanningSceneWorldMsg(this->world_msg);
+    psm_planning_scene->processPlanningSceneWorldMsg(world_msg);
 }
 
 void HapticsPSM::publishMarkers(visualization_msgs::MarkerArray& markers)
@@ -232,8 +170,8 @@ void HapticsPSM::get_collision_normals(const collision_detection::CollisionResul
 
 bool HapticsPSM::check_collison(){
 
-    this->coll_res.clear();
-    this->psm_planning_scene->checkCollisionUnpadded(coll_req,coll_res,*group->getCurrentState(),
+    coll_res.clear();
+    psm_planning_scene->checkCollisionUnpadded(coll_req,coll_res,*group->getCurrentState(),
                                             psm_planning_scene->getAllowedCollisionMatrix());
     if (coll_res.collision)
        {
