@@ -27,6 +27,24 @@
 
 class HapticsPSM{
 
+
+public:
+    struct CollisionPSM{
+        bool _is_coll;
+        bool _first_contact; //Flag is released after a collision occurs for the first time with a body, only reset when collision is cleared and then happens again
+        tf::Vector3 cur_normal; //Current normal
+        tf::Vector3 pre_normal; //The previous normal
+        std::vector<tf::Vector3> cur_normal_arr;
+        tf::Vector3 locked_position;
+        tf::Vector3 cur_position;
+        geometry_msgs::Pose locked_pose;
+        tf::Vector3 def_along_n; //deflection along normal
+        tf::Vector3 def_total;  //total deflection from locked pose
+        double epsilon; //Small value to compare the change in direction of the normals
+
+        CollisionPSM():_first_contact(true){};
+    }coll_psm;
+
     HapticsPSM();
     moveit::planning_interface::MoveGroup * group;
     moveit::planning_interface::MoveGroup::Plan plan_srv;
@@ -41,18 +59,11 @@ class HapticsPSM{
     moveit_msgs::PlanningScene planning_scene_msg;
     moveit_msgs::PlanningSceneWorld world_msg;
     geometry_msgs::Point32 pc_point;
-    geometry_msgs::Pose cur_psm_pose;
-    geometry_msgs::Pose pre_psm_pose;
-    geometry_msgs::Vector3 cur_psm_tip_vel;
-    geometry_msgs::Vector3 spr_collision_direction;
-    double radius_SPR; //Three dimensional radii of spherical proxy region
     geometry_msgs::WrenchStamped spr_haptic_force;
-    double norm, deflection_norm;
-    double force_magnitude;
+    double norm;
     tf::Matrix3x3 rot_mat6wrt0;
     tf::Vector3 tf_vec3;
     sensor_msgs::PointCloud pc;
-    std::vector<tf::Vector3> fcl_normals;
     std::vector<double> collision_depth;
     ros::Rate *rate_;
     bool pose_cb_switch;
@@ -67,21 +78,24 @@ class HapticsPSM{
     ros::Subscriber coag_sub;
     ros::Subscriber clutch_sub;
     ros::Subscriber planning_scene_msg_sub;
-    ros::Subscriber psm_pose_sub;
 
     void footpedal_cam_minus_cb(const std_msgs::BoolConstPtr &state);
     void footpedal_camera_cb(const std_msgs::BoolConstPtr &state);
     void compute_cart_path();
     void publishMarkers(visualization_msgs::MarkerArray& markers);
     void planning_scene_cb(moveit_msgs::PlanningScene scene);
-    void check_collison();
-    void psm_pose_cb(const geometry_msgs::PoseConstPtr &msg);
-    void calculate_spr_collision_direction(visualization_msgs::MarkerArray &markers);
-    void normalize(geometry_msgs::Vector3 &v);
-    void compute_deflection_force(geometry_msgs::Wrench &wrench);
-    void compute_norm(geometry_msgs::Vector3 &v, double &n);
+    bool check_collison();
+    void compute_total_deflection(tf::Vector3 &delta_v);
+    void compute_deflection_along_normal(tf::Vector3 &n, tf::Vector3 &d, tf::Vector3 &d_along_n);
+    void adjust_locked_position_along_new_n(tf::Vector3 &d, tf::Vector3 &p);
+    void get_current_position(tf::Vector3 &v);
+    void lock_current_position_for_proxy(tf::Vector3 &v); //Record the current pose and set v equal to it.
+    void compute_deflection_force(geometry_msgs::Wrench &wrench, tf::Vector3 &d_along_n);
+    void compute_average_normal(std::vector<tf::Vector3> &v_arr, tf::Vector3 &v); //If we have many normals, compute average normal vector
     void compute_force_in_tip_frame(geometry_msgs::Wrench &wrench);
-    void get_collision_normals(const collision_detection::CollisionResult::ContactMap& con, std::vector<tf::Vector3> &n, std::vector<double> &d);
+    void get_collision_normals(const collision_detection::CollisionResult::ContactMap& con, std::vector<tf::Vector3> &n);
+    bool has_normal_changed(tf::Vector3 &v1, tf::Vector3 &v2);
+    void run_haptic_alg();
 
 
 protected:
@@ -90,8 +104,7 @@ protected:
     std_msgs::UInt64 traj_size_;
 };
 
-HapticsPSM::HapticsPSM()
-{
+HapticsPSM::HapticsPSM(){
     this->rate_ = new ros::Rate(50);
     this->group = new moveit::planning_interface::MoveGroup("full_chain");
     this->robotModel = new robot_model_loader::RobotModelLoader("robot_description");
@@ -105,6 +118,7 @@ HapticsPSM::HapticsPSM()
     this->do_planning_ = false;
     this->pc.header.frame_id = "world";
 
+
     this->coag_sub = node_.subscribe(
                 "/dvrk_footpedal/cam_minus_state",10,
                                      &HapticsPSM::footpedal_cam_minus_cb, this);
@@ -113,8 +127,6 @@ HapticsPSM::HapticsPSM()
                                        &HapticsPSM::footpedal_camera_cb, this);
     this->planning_scene_msg_sub = node_.subscribe(
                 "/move_group/monitored_planning_scene",10,&HapticsPSM::planning_scene_cb,this);
-    this->psm_pose_sub = node_.subscribe(
-                "/dvrk_psm/cartesian_pose_current",10,&HapticsPSM::psm_pose_cb, this);
 
 
     this->pose_pub = node_.advertise<geometry_msgs::PoseStamped>
@@ -128,11 +140,9 @@ HapticsPSM::HapticsPSM()
     spr_haptic_force.header.frame_id = "one_tool_wrist_sca_ee_link_1";
 
     rot_mat6wrt0.setRPY(-M_PI/2,0,0);
-    radius_SPR = 0.01; //If using a SPR of 20 mm Diameter
-    //radius_SPR = 0.0125; //If using a SPR of 25 mm Diameter
-    //radius_SPR = 0.015; //If using a SPR of 30 mm Diameter
 
     group->setEndEffectorLink("one_tool_wrist_sca_ee_link_1");
+    coll_psm.epsilon = 0.0001;
 }
 
 void HapticsPSM::footpedal_cam_minus_cb(const std_msgs::BoolConstPtr & state)
@@ -166,7 +176,6 @@ void HapticsPSM::footpedal_cam_minus_cb(const std_msgs::BoolConstPtr & state)
 
 }
 
-
 void HapticsPSM::footpedal_camera_cb(const std_msgs::BoolConstPtr & state)
 {
     if(state->data == true){
@@ -176,19 +185,6 @@ void HapticsPSM::footpedal_camera_cb(const std_msgs::BoolConstPtr & state)
     }
 }
 
-void HapticsPSM::compute_cart_path(){
-
-    double fraction = group->computeCartesianPath(this->poses_list,
-                                                 0.01,  // eef_step
-                                                 0.0,   // jump_threshold
-                                                 this->trajectory);
-
-    ROS_INFO("Cartesian path is (%.2f%% acheived)",
-          fraction * 100.0);
-    /* Sleep to give Rviz time to visualize the plan. */
-    sleep(5.0);
-
-}
 
 void HapticsPSM::planning_scene_cb(moveit_msgs::PlanningScene scene){
     this->world_msg = scene.world;
@@ -215,7 +211,26 @@ void HapticsPSM::publishMarkers(visualization_msgs::MarkerArray& markers)
      coll_marker_pub.publish(psm_collision_points);
  }
 
-void HapticsPSM::check_collison(){
+void HapticsPSM::get_collision_normals(const collision_detection::CollisionResult::ContactMap &con, std::vector<tf::Vector3> &n){
+    n.clear();
+    std::map<std::string, unsigned> ns_counts;
+    tf::Vector3 temp;
+   for(collision_detection::CollisionResult::ContactMap::const_iterator it = con.begin(); it != con.end(); ++it)
+    {
+      for(unsigned int i = 0; i < it->second.size(); ++i)
+      {
+        std::string ns_name = it->second[i].body_name_1 + "=" + it->second[i].body_name_2;
+        if (ns_counts.find(ns_name) == ns_counts.end())
+          ns_counts[ns_name] = 0;
+        else
+        ns_counts[ns_name]++;
+        temp.setValue(it->second[i].normal.x(),it->second[i].normal.y(),it->second[i].normal.z());
+        n.push_back(temp);
+      }
+   }
+}
+
+bool HapticsPSM::check_collison(){
 
     this->coll_res.clear();
     this->psm_planning_scene->checkCollisionUnpadded(coll_req,coll_res,*group->getCurrentState(),
@@ -238,13 +253,9 @@ void HapticsPSM::check_collison(){
                                                                 color,
                                                                 ros::Duration(), // remain until deleted
                                                                 0.002);
-           get_collision_normals(coll_res.contacts, fcl_normals, collision_depth);
-           ROS_INFO("Size of FCL Normals = %d", fcl_normals.size());
-           ROS_INFO("Normal x: %f y: %f z:%f",fcl_normals.at(0).getX(),fcl_normals.at(0).getY(),fcl_normals.at(0).getZ());
-           ROS_INFO("Depth: %f",collision_depth.at(0));
-           calculate_spr_collision_direction(markers);
            publishMarkers(markers);
            }
+         return true;
          }
     else
       {
@@ -253,53 +264,76 @@ void HapticsPSM::check_collison(){
         // delete the old collision point markers
         visualization_msgs::MarkerArray empty_marker_array;
         publishMarkers(empty_marker_array);
+        return false;
       }
 
 }
 
-void HapticsPSM::calculate_spr_collision_direction(visualization_msgs::MarkerArray &markers){
-    spr_collision_direction.x = 0;
-    spr_collision_direction.y = 0;
-    spr_collision_direction.z = 0;
-    //If more than 1 marker, add all the deflection vectors to get an average vector
-    for(size_t i = 0 ; i < markers.markers.size() ; i++){
-    spr_collision_direction.x += (markers.markers.at(i).pose.position.x - group->getCurrentPose().pose.position.x);
-    spr_collision_direction.y += (markers.markers.at(i).pose.position.y - group->getCurrentPose().pose.position.y);
-    spr_collision_direction.z += (markers.markers.at(i).pose.position.z - group->getCurrentPose().pose.position.z);
+
+void HapticsPSM::get_current_position(tf::Vector3 &v){
+    v.setValue(group->getCurrentPose().pose.position.x,
+               group->getCurrentPose().pose.position.y,
+               group->getCurrentPose().pose.position.z);
+}
+
+void HapticsPSM::lock_current_position_for_proxy(tf::Vector3 &v){
+    get_current_position(v); //Whatever the current end position is, set v equal to it.
+}
+
+void HapticsPSM::compute_total_deflection(tf::Vector3 &delta_v){
+    tf::Vector3 v1,v2;
+    v1 = coll_psm.locked_position;
+    get_current_position(v2);
+    delta_v.setValue(v1.getX() - v2.getX(),
+                     v1.getY() - v2.getY(),
+                     v1.getZ() - v2.getZ());
+}
+
+void HapticsPSM::compute_average_normal(std::vector<tf::Vector3> &v_arr, tf::Vector3 &v){
+    if(v_arr.size() == 1){
+        v = v_arr.at(0);
     }
-    spr_collision_direction.x = spr_collision_direction.x/markers.markers.size();
-    spr_collision_direction.y = spr_collision_direction.y/markers.markers.size();
-    spr_collision_direction.z = spr_collision_direction.z/markers.markers.size();
-
-    compute_deflection_force(spr_haptic_force.wrench);
-    compute_force_in_tip_frame(spr_haptic_force.wrench);
-    spr_haptic_pub.publish(spr_haptic_force);
-
-    ROS_INFO("SPR Collision x:%f y:%f z:%f", spr_collision_direction.x,
-             spr_collision_direction.y,
-             spr_collision_direction.z);
+    else{
+        double x,y,z;
+        x = y = z = 0;
+        for(size_t i ; i < v_arr.size() ; i++){
+            x += v_arr.at(i).getX();
+            y += v_arr.at(i).getY();
+            z += v_arr.at(i).getZ();
+        }
+        x = x/v_arr.size();
+        y = y/v_arr.size();
+        z = z/v_arr.size();
+        v.setValue(x,y,z);
+    }
 }
 
-void HapticsPSM::normalize(geometry_msgs::Vector3 &v){
-    compute_norm(v,norm);
-    v.x = v.x/norm;
-    v.y = v.y/norm;
-    v.z = v.z/norm;
-
+bool HapticsPSM::has_normal_changed(tf::Vector3 &v1, tf::Vector3 &v2){
+    tf::Vector3 v;
+    v = v1 - v2;
+    if(v.length() > coll_psm.epsilon){
+        return true; //The new normal has not changed
+    }
+    else{
+        return false; //The new normal has changed
+    }
 }
 
-void HapticsPSM::compute_norm(geometry_msgs::Vector3 &v, double &n){
-    n = (v.x * v.x) + (v.y * v.y) + (v.z * v.z);
-    n = sqrt(n);
+void HapticsPSM::compute_deflection_along_normal(tf::Vector3 &n, tf::Vector3 &d, tf::Vector3 &d_along_n){
+    d_along_n = d.dot(n) * n; //This gives us the dot product of current deflection in the direction of current normal                                                                                        //We don't need to divide by mag to n, as n is a normal vector with mag = 1
 }
 
-void HapticsPSM::compute_deflection_force(geometry_msgs::Wrench &wrench){
-    compute_norm(spr_collision_direction,deflection_norm);
-    force_magnitude = radius_SPR - deflection_norm;
-    normalize(spr_collision_direction);
-    wrench.force.x = spr_collision_direction.x * force_magnitude;
-    wrench.force.y = spr_collision_direction.y * force_magnitude;
-    wrench.force.z = spr_collision_direction.z * force_magnitude;
+void HapticsPSM::adjust_locked_position_along_new_n(tf::Vector3 &d, tf::Vector3 &p){
+    get_current_position(p); //Record the current position, this would be inside the collision mesh as the normal just changed while in collision
+    p = p+d; //If we are already inside a body, this would take the locked proxy point outside the body along the deflection along normal.
+}
+
+
+void HapticsPSM::compute_deflection_force(geometry_msgs::Wrench &wrench, tf::Vector3 &d_along_n){
+
+    wrench.force.x = d_along_n.getX();
+    wrench.force.y = d_along_n.getY();
+    wrench.force.z = d_along_n.getZ();
 }
 
 void HapticsPSM::compute_force_in_tip_frame(geometry_msgs::Wrench &wrench){
@@ -314,57 +348,59 @@ void HapticsPSM::compute_force_in_tip_frame(geometry_msgs::Wrench &wrench){
 }
 
 
-// Trying this out to see if we can extract FCL collision normals for generic collision
-void HapticsPSM::get_collision_normals(const collision_detection::CollisionResult::ContactMap &con, std::vector<tf::Vector3> &n, std::vector<double> &d){
-    n.clear();
-    d.clear();
-    std::map<std::string, unsigned> ns_counts;
-    tf::Vector3 temp;
-   for(collision_detection::CollisionResult::ContactMap::const_iterator it = con.begin(); it != con.end(); ++it)
-    {
-      for(unsigned int i = 0; i < it->second.size(); ++i)
-      {
-        std::string ns_name = it->second[i].body_name_1 + "=" + it->second[i].body_name_2;
-        if (ns_counts.find(ns_name) == ns_counts.end())
-          ns_counts[ns_name] = 0;
-        else
-        ns_counts[ns_name]++;
-        temp.setValue(it->second[i].normal.x(),it->second[i].normal.y(),it->second[i].normal.z());
-        d.push_back(it->second[i].depth);
-        n.push_back(temp);
-      }
-   }
-}
+void HapticsPSM::run_haptic_alg(){
 
-void HapticsPSM::psm_pose_cb(const geometry_msgs::PoseConstPtr &msg){
-    pre_psm_pose = cur_psm_pose;
-    cur_psm_pose = *msg;
+    if(check_collison()){
+        if(coll_psm._first_contact){
+            ROS_INFO("First contact occured");
+            lock_current_position_for_proxy(coll_psm.locked_position);
+            coll_psm._first_contact = false;
+        }
+        //Step 1:
+        get_collision_normals(coll_res.contacts, coll_psm.cur_normal_arr);
+        //Step 2:
+        compute_average_normal(coll_psm.cur_normal_arr, coll_psm.cur_normal);
+        //Step 3:
+        if(has_normal_changed(coll_psm.cur_normal, coll_psm.pre_normal)){
+            adjust_locked_position_along_new_n(coll_psm.def_along_n, coll_psm.locked_position);
+        }
+        //Step 5:
+        compute_total_deflection(coll_psm.def_total);
+        //Step 6:
+        compute_deflection_along_normal(coll_psm.cur_normal, coll_psm.def_total, coll_psm.def_along_n);
+        //Step 7:
+        compute_deflection_force(spr_haptic_force.wrench,coll_psm.def_along_n);
+        //Step 8:
+        compute_force_in_tip_frame(spr_haptic_force.wrench);
+        //Step 9:
+        coll_psm.pre_normal = coll_psm.cur_normal;
 
-    cur_psm_tip_vel.x = cur_psm_pose.position.x - pre_psm_pose.position.x;
-    cur_psm_tip_vel.y = cur_psm_pose.position.y - pre_psm_pose.position.y;
-    cur_psm_tip_vel.z = cur_psm_pose.position.z - pre_psm_pose.position.z;
+    }
+    else{
+        coll_psm._first_contact = true;
+        coll_psm.cur_normal.setValue(0,0,0);
+        ROS_INFO("First Contact Released");
+        spr_haptic_force.wrench.force.x=0;
+        spr_haptic_force.wrench.force.y=0;
+        spr_haptic_force.wrench.force.z=0;
+    }
+
+    spr_haptic_pub.publish(spr_haptic_force);
+
+
 }
 
 int main(int argc, char ** argv)
 {
-    ros::init(argc,argv,"psm_MotionPlanning");
-    HapticsPSM traj;
+    ros::init(argc,argv,"psm_haptics_node");
+    HapticsPSM psmHap;
     ros::AsyncSpinner spinner(1);
     spinner.start();
     while(ros::ok())
     {
-        traj.check_collison();
-        if(traj.do_planning_ == true){
-           bool success =  traj.group->plan(traj.plan_srv);
-           ROS_INFO("Visualizing plan 2 (joint space goal) %s",success?"":"FAILED");
-           /* Sleep to give Rviz time to visualize the plan. */
-           sleep(5.0);
-           traj.do_planning_ = false;
-        }
-        //ros::spinOnce();
-        traj.rate_->sleep();
+        psmHap.run_haptic_alg();
+        psmHap.rate_->sleep();
     }
-
     ros::shutdown();
     return 0;
 }
