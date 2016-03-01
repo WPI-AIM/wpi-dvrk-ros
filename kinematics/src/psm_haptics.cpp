@@ -118,7 +118,7 @@ HapticsPSM::HapticsPSM()
     spr_haptic_pub = node_.advertise<geometry_msgs::WrenchStamped>
             ("/dvrk_psm/haptics_feedback_force",1);
     haptic_deflection_pub = node_.advertise<geometry_msgs::Vector3>
-            ("/dvrk_psm/haptic_defection_vector",1);
+            ("/dvrk_psm/haptic_deflection_vector",1);
     spr_haptic_force.header.frame_id = "one_tool_wrist_sca_ee_link_1";
 
     rot_mat6wrt0.setRPY(-M_PI/2,0,0);

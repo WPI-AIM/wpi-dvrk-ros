@@ -148,7 +148,7 @@ void MTMHaptics::visualize_haptic_force(const ros::Publisher &pub){
 }
 
 void MTMHaptics::haptic_feeback_plane(geometry_msgs::Point set_point, bool _collision){
-    if(strcmp(this->cur_robot_state.c_str(),"DVRK_EFFORT_CARTESIAN")){
+    if(strcmp(this->cur_robot_state.c_str(),"DVRK_EFFORT_CARTESIAN") == 0){
         geometry_msgs::Point error;
         error.x = set_point.x - cur_mtm_pose.position.x;
         error.y = set_point.y - cur_mtm_pose.position.y;
@@ -193,7 +193,7 @@ int main(int argc, char ** argv){
     sleep(2.0);
     geometry_msgs::Point haptic_point;
     haptic_point.y = -0.38;
-    haptics.set_effort_mode();
+//    haptics.set_effort_mode();
 
     while (ros::ok()){
     haptics.haptic_feeback_plane(haptic_point,true);

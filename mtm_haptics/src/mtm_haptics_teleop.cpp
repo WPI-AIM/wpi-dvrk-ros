@@ -77,6 +77,7 @@ HapticsMTM::HapticsMTM(){
     jnt_pos_sub = node_.subscribe("/dvrk_mtm/joint_position_current", 10, &HapticsMTM::jnt_pos_cb, this);
 //  jnt_torque_sub = node_.subscribe("/dvrk_mtm/joint_effort_current", 10, &HapticsMTM::jnt_torque_cb, this);
     crt_pos_sub = node_.subscribe("/dvrk_mtm/cartesian_pose_current", 10, &HapticsMTM::crt_pos_cb, this);
+    cur_robot_state_sub = node_.subscribe("/dvrk_mtm/robot_state_current", 10, &HapticsMTM::cur_robot_state_cb, this);
     haptic_deflection_sub = node_.subscribe("/dvrk_psm/haptic_deflection_vector", 10, &HapticsMTM::haptic_deflection_cb, this);
 
     crt_torque_pub = node_.advertise<geometry_msgs::Wrench>("/dvrk_mtm/set_wrench_body",10);
@@ -86,7 +87,7 @@ HapticsMTM::HapticsMTM(){
     spatial_force_pub = node_.advertise<geometry_msgs::WrenchStamped>("/dvrk_mtm_haptics/spatial_force_feedback",10);
     haptic_feedback.header.frame_id = "right_ee_link";
 
-    rate_ = new ros::Rate(500);
+    rate_ = new ros::Rate(100);
 
     Kp.x = 200;
     Kp.y = 200;
@@ -158,7 +159,7 @@ void HapticsMTM::haptic_deflection_cb(const geometry_msgs::Vector3ConstPtr &delt
 
 void HapticsMTM::run_mtm_haptic_alg(){
 
-    if(strcmp(cur_robot_state.c_str(), "DVRK_EFFOR_CARTESIAN")){
+    if(strcmp(this->cur_robot_state.c_str(), "DVRK_EFFORT_CARTESIAN") == 0){
         haptic_feedback.wrench.force.x = Kp.x * coll_mtm.def_mtm_base.getX();
         haptic_feedback.wrench.force.y = Kp.y * coll_mtm.def_mtm_base.getY();
         haptic_feedback.wrench.force.z = Kp.z * coll_mtm.def_mtm_base.getZ();
@@ -171,18 +172,20 @@ void HapticsMTM::run_mtm_haptic_alg(){
         ROS_INFO("Setting Robot State to Cartesian Effort. Current State is %s",cur_robot_state.c_str());
         sleep(3.0);
     }
+    rate_->sleep();
 
 }
 
 
 int main(int argc, char ** argv){
     ros::init(argc,argv,"mtm_haptics_teleop_node");
+    ros::AsyncSpinner spinner(1);
+    spinner.start();
+    ROS_INFO("Starting MTM TeleOp Haptics Node");
     HapticsMTM haptics;
     sleep(2.0);
     while (ros::ok()){
     haptics.run_mtm_haptic_alg();
-    haptics.rate_->sleep();
-    ros::spinOnce();
     }
     ros::shutdown();
     return 0;
