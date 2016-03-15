@@ -226,34 +226,37 @@ void HapticsPSM::compute_total_deflection(tf::Vector3 &delta_v){
     tf::Vector3 v1,v2;
     v1 = coll_psm.locked_position;
     get_current_position(v2);
-    delta_v.setValue(v1.getX() - v2.getX(),
-                     v1.getY() - v2.getY(),
-                     v1.getZ() - v2.getZ());
+    delta_v = v1 - v2;
 }
 
 void HapticsPSM::compute_average_normal(std::vector<tf::Vector3> &v_arr, tf::Vector3 &v){
+    tf::Vector3 new_n;
+    new_n.setValue(0,0,0);
     if(v_arr.size() == 1){
-        v = v_arr.at(0);
+        new_n = v_arr.at(0);
     }
     else{
-        tf::Vector3 v_avg;
-        v_avg.setValue(0,0,0);
         for(size_t i ; i < v_arr.size() ; i++){
-            v_avg = v_avg + v_arr.at(i);
+            new_n = new_n + v_arr.at(i);
         }
-        v_avg = v_avg.normalize();
+    }
+    new_n.normalize();
 
-        //Check if v_avg = 0 or in the negative direction as curr v, if it is, leave v unchanged
-        if(v.dot(v_avg) == 0){ // If the dot product of the last and the current normal in 0, this could be due to the bug of getting negative normals
+    if(v.length() == 0){
+        v = new_n; // This is for the first contact, since the current normal is zero, so assign the new value of the normal computed form collision checking
+    }
+    else{
+        //Check if new_n = 0 or in the negative direction as curr n, if it is, leave n unchanged
+        if(v.dot(new_n) == 0){ // If the dot product of the last and the current normal in 0, this could be due to the bug of getting negative normals
             //v remains unchanged
             ROS_INFO("New Normal Cancels out the previous one");
         }
-        else if(v.dot(v_avg) < 0 ){ //If the dot product of the last and the current normal in a negative number, this could be due to the bug of getting negative normals
-            v = -v_avg;
+        else if(v.dot(new_n) < 0 ){ //If the dot product of the last and the current normal in a negative number, this could be due to the bug of getting negative normals
+            v = -new_n;
             ROS_INFO("New normal lies on the opposite plane");
         }
         else{
-            v = v_avg;
+            v = new_n;
         }
     }
 }
@@ -261,16 +264,17 @@ void HapticsPSM::compute_average_normal(std::vector<tf::Vector3> &v_arr, tf::Vec
 bool HapticsPSM::has_normal_changed(tf::Vector3 &v1, tf::Vector3 &v2){
     tf::Vector3 v;
     v = v1 - v2;
+    v.normalize();
     if(v.length() > coll_psm.epsilon){
-        return true; //The new normal has not changed
+        return true; //The new normal has changed
     }
     else{
-        return false; //The new normal has changed
+        return false; //The new normal has not changed
     }
 }
 
 void HapticsPSM::compute_deflection_along_normal(tf::Vector3 &n, tf::Vector3 &d, tf::Vector3 &d_along_n){
-    d_along_n = d.dot(n) * n; //This gives us the dot product of current deflection in the direction of current normal                                                                                        //We don't need to divide by mag to n, as n is a normal vector with mag = 1
+    d_along_n = (d.dot(n)/n.length()) * n; //This gives us the dot product of current deflection in the direction of current normal                                                                                        //We don't need to divide by mag to n, as n is a normal vector with mag = 1
 }
 
 void HapticsPSM::adjust_locked_position_along_new_n(tf::Vector3 &d, tf::Vector3 &p){
@@ -312,6 +316,7 @@ void HapticsPSM::run_haptic_alg(){
         compute_average_normal(coll_psm.cur_normal_arr, coll_psm.cur_normal);
         //Step 3:
         if(has_normal_changed(coll_psm.cur_normal, coll_psm.pre_normal)){
+            ROS_INFO("Normal has Changed");
             adjust_locked_position_along_new_n(coll_psm.def_along_n, coll_psm.locked_position);
         }
         //Step 5:
