@@ -100,9 +100,9 @@ HapticsPSM::HapticsPSM()
     robotModel = new robot_model_loader::RobotModelLoader("robot_description");
     kinematic_model = robotModel->getModel();
     psm_planning_scene = new planning_scene::PlanningScene(kinematic_model);
-    coll_req.group_name = "full_chain";
+    coll_req.group_name = "end_effector";
     coll_req.contacts = true;
-    coll_req.max_contacts = 100;
+    coll_req.max_contacts = 5;
     coll_req.verbose = false;
 
     planning_scene_msg_sub = node_.subscribe(
@@ -239,17 +239,18 @@ void HapticsPSM::compute_average_normal(std::vector<tf::Vector3> &v_arr, tf::Vec
         tf::Vector3 v_avg;
         v_avg.setValue(0,0,0);
         for(size_t i ; i < v_arr.size() ; i++){
-            v_avg.setX(v_avg.getX() + v_arr.at(i).getX());
-            v_avg.setY(v_avg.getY() + v_arr.at(i).getY());
-            v_avg.setZ(v_avg.getZ() + v_arr.at(i).getZ());
+            v_avg = v_avg + v_arr.at(i);
         }
-        v_avg.setX(v_avg.getX()/v_arr.size());
-        v_avg.setY(v_avg.getY()/v_arr.size());
-        v_avg.setZ(v_avg.getZ()/v_arr.size());
+        v_avg = v_avg.normalize();
 
         //Check if v_avg = 0 or in the negative direction as curr v, if it is, leave v unchanged
-        if(v.dot(v_avg) == 0 || v.dot(v_avg) + 1 > coll_psm.epsilon ){
+        if(v.dot(v_avg) == 0){ // If the dot product of the last and the current normal in 0, this could be due to the bug of getting negative normals
             //v remains unchanged
+            ROS_INFO("New Normal Cancels out the previous one");
+        }
+        else if(v.dot(v_avg) < 0 ){ //If the dot product of the last and the current normal in a negative number, this could be due to the bug of getting negative normals
+            v = -v_avg;
+            ROS_INFO("New normal lies on the opposite plane");
         }
         else{
             v = v_avg;
