@@ -1,7 +1,7 @@
 <!-- Author: Adnan Munawar: Launch file for MTMs trajectory and motion planning nodes -->
 <launch>
 <!-- Launch Actual MTMR launch file -->
-  	<include file="$(find dvrk_robot)/launch/test_dvrk_mtm.launch" />
+  	<!--include file="$(find dvrk_robot)/launch/test_dvrk_mtm.launch" /-->
 <!-- Launch motion planning/kinematics nodes -->
 	<node name="teleop" pkg="dvrk_teleop" type="dvrk_teleop" />
 <!-- Launch PSM's logic handling code node -->
