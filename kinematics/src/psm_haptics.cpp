@@ -78,7 +78,7 @@ public:
     bool check_collison();
     void compute_total_deflection(tf::Vector3 &delta_v);
     void compute_deflection_along_normal(tf::Vector3 &n, tf::Vector3 &d, tf::Vector3 &d_along_n);
-    void adjust_locked_position_along_new_n(tf::Vector3 &d, tf::Vector3&new_n, tf::Vector3 &p);
+    void adjust_locked_position_along_new_n(tf::Vector3 &old_d, tf::Vector3&new_n, tf::Vector3 &old_locked_p);
     void get_current_position(tf::Vector3 &v);
     void lock_current_position_for_proxy(tf::Vector3 &v); //Record the current pose and set v equal to it.
     void compute_deflection_force(geometry_msgs::Wrench &wrench, tf::Vector3 &d_along_n);
@@ -102,7 +102,7 @@ HapticsPSM::HapticsPSM()
     psm_planning_scene = new planning_scene::PlanningScene(kinematic_model);
     coll_req.group_name = "end_effector";
     coll_req.contacts = true;
-    coll_req.max_contacts = 5;
+    coll_req.max_contacts = 15;
     coll_req.verbose = false;
 
     planning_scene_msg_sub = node_.subscribe(
@@ -277,9 +277,11 @@ void HapticsPSM::compute_deflection_along_normal(tf::Vector3 &n, tf::Vector3 &d,
     d_along_n = (d.dot(n)/n.length()) * n; //This gives us the dot product of current deflection in the direction of current normal                                                                                        //We don't need to divide by mag to n, as n is a normal vector with mag = 1
 }
 
-void HapticsPSM::adjust_locked_position_along_new_n(tf::Vector3 &d, tf::Vector3 &new_n, tf::Vector3 &p){
-    get_current_position(p); //Record the current position, this would be inside the collision mesh as the normal just changed while in collision
-    p = p+d; //If we are already inside a body, this would take the locked proxy point outside the body along the deflection along normal.
+void HapticsPSM::adjust_locked_position_along_new_n(tf::Vector3 &old_d, tf::Vector3&new_n, tf::Vector3 &locked_p){
+    tf::Vector3 new_d;
+    get_current_position(locked_p); //Record the current position, this would be inside the collision mesh as the normal just changed while in collision
+    compute_deflection_along_normal(new_n, old_d, new_d);
+    locked_p = locked_p + new_d; //If we are already inside a body, this would take the locked proxy point outside the body along the deflection along normal.
 }
 
 
@@ -316,8 +318,9 @@ void HapticsPSM::run_haptic_alg(){
         compute_average_normal(coll_psm.cur_normal_arr, coll_psm.cur_normal);
         //Step 3:
         if(has_normal_changed(coll_psm.cur_normal, coll_psm.pre_normal)){
-            ROS_INFO("Normal has Changed");
+            ROS_INFO("Normal has Changed nx = %f ny = %f  nz = %f", coll_psm.cur_normal.getX(),coll_psm.cur_normal.getY(),coll_psm.cur_normal.getZ());
             adjust_locked_position_along_new_n(coll_psm.def_along_n, coll_psm.cur_normal, coll_psm.locked_position);
+            ROS_INFO("Changing Locked Position to px = %f py = %f  pz = %f", coll_psm.locked_position.getX(),coll_psm.locked_position.getY(),coll_psm.locked_position.getZ());
         }
         //Step 5:
         compute_total_deflection(coll_psm.def_total);
