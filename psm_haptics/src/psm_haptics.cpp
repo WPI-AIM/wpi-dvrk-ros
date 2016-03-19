@@ -231,28 +231,23 @@ void HapticsPSM::lock_current_position_for_proxy(tf::Vector3 &v){
 }
 
 void HapticsPSM::compute_total_deflection(tf::Vector3 &delta_v){
-    tf::Vector3 v1,v2;
+    tf::Vector3 v1,v2,v3;
+    tfScalar d_len;
     v1 = coll_psm.locked_position;
     get_current_position(v2);
-    if(v1.getX() < 0){
-        delta_v.setX( - coll_psm.spr_radius + v1.getX() - v2.getX());
+    v3 = v1 - v2;
+    d_len = v3.length();
+    v3.normalize();
+    if(v3.getX() > 0 || v3.getY() > 0 || v3.getZ() > 0){
+        delta_v = -(coll_psm.spr_radius - d_len) * v3;
     }
     else{
-        delta_v.setX(   coll_psm.spr_radius + v1.getX() - v2.getX());
+        delta_v = (coll_psm.spr_radius + d_len) * v3;
     }
-    if(v1.getY() < 0){
-        delta_v.setY( - coll_psm.spr_radius + v1.getY() - v2.getY());
-    }
-    else{
-        delta_v.setY(   coll_psm.spr_radius + v1.getY() - v2.getY());
-    }
-    if(v1.getZ() < 0){
-        delta_v.setZ( - coll_psm.spr_radius + v1.getZ() - v2.getZ());
-    }
-    else{
-        delta_v.setZ(   coll_psm.spr_radius + v1.getZ() - v2.getZ());
-    }
-    ROS_INFO("Locked/Current Position lx = %f cx = %f ly = %f cy = %f lz = %f cz = %f", v1.getX(),v2.getX(),v1.getY(),v2.getY(),v1.getZ(),v2.getZ());
+
+    //ROS_INFO("Locked  Position lx = %f ly = %f lz = %f ", v1.getX(),v1.getY(),v1.getZ());
+    //ROS_INFO("Current Position cx = %f cy = %f cz = %f ", v2.getX(),v2.getY(),v2.getZ());
+
 }
 
 void HapticsPSM::compute_average_normal(std::vector<tf::Vector3> &v_arr, tf::Vector3 &v){
@@ -262,7 +257,7 @@ void HapticsPSM::compute_average_normal(std::vector<tf::Vector3> &v_arr, tf::Vec
         new_n = v_arr.at(0);
     }
     else{
-        for(size_t i ; i < v_arr.size() ; i++){
+        for(size_t i=0 ; i < v_arr.size() ; i++){
             new_n = new_n + v_arr.at(i);
         }
     }
@@ -294,10 +289,15 @@ void HapticsPSM::compute_average_position(std::vector<tf::Vector3> &p_arr, tf::V
         new_p = p_arr.at(0);
     }
     else{
-        for(size_t i ; i < p_arr.size() ; i++){
+        for(size_t i=0 ; i < p_arr.size() ; i++){
             new_p = new_p + p_arr.at(i);
         }
+        new_p = new_p/p_arr.size();
     }
+//    ROS_INFO("Number of Conatact Points %lu", p_arr.size());
+//    for(size_t i=0 ; i < p_arr.size() ; i++){
+//        ROS_INFO("Contact Point px %f   py %f   pz %f",p_arr.at(i).getX(),p_arr.at(i).getY(),p_arr.at(i).getZ());
+//    }
     p = new_p;
 }
 
@@ -358,8 +358,8 @@ void HapticsPSM::run_haptic_alg(){
         }
         //Step 3:
         if(has_normal_changed(coll_psm.cur_normal, coll_psm.pre_normal)){
-            ROS_INFO("Normal has Changed nx = %f ny = %f  nz = %f", coll_psm.cur_normal.getX(),coll_psm.cur_normal.getY(),coll_psm.cur_normal.getZ());
-            ROS_INFO("Normal has Changed pnx = %f pny = %f  pnz = %f", coll_psm.pre_normal.getX(),coll_psm.pre_normal.getY(),coll_psm.pre_normal.getZ());
+        //    ROS_INFO("Normal has Changed nx = %f ny = %f  nz = %f", coll_psm.cur_normal.getX(),coll_psm.cur_normal.getY(),coll_psm.cur_normal.getZ());
+        //    ROS_INFO("Normal has Changed pnx = %f pny = %f  pnz = %f", coll_psm.pre_normal.getX(),coll_psm.pre_normal.getY(),coll_psm.pre_normal.getZ());
         }
         //Step 5:
         compute_total_deflection(coll_psm.def_total);
