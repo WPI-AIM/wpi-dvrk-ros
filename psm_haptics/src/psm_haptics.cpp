@@ -236,6 +236,7 @@ void HapticsPSM::compute_total_deflection(tf::Vector3 &delta_v){
     get_current_position(v2);
     v3 = (v1 - v2) + (coll_psm.cur_normal * coll_psm.spr_radius);
     ROS_INFO("v3 full vx = %f vy = %f vz = %f ", v3.getX(),v3.getY(),v3.getZ());
+    delta_v = v3;
 }
 
 void HapticsPSM::compute_average_normal(std::vector<tf::Vector3> &v_arr, tf::Vector3 &v){
