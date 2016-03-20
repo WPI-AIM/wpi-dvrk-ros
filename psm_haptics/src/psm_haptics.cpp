@@ -232,22 +232,10 @@ void HapticsPSM::lock_current_position_for_proxy(tf::Vector3 &v){
 
 void HapticsPSM::compute_total_deflection(tf::Vector3 &delta_v){
     tf::Vector3 v1,v2,v3;
-    tfScalar d_len;
     v1 = coll_psm.locked_position;
     get_current_position(v2);
-    v3 = v1 - v2;
-    d_len = v3.length();
-    v3.normalize();
-    if(v3.getX() > 0 || v3.getY() > 0 || v3.getZ() > 0){
-        delta_v = -(coll_psm.spr_radius - d_len) * v3;
-    }
-    else{
-        delta_v = (coll_psm.spr_radius + d_len) * v3;
-    }
-
-    //ROS_INFO("Locked  Position lx = %f ly = %f lz = %f ", v1.getX(),v1.getY(),v1.getZ());
-    //ROS_INFO("Current Position cx = %f cy = %f cz = %f ", v2.getX(),v2.getY(),v2.getZ());
-
+    v3 = (v1 - v2) + (coll_psm.cur_normal * coll_psm.spr_radius);
+    ROS_INFO("v3 full vx = %f vy = %f vz = %f ", v3.getX(),v3.getY(),v3.getZ());
 }
 
 void HapticsPSM::compute_average_normal(std::vector<tf::Vector3> &v_arr, tf::Vector3 &v){
