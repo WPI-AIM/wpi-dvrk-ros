@@ -129,7 +129,6 @@ HapticsPSM::HapticsPSM()
 
     group->setEndEffectorLink("one_tool_wrist_sca_ee_link_1");
     coll_psm.epsilon = 0.001;
-    coll_psm.spr_radius = 0.025;
 }
 
 
@@ -235,7 +234,7 @@ void HapticsPSM::compute_total_deflection(tf::Vector3 &delta_v){
     v1 = coll_psm.locked_position;
     get_current_position(v2);
     v3 = (v1 - v2) + (coll_psm.cur_normal * coll_psm.spr_radius);
-    ROS_INFO("v3 full vx = %f vy = %f vz = %f ", v3.getX(),v3.getY(),v3.getZ());
+    //ROS_INFO("v3 full vx = %f vy = %f vz = %f ", v3.getX(),v3.getY(),v3.getZ());
     delta_v = v3;
 }
 
@@ -342,6 +341,11 @@ void HapticsPSM::run_haptic_alg(){
         compute_average_normal(coll_psm.cur_normal_arr, coll_psm.cur_normal);
         if(coll_psm._first_contact){
             ROS_INFO("First contact occured");
+            tf::Vector3 diff, cur_pos;
+            get_current_position(cur_pos);
+            diff = coll_psm.locked_position - cur_pos;
+            coll_psm.spr_radius = diff.length();
+            ROS_INFO("SPR Radius Detected to be %f",coll_psm.spr_radius);
             coll_psm._first_contact = false;
             ROS_INFO("Normal is nx = %f ny = %f  nz = %f", coll_psm.cur_normal.getX(),coll_psm.cur_normal.getY(),coll_psm.cur_normal.getZ());
         }
