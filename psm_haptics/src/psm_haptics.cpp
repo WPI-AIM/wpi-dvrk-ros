@@ -43,6 +43,7 @@ public:
         tf::Vector3 def_along_n; //deflection along normal
         tf::Vector3 def_total;  //total deflection from locked pose
         double epsilon; //Small value to compare the change in direction of the normals
+        double insertion_depth; //Insertion Depth as reported by MoveIt
         double spr_radius;
 
         CollisionPSM():_first_contact(true){}
@@ -88,7 +89,7 @@ public:
     void compute_average_normal(std::vector<tf::Vector3> &v_arr, tf::Vector3 &v); //If we have several normals, compute average normal vector
     void compute_average_position(std::vector<tf::Vector3> &p_arr, tf::Vector3 &p); //If we have several contact, compute average contact point
     void compute_force_in_tip_frame(geometry_msgs::Wrench &wrench);
-    void get_collision_normals_and_points(const collision_detection::CollisionResult::ContactMap& con, std::vector<tf::Vector3> &n, std::vector<tf::Vector3> &p);
+    void get_collision_normals_and_points(const collision_detection::CollisionResult::ContactMap& con, std::vector<tf::Vector3> &n, std::vector<tf::Vector3> &p, double &depth);
     bool has_normal_changed(tf::Vector3 &v1, tf::Vector3 &v2);
     void run_haptic_alg();
 
@@ -157,7 +158,7 @@ void HapticsPSM::publishMarkers(visualization_msgs::MarkerArray& markers)
      coll_marker_pub.publish(psm_collision_points);
  }
 
-void HapticsPSM::get_collision_normals_and_points(const collision_detection::CollisionResult::ContactMap &con, std::vector<tf::Vector3> &n, std::vector<tf::Vector3> &p){
+void HapticsPSM::get_collision_normals_and_points(const collision_detection::CollisionResult::ContactMap &con, std::vector<tf::Vector3> &n, std::vector<tf::Vector3> &p, double &depth){
     n.clear();
     p.clear();
     std::map<std::string, unsigned> ns_counts;
@@ -173,6 +174,7 @@ void HapticsPSM::get_collision_normals_and_points(const collision_detection::Col
         ns_counts[ns_name]++;
         temp_n.setValue(it->second[i].normal.x(),it->second[i].normal.y(),it->second[i].normal.z());
         temp_p.setValue(it->second[i].pos.x(),it->second[i].pos.y(),it->second[i].pos.z());
+        depth = it->second[i].depth;
         n.push_back(temp_n);
         p.push_back(temp_p);
       }
@@ -335,7 +337,7 @@ void HapticsPSM::run_haptic_alg(){
 
     if(check_collison()){
         //Step 1:
-        get_collision_normals_and_points(coll_res.contacts, coll_psm.cur_normal_arr, coll_psm.cur_contact_pnts_arr);
+        get_collision_normals_and_points(coll_res.contacts, coll_psm.cur_normal_arr, coll_psm.cur_contact_pnts_arr, coll_psm.insertion_depth);
         //Step 2:
         compute_average_position(coll_psm.cur_contact_pnts_arr, coll_psm.locked_position);
         compute_average_normal(coll_psm.cur_normal_arr, coll_psm.cur_normal);
