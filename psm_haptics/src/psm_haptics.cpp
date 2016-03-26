@@ -45,6 +45,7 @@ public:
         double epsilon; //Small value to compare the change in direction of the normals
         std::vector<double> insertion_depths; //Insertion Depth as reported by MoveIt
         double spr_radius;
+        int contact_cnts_prev;
 
         CollisionPSM():_first_contact(true){}
     }coll_psm;
@@ -339,6 +340,9 @@ void HapticsPSM::run_haptic_alg(){
     if(check_collison()){
         //Step 1:
         get_collision_normals_and_points(coll_res.contacts, coll_psm.cur_normal_arr, coll_psm.cur_contact_pnts_arr, coll_psm.insertion_depths);
+        if (coll_psm.contact_cnts_prev != coll_res.contacts.size()){
+            ROS_INFO("Number of Contact Points = %i", coll_res.contacts.size());
+        }
         //Step 2:
         compute_average_position(coll_psm.cur_contact_pnts_arr, coll_psm.locked_position);
         compute_average_normal(coll_psm.cur_normal_arr, coll_psm.cur_normal);
@@ -367,6 +371,7 @@ void HapticsPSM::run_haptic_alg(){
         compute_force_in_tip_frame(spr_haptic_force.wrench);
         //Step 9:
         coll_psm.pre_normal = coll_psm.cur_normal;
+        coll_psm.contact_cnts_prev = coll_res.contacts.size();
 
     }
     else{
