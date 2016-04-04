@@ -72,6 +72,7 @@ MTMHaptics::MTMHaptics(){
 //    jnt_torque_sub = node_.subscribe("/dvrk_mtm/joint_effort_current", 10, &MTMHaptics::jnt_torque_cb, this);
     crt_pos_sub = node_.subscribe("/dvrk_mtm/cartesian_pose_current", 10, &MTMHaptics::crt_pos_cb, this);
     haptic_collision_sub = node_.subscribe("/dvrk_mtm/haptic_collision_subscriber",10, &MTMHaptics::haptic_collision_cb, this);
+    cur_robot_state_sub = node_.subscribe("/dvrk_mtm/robot_state_current", 10, &MTMHaptics::cur_robot_state_cb, this);
 
     crt_torque_pub = node_.advertise<geometry_msgs::Wrench>("/dvrk_mtm/set_wrench_body",10);
     jnt_torque_pub = node_.advertise<sensor_msgs::JointState>("/dvrk_mtm/set_effort_joint_unsinked",10);
@@ -90,9 +91,9 @@ MTMHaptics::MTMHaptics(){
     Kd.y = 1;
     Kd.z = 1;
 
-    dX.x = 0.05;
-    dX.y = 0.05;
-    dX.z = 0.05;
+    dX.x = 0.1;
+    dX.y = 0.1;
+    dX.z = 0.1;
 
 }
 
@@ -157,7 +158,7 @@ void MTMHaptics::haptic_feeback_plane(geometry_msgs::Point set_point, bool _coll
         if (error.y >= 0 && error.y <= dX.y){
             haptic_feedback.header.stamp = ros::Time::now();
             haptic_feedback.wrench.force.x = 0;
-            haptic_feedback.wrench.force.y = (Kp.y * error.y);
+            haptic_feedback.wrench.force.y = (Kp.y * error.y) - (Kd.y * cur_mtm_tip_vel.y);
             haptic_feedback.wrench.force.z = 0;
             convert_bodyForcetoSpatialForce(haptic_feedback);
             crt_torque_pub.publish(haptic_feedback.wrench);
@@ -172,7 +173,7 @@ void MTMHaptics::haptic_feeback_plane(geometry_msgs::Point set_point, bool _coll
 
     }
     else{
-        ROS_WARN("MTM is %s state, it needs to be in DVRK_EFFORT_CARTESIAN STATE",this->cur_robot_state.c_str());
+        ROS_WARN("MTM in %s state, it needs to be in DVRK_EFFORT_CARTESIAN STATE",this->cur_robot_state.c_str());
     }
 }
 
@@ -193,7 +194,7 @@ int main(int argc, char ** argv){
     sleep(2.0);
     geometry_msgs::Point haptic_point;
     haptic_point.y = -0.38;
-//    haptics.set_effort_mode();
+    haptics.set_effort_mode();
 
     while (ros::ok()){
     haptics.haptic_feeback_plane(haptic_point,true);

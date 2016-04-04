@@ -46,7 +46,6 @@ public:
         std::vector<double> insertion_depths; //Insertion Depth as reported by MoveIt
         double spr_radius;
         int contact_cnts_prev;
-
         CollisionPSM():_first_contact(true){}
     }coll_psm;
 
@@ -63,6 +62,7 @@ public:
     moveit_msgs::PlanningSceneWorld world_msg;
     geometry_msgs::Point32 pc_point;
     geometry_msgs::WrenchStamped spr_haptic_force;
+    geometry_msgs::WrenchStamped mesh_normal;
     geometry_msgs::Vector3 haptic_deflection;
     tf::Matrix3x3 rot_mat6wrt0;
     tf::Vector3 tf_vec3;
@@ -74,6 +74,7 @@ public:
     ros::Publisher traj_pc_pub;
     ros::Publisher spr_haptic_pub;
     ros::Publisher haptic_deflection_pub;
+    ros::Publisher normal_pub;
 
 
     ros::Subscriber planning_scene_msg_sub;
@@ -110,6 +111,7 @@ HapticsPSM::HapticsPSM()
     coll_req.contacts = true;
     coll_req.max_contacts = 15;
     coll_req.verbose = false;
+    coll_req.max_contacts_per_pair = 50;
 
     planning_scene_msg_sub = node_.subscribe(
                 "/move_group/monitored_planning_scene",10,&HapticsPSM::planning_scene_cb,this);
@@ -125,7 +127,11 @@ HapticsPSM::HapticsPSM()
             ("/dvrk_psm/haptics_feedback_force",1);
     haptic_deflection_pub = node_.advertise<geometry_msgs::Vector3>
             ("/dvrk_psm/haptic_deflection_vector",1);
+    normal_pub = node_.advertise<geometry_msgs::WrenchStamped>
+            ("/dvrk_psm/mesh_normal",1);
     spr_haptic_force.header.frame_id = "one_tool_wrist_sca_ee_link_1";
+    mesh_normal.header.frame_id = "world";
+
 
     rot_mat6wrt0.setRPY(-M_PI/2,0,0);
 
@@ -305,7 +311,7 @@ bool HapticsPSM::has_normal_changed(tf::Vector3 &v1, tf::Vector3 &v2){
 }
 
 void HapticsPSM::compute_deflection_along_normal(tf::Vector3 &n, tf::Vector3 &d, tf::Vector3 &d_along_n){
-    d_along_n = (d.dot(n)/n.length()) * n; //This gives us the dot product of current deflection in the direction of current normal                                                                                        //We don't need to divide by mag to n, as n is a normal vector with mag = 1
+    d_along_n = (d.dot(n)/n.length()) * n; //This gives us the dot product of current deflection in the direction of current normal
 }
 
 void HapticsPSM::adjust_locked_position_along_new_n(tf::Vector3 &old_d, tf::Vector3&new_n, tf::Vector3 &locked_p){
@@ -358,8 +364,8 @@ void HapticsPSM::run_haptic_alg(){
         }
         //Step 3:
         if(has_normal_changed(coll_psm.cur_normal, coll_psm.pre_normal)){
-        //    ROS_INFO("Normal has Changed nx = %f ny = %f  nz = %f", coll_psm.cur_normal.getX(),coll_psm.cur_normal.getY(),coll_psm.cur_normal.getZ());
-        //    ROS_INFO("Normal has Changed pnx = %f pny = %f  pnz = %f", coll_psm.pre_normal.getX(),coll_psm.pre_normal.getY(),coll_psm.pre_normal.getZ());
+//            ROS_INFO("Normal has Changed nx = %f ny = %f  nz = %f", coll_psm.cur_normal.getX(),coll_psm.cur_normal.getY(),coll_psm.cur_normal.getZ());
+//            ROS_INFO("Normal has Changed pnx = %f pny = %f  pnz = %f", coll_psm.pre_normal.getX(),coll_psm.pre_normal.getY(),coll_psm.pre_normal.getZ());
         }
         //Step 5:
         compute_total_deflection(coll_psm.def_total);
@@ -372,7 +378,14 @@ void HapticsPSM::run_haptic_alg(){
         //Step 9:
         coll_psm.pre_normal = coll_psm.cur_normal;
         coll_psm.contact_cnts_prev = coll_res.contacts.size();
+        if (coll_psm.cur_normal.angle(coll_psm.def_along_n) > coll_psm.epsilon){
+        ROS_INFO("Angle between normal and deflection force %f", coll_psm.cur_normal.angle(coll_psm.def_along_n));
+        }
+        mesh_normal.wrench.force.x = coll_psm.cur_normal.getX();
+        mesh_normal.wrench.force.y = coll_psm.cur_normal.getY();
+        mesh_normal.wrench.force.z = coll_psm.cur_normal.getZ();
 
+        normal_pub.publish(mesh_normal);
     }
     else{
         if(!coll_psm._first_contact){

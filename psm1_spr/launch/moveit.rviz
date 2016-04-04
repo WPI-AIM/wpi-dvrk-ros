@@ -14,6 +14,7 @@ Panels:
         - /MarkerArray1
         - /WrenchStamped1
         - /RobotModel1
+        - /WrenchStamped2
       Splitter Ratio: 0.74256
     Tree Height: 443
   - Class: rviz/Help
@@ -279,7 +280,9 @@ Visualization Manager:
       Marker Topic: /interactive_robot_array
       Name: MarkerArray
       Namespaces:
-        {}
+        sphere.stl=one_tool_wrist_sca_ee_link_1: true
+        sphere.stl=one_tool_wrist_sca_ee_link_2: true
+        sphere.stl=one_tool_wrist_sca_shaft_link: true
       Queue Size: 100
       Value: true
     - Alpha: 1
@@ -417,6 +420,18 @@ Visualization Manager:
       Update Interval: 0
       Value: true
       Visual Enabled: true
+    - Alpha: 1
+      Arrow Width: 0.05
+      Class: rviz/WrenchStamped
+      Enabled: true
+      Force Arrow Scale: 0.1
+      Force Color: 0; 255; 0
+      History Length: 1
+      Name: WrenchStamped
+      Topic: /dvrk_psm/mesh_normal
+      Torque Arrow Scale: 0.1
+      Torque Color: 255; 255; 255
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 203; 203; 203
@@ -432,22 +447,22 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 1.62514
+      Distance: 1.34715
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -0.427731
-        Y: 0.44012
-        Z: -7.90413e-07
+        X: -0.299979
+        Y: 0.386496
+        Z: -8.7982e-07
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.374796
+      Pitch: 0.179796
       Target Frame: world
       Value: XYOrbit (rviz)
-      Yaw: 5.40491
+      Yaw: 5.66488
     Saved: ~
 Window Geometry:
   Displays:
