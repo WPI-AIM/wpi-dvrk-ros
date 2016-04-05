@@ -1,3 +1,4 @@
+<!-- PSM 1 Motion Planning  -->
 <launch>
 
   <!-- By default, we do not start a database (it can be large) -->
@@ -13,7 +14,7 @@
 
   <!-- If needed, broadcast static tf for robot root -->
   
-
+  <remap from="/joint_states" to="/dvrk_psm/joint_states" />
   <!-- We do not have a robot connected, so publish fake joint states -->
   <node name="joint_state_publisher_MP" pkg="joint_state_publisher" type="joint_state_publisher">
     <param name="/use_gui" value="true"/> 
