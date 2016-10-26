@@ -403,6 +403,7 @@ void HapticsPSM::run_haptic_alg(){
     haptic_deflection.z = coll_psm.def_along_n.getZ();
     haptic_deflection_pub.publish(haptic_deflection);
     spr_haptic_pub.publish(spr_haptic_force);
+    pose_pub.publish(group->getCurrentPose());
 
 
 }
