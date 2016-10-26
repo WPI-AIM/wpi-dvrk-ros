@@ -7,7 +7,7 @@
 <!-- Launch PSM's logic handling code node -->
 	<node name="dvrk_psm_logic" pkg="dvrk_kinematics" type="dvrk_psm_logic" />
 <!-- Launch PSMs motion planning, collision detection and intelligence node -->
-	<node name="psmMP" pkg="kinematics" type="psmHaptics_node" />
+	<node name="psm_haptics" pkg="psm_haptics" type="psm_haptics_node"/>
 <!-- Launch planning context with robot model-->
   	<include file="$(find psm1_spr)/launch/demo.launch"/>
 </launch>
