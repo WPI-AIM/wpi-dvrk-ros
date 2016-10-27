@@ -46,19 +46,19 @@ include_directories(
 
 
 ## Declare a C++ executable
-add_executable(mtm_haptics_node src/mtm_haptics.cpp
+add_executable(test_mtm_haptics src/test_mtm_haptics.cpp
                                  include/mtm_haptics/haptic_position_kinematics.h
                                  src/haptic_position_kinematics.cpp)
-add_executable(mtm_haptics_teleop_node src/mtm_haptics_teleop.cpp)
+add_executable(mtm_haptics_teleop src/mtm_haptics_teleop.cpp)
 
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(mtm_haptics_node
+target_link_libraries(test_mtm_haptics
    ${catkin_LIBRARIES}
 )
-target_link_libraries(mtm_haptics_teleop_node
+target_link_libraries(mtm_haptics_teleop
    ${catkin_LIBRARIES}
 )
-cisst_target_link_libraries (mtm_haptics_node ${REQUIRED_CISST_LIBRARIES})
-cisst_target_link_libraries (mtm_haptics_teleop_node ${REQUIRED_CISST_LIBRARIES})
+cisst_target_link_libraries (test_mtm_haptics ${REQUIRED_CISST_LIBRARIES})
+cisst_target_link_libraries (mtm_haptics_teleop ${REQUIRED_CISST_LIBRARIES})
 
