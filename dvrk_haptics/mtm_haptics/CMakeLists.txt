@@ -46,6 +46,8 @@ include_directories(
 
 
 ## Declare a C++ executable
+add_library(force_filter src/force_filter.cpp include/mtm_haptics/force_filter.h)
+
 add_executable(test_mtm_haptics src/test_mtm_haptics.cpp
                                  include/mtm_haptics/haptic_position_kinematics.h
                                  src/haptic_position_kinematics.cpp)
@@ -53,6 +55,9 @@ add_executable(mtm_haptics_teleop src/mtm_haptics_teleop.cpp)
 
 
 ## Specify libraries to link a library or executable target against
+target_link_libraries(force_filter
+   ${catkin_LIBRARIES}
+)
 target_link_libraries(test_mtm_haptics
    ${catkin_LIBRARIES}
 )
