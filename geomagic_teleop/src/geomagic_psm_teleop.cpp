@@ -9,6 +9,7 @@
 #include "tf/transform_broadcaster.h"
 #include "tf/LinearMath/Transform.h"
 #include <string>
+#include <geomagic_control/OmniFeedback.h>
 
 #include <ros/package.h>
 
@@ -22,6 +23,10 @@ sensor_msgs::JointState psm_jnt_cur;
 
 
 std_msgs::String psm_state_cur;
+geomagic_control::OmniFeedback omni_feedback;
+
+bool _coag_pressed = false;
+bool _clutch_pressed = false;
 
 
 double db = 0.0001;
@@ -86,6 +91,7 @@ int main(int argc, char **argv){
     ros::Subscriber psm_jnt_state_sub;
     ros::Publisher  psm_teleop;
     ros::Publisher  psm_state_pub;
+    ros::Publisher  geomagic_force_pub;
 
     // initialize joint current/command/msg_js
     psm_jnt_cur.position.resize(7);
@@ -97,6 +103,7 @@ int main(int argc, char **argv){
     geomagic_pose_sub = node.subscribe("/Geomagic/pose",10,geomagic_pose_cb);
     psm_teleop = node.advertise<geometry_msgs::Pose>("/dvrk/PSM1/set_position_cartesian",10);
     psm_state_pub = node.advertise<std_msgs::String>("/dvrk/PSM1/set_robot_state",10);
+    geomagic_force_pub = node.advertise<geomagic_control::OmniFeedback>("/Geomagic/force_feedback",10);
 
     std_msgs::String state_msg;
     state_msg.data = req_state.c_str();
@@ -109,6 +116,8 @@ int main(int argc, char **argv){
     geomagic_joy_cmd.axes.resize(6);
     geomagic_joy_cur.axes.resize(6);
     geomagic_joy_pre.axes.resize(6);
+    geomagic_joy_cur.buttons.resize(2);
+    omni_feedback.lock.resize(3);
 
     sleep(2);
 
@@ -136,10 +145,6 @@ int main(int argc, char **argv){
             trans_geomagic.setOrigin(pos_geomagic);
             tf::Quaternion quat;
             quat.setRPY(geomagic_joy_cur.axes[5], geomagic_joy_cur.axes[4], geomagic_joy_cur.axes[3]);
-//            quat.setX(geomagic_pose_cur.orientation.x);
-//            quat.setY(geomagic_pose_cur.orientation.y);
-//            quat.setZ(geomagic_pose_cur.orientation.z);
-//            quat.setW(geomagic_pose_cur.orientation.w);
             trans_geomagic.setRotation(quat);
 
             psm_pose_cmd.position.x = psm_pose_cur.position.x + (scale * geomagic_joy_cmd.axes[0]);
@@ -148,22 +153,66 @@ int main(int argc, char **argv){
 
             psm_pose_cmd.orientation = psm_pose_cur.orientation;
 
-            //if(geomagic_joy_cur.buttons[0] == 1)
-            //{
-            psm_teleop.publish(psm_pose_cmd);
-            //}
+            // Check if COAG is pressed. Grey Button
 
+            if(geomagic_joy_cur.buttons[0] == 1){
+                if(_coag_pressed == false){
+                    ROS_INFO("Coag Pressed");
+                    _coag_pressed = true;
+                    for(u_int i = 0 ; i < 3 ; i++){
+                        omni_feedback.lock[i] = false;
+                    }
+                }
+                else{
+                    omni_feedback.position.x = geomagic_joy_cur.axes[0];
+                    omni_feedback.position.y = geomagic_joy_cur.axes[1];
+                    omni_feedback.position.z = geomagic_joy_cur.axes[2];
+
+                    omni_feedback.force.x = 0;
+                    omni_feedback.force.y = 0;
+                    omni_feedback.force.z = 0;
+
+                    for(u_int i = 0 ; i < 3 ; i++){
+                        omni_feedback.lock[i] = true;
+                    }
+                }
+                psm_teleop.publish(psm_pose_cmd);
+            }
+            else{
+                _coag_pressed = false;
+            }
+
+            // Check if Clutch is Pressed. White Button
+            if(geomagic_joy_cur.buttons[1] == 1){
+                if(_clutch_pressed == false){
+                    ROS_INFO("Clutch Pressed");
+                    _clutch_pressed = true;
+
+                    for(u_int i = 0 ; i < 3 ; i++){
+                        omni_feedback.lock[i] = false;
+                    }
+                }
+                else{
+                    omni_feedback.position.x = geomagic_joy_cur.axes[0];
+                    omni_feedback.position.y = geomagic_joy_cur.axes[1];
+                    omni_feedback.position.z = geomagic_joy_cur.axes[2];
+
+                    omni_feedback.force.x = 0;
+                    omni_feedback.force.y = 0;
+                    omni_feedback.force.z = 0;
+
+                    for(u_int i = 0 ; i < 3 ; i++){
+                        omni_feedback.lock[i] = true;
+                    }
+                }
+            }
+            else{
+                _clutch_pressed = false;
+            }
+
+            geomagic_force_pub.publish(omni_feedback);
             t_br.sendTransform(tf::StampedTransform(trans_geomagic,ros::Time::now(),"/world","/geomagic_position"));
 
-//            pos_geomagic.setX(geomagic_joy_cur.axes[0]/scale);
-//            pos_geomagic.setY(geomagic_joy_cur.axes[2]/scale);
-//            pos_geomagic.setZ(geomagic_joy_cur.axes[1]/scale);
-
-//            trans_geomagic.setOrigin(pos_geomagic);
-//            quat.setEuler(geomagic_joy_cur.axes[3], geomagic_joy_cur.axes[4], geomagic_joy_cur.axes[5]);
-//            trans_geomagic.setRotation(quat);
-//            t_br.sendTransform(tf::StampedTransform(trans_geomagic,ros::Time::now(),"/world","/geomagic_position_2"));
-//            t_br.sendTransform(tf::StampedTransform(trans_mtm,ros::Time::now(),"/world","/mtm_position"));
         }
 //        else{
 //            ROS_INFO("DVRK PSM in %s, CURRENT STATE IS %s ", req_state.c_str(), psm_state_cur.data.c_str());
