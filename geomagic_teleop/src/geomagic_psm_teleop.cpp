@@ -31,7 +31,7 @@ bool _clutch_pressed = false;
 
 double db = 0.0001;
 double precision = 1000;
-double scale = 0.05;
+double scale = 0.01;
 
 
 void psm_pose_cb(const geometry_msgs::PoseStampedConstPtr msg){
@@ -152,7 +152,7 @@ int main(int argc, char **argv){
 
             trans_geomagic.setOrigin(pos_geomagic);
             tf::Quaternion geo_rot, quat;
-            geo_rot.setRPY(geomagic_joy_cur.axes[5], geomagic_joy_cur.axes[4], geomagic_joy_cur.axes[3]);
+            geo_rot.setRPY(geomagic_joy_cur.axes[3], geomagic_joy_cur.axes[4], geomagic_joy_cur.axes[5]);
             trans_geomagic.setRotation(geo_rot);
 
             psm_pose_cmd.position.x = psm_pose_cur.position.x + (scale * geomagic_joy_cmd.axes[0]);
