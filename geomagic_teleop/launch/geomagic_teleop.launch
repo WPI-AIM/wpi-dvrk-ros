@@ -1,0 +1,9 @@
+<!-- Launch File for Launching Geomagic Teleop for dVRK PSMs -->
+<launch>
+  <include file="$(find geomagic_control)/launch/geomagic_headless.launch"/>
+
+  <node name="geomagic_teleop_node"
+        pkg="geomagic_teleop"
+        type="geomagic_teleop_node"/>
+</launch>
+
