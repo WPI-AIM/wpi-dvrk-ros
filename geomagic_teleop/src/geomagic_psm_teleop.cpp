@@ -31,7 +31,7 @@ bool _clutch_pressed = false;
 
 double db = 0.0001;
 double precision = 1000;
-double scale = 200;
+double scale = 0.05;
 
 
 void psm_pose_cb(const geometry_msgs::PoseStampedConstPtr msg){
@@ -79,11 +79,12 @@ int main(int argc, char **argv){
     ros::init(argc, argv, "geomagic_teleop");
     ros::NodeHandle node;
     ros::Rate rate(1000);
-    tf::Vector3 pos_geomagic, pos_mtm;
-    tf::Transform trans_geomagic;
+    tf::Vector3 pos_geomagic, pos_psm;
+    tf::Transform trans_geomagic, trans_psm;
     tf::TransformBroadcaster t_br;
 
     std::string req_state = "DVRK_POSITION_CARTESIAN";
+
 
     ros::Subscriber psm_pose_sub;
     ros::Subscriber geomagic_joy_sub, geomagic_pose_sub;
@@ -92,6 +93,9 @@ int main(int argc, char **argv){
     ros::Publisher  psm_teleop;
     ros::Publisher  psm_state_pub;
     ros::Publisher  geomagic_force_pub;
+
+    tf::Quaternion R_geoTopsm;
+    tf::Matrix3x3 mat_geoTopsm;
 
     // initialize joint current/command/msg_js
     psm_jnt_cur.position.resize(7);
@@ -119,6 +123,11 @@ int main(int argc, char **argv){
     geomagic_joy_cur.buttons.resize(2);
     omni_feedback.lock.resize(3);
 
+    mat_geoTopsm.setValue(0 , 1 , 0,
+                          1 , 0 , 0,
+                          0 , 0 ,-1);
+    mat_geoTopsm.getRotation(R_geoTopsm);
+
     sleep(2);
 
 
@@ -126,7 +135,7 @@ int main(int argc, char **argv){
     int counter = 0;
 
     while(node.ok()){
-        //if (!strcmp(psm_state_cur.data.c_str(), req_state.c_str()))
+        if (!strcmp(psm_state_cur.data.c_str(), req_state.c_str()))
         {
             geomagic_joy_cmd.axes[0] = geomagic_joy_cur.axes[0] - geomagic_joy_pre.axes[0];
             geomagic_joy_cmd.axes[1] = geomagic_joy_cur.axes[1] - geomagic_joy_pre.axes[1];
@@ -136,22 +145,34 @@ int main(int argc, char **argv){
             //geomagic_joy_cmd.axes[0] = geomagic_joy_cmd.axes[0]/precision;
             //dead_band(geomagic_joy_cmd);
             //clip(geomagic_joy_cmd);
-
-            pos_geomagic.setX(-geomagic_joy_cur.axes[0]/scale);
-            pos_geomagic.setY(geomagic_joy_cur.axes[2]/scale);
-            pos_geomagic.setZ(geomagic_joy_cur.axes[1]/scale);
+            double temp_scale = 200;
+            pos_geomagic.setX(-geomagic_joy_cur.axes[0]/temp_scale);
+            pos_geomagic.setY(geomagic_joy_cur.axes[2]/temp_scale);
+            pos_geomagic.setZ(geomagic_joy_cur.axes[1]/temp_scale);
 
 
             trans_geomagic.setOrigin(pos_geomagic);
-            tf::Quaternion quat;
-            quat.setRPY(geomagic_joy_cur.axes[5], geomagic_joy_cur.axes[4], geomagic_joy_cur.axes[3]);
-            trans_geomagic.setRotation(quat);
+            tf::Quaternion geo_rot, quat;
+            geo_rot.setRPY(geomagic_joy_cur.axes[5], geomagic_joy_cur.axes[4], geomagic_joy_cur.axes[3]);
+            trans_geomagic.setRotation(geo_rot);
 
             psm_pose_cmd.position.x = psm_pose_cur.position.x + (scale * geomagic_joy_cmd.axes[0]);
             psm_pose_cmd.position.y = psm_pose_cur.position.y + (scale * geomagic_joy_cmd.axes[1]);
             psm_pose_cmd.position.z = psm_pose_cur.position.z + (scale * geomagic_joy_cmd.axes[2]);
 
-            psm_pose_cmd.orientation = psm_pose_cur.orientation;
+
+            quat = geo_rot * R_geoTopsm;
+            psm_pose_cmd.orientation.x = quat.getX();
+            psm_pose_cmd.orientation.y = quat.getY();
+            psm_pose_cmd.orientation.z = quat.getZ();
+            psm_pose_cmd.orientation.w = quat.getW();
+
+            pos_psm.setX(psm_pose_cmd.position.x);
+            pos_psm.setY(psm_pose_cmd.position.y);
+            pos_psm.setZ(psm_pose_cmd.position.z);
+            trans_psm.setOrigin(pos_psm);
+            trans_psm.setRotation(quat);
+
 
             // Check if COAG is pressed. Grey Button
 
@@ -212,13 +233,14 @@ int main(int argc, char **argv){
 
             geomagic_force_pub.publish(omni_feedback);
             t_br.sendTransform(tf::StampedTransform(trans_geomagic,ros::Time::now(),"/world","/geomagic_position"));
+            t_br.sendTransform(tf::StampedTransform(trans_psm,ros::Time::now(),"/world","/teleoped_psm"));
 
         }
-//        else{
-//            ROS_INFO("DVRK PSM in %s, CURRENT STATE IS %s ", req_state.c_str(), psm_state_cur.data.c_str());
-//            psm_state_pub.publish(state_msg);
-//            sleep(2);
-//        }
+        else{
+            ROS_INFO("DVRK PSM in %s, CURRENT STATE IS %s ", req_state.c_str(), psm_state_cur.data.c_str());
+            psm_state_pub.publish(state_msg);
+            sleep(2);
+        }
         counter++;
         ros::spinOnce();
         rate.sleep();
