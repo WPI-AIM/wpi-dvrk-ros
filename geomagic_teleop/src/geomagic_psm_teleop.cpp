@@ -145,10 +145,9 @@ int main(int argc, char **argv){
             //geomagic_joy_cmd.axes[0] = geomagic_joy_cmd.axes[0]/precision;
             //dead_band(geomagic_joy_cmd);
             //clip(geomagic_joy_cmd);
-            double temp_scale = 200;
-            pos_geomagic.setX(-geomagic_joy_cur.axes[0]/temp_scale);
-            pos_geomagic.setY(geomagic_joy_cur.axes[2]/temp_scale);
-            pos_geomagic.setZ(geomagic_joy_cur.axes[1]/temp_scale);
+            pos_geomagic.setX(-geomagic_joy_cur.axes[0] * scale);
+            pos_geomagic.setY(geomagic_joy_cur.axes[2] * scale);
+            pos_geomagic.setZ(geomagic_joy_cur.axes[1] * scale);
 
 
             trans_geomagic.setOrigin(pos_geomagic);
@@ -201,6 +200,13 @@ int main(int argc, char **argv){
             }
             else{
                 _coag_pressed = false;
+                tf::Quaternion temp_quat;
+                temp_quat.setX(psm_pose_cur.orientation.x);
+                temp_quat.setY(psm_pose_cur.orientation.y);
+                temp_quat.setZ(psm_pose_cur.orientation.z);
+                temp_quat.setW(psm_pose_cur.orientation.w);
+
+                R_geoTopsm = geo_rot.inverse() * temp_quat;
             }
 
             // Check if Clutch is Pressed. White Button
