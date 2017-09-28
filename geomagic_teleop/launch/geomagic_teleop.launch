@@ -1,6 +1,16 @@
 <!-- Launch File for Launching Geomagic Teleop for dVRK PSMs -->
 <launch>
-  <include file="$(find geomagic_control)/launch/geomagic_headless.launch"/>
+
+  <arg name="arm" default="PSM1" />
+  <arg name="device_name" default="geomagic" />
+  
+  <param name="arm" type="str" value="$(arg arm)" />
+  <param name="device_name" type="str" value="$(arg device_name)" />
+
+
+  <include file="$(find geomagic_control)/launch/geomagic_headless.launch">
+	<arg name="prefix" value="$(arg device_name)"/>
+  </include>
 
   <node name="geomagic_teleop_node"
         pkg="geomagic_teleop"
