@@ -19,6 +19,8 @@ sensor_msgs::Joy geomagic_joy_pre;
 sensor_msgs::Joy geomagic_joy_cmd;
 geometry_msgs::Pose psm_pose_cmd;
 geometry_msgs::Pose geomagic_pose_cur;
+geometry_msgs::Pose geomagic_pose_pre;
+geometry_msgs::Pose geomagic_pose_cmd;
 sensor_msgs::JointState psm_jnt_cur;
 
 
@@ -42,6 +44,7 @@ void psm_jnt_cb(const sensor_msgs::JointStatePtr msg){
 }
 
 void geomagic_pose_cb(const geometry_msgs::PoseStampedConstPtr msg){
+    geomagic_pose_pre = geomagic_pose_cur;
     geomagic_pose_cur = msg->pose;
 }
 
@@ -85,8 +88,8 @@ int main(int argc, char **argv){
     node.param(std::string("rate"), pub_rate, 1000);
     node.param(std::string("device_name"), device_name, std::string("Geomagic"));
     ros::Rate rate(pub_rate);
-    tf::Vector3 pos_geomagic, pos_psm;
     tf::Transform trans_geomagic, trans_psm;
+    tf::Quaternion geo_rot, quat;
     tf::TransformBroadcaster t_br;
 
     std::string req_state = "DVRK_POSITION_CARTESIAN";
@@ -152,31 +155,19 @@ int main(int argc, char **argv){
             //geomagic_joy_cmd.axes[0] = geomagic_joy_cmd.axes[0]/precision;
             //dead_band(geomagic_joy_cmd);
             //clip(geomagic_joy_cmd);
-            pos_geomagic.setX(-geomagic_joy_cur.axes[0] * scale);
-            pos_geomagic.setY(geomagic_joy_cur.axes[2] * scale);
-            pos_geomagic.setZ(geomagic_joy_cur.axes[1] * scale);
-
-
-            trans_geomagic.setOrigin(pos_geomagic);
-            tf::Quaternion geo_rot, quat;
-            geo_rot.setRPY(geomagic_joy_cur.axes[3], geomagic_joy_cur.axes[4], geomagic_joy_cur.axes[5]);
-            trans_geomagic.setRotation(geo_rot);
 
             psm_pose_cmd.position.x = psm_pose_cur.position.x + (scale * geomagic_joy_cmd.axes[0]);
             psm_pose_cmd.position.y = psm_pose_cur.position.y + (scale * geomagic_joy_cmd.axes[1]);
             psm_pose_cmd.position.z = psm_pose_cur.position.z + (scale * geomagic_joy_cmd.axes[2]);
 
+            trans_geomagic.setOrigin(scale * tf::Vector3(-geomagic_joy_cur.axes[0], geomagic_joy_cur.axes[2], geomagic_joy_cur.axes[1]));
+            geo_rot.setRPY(geomagic_joy_cur.axes[3], geomagic_joy_cur.axes[4], geomagic_joy_cur.axes[5]);
+            trans_geomagic.setRotation(geo_rot);
 
             quat = geo_rot * R_geoTopsm;
-            psm_pose_cmd.orientation.x = quat.getX();
-            psm_pose_cmd.orientation.y = quat.getY();
-            psm_pose_cmd.orientation.z = quat.getZ();
-            psm_pose_cmd.orientation.w = quat.getW();
+            tf::quaternionTFToMsg(quat, psm_pose_cmd.orientation);
 
-            pos_psm.setX(psm_pose_cmd.position.x);
-            pos_psm.setY(psm_pose_cmd.position.y);
-            pos_psm.setZ(psm_pose_cmd.position.z);
-            trans_psm.setOrigin(pos_psm);
+            trans_psm.setOrigin(tf::Vector3(psm_pose_cmd.position.x,psm_pose_cmd.position.y,psm_pose_cmd.position.z));
             trans_psm.setRotation(quat);
 
 
@@ -208,10 +199,7 @@ int main(int argc, char **argv){
             else{
                 _coag_pressed = false;
                 tf::Quaternion temp_quat;
-                temp_quat.setX(psm_pose_cur.orientation.x);
-                temp_quat.setY(psm_pose_cur.orientation.y);
-                temp_quat.setZ(psm_pose_cur.orientation.z);
-                temp_quat.setW(psm_pose_cur.orientation.w);
+                tf::quaternionMsgToTF(psm_pose_cur.orientation, temp_quat);
 
                 R_geoTopsm = geo_rot.inverse() * temp_quat;
             }
