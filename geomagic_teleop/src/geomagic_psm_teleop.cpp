@@ -78,7 +78,13 @@ int main(int argc, char **argv){
 
     ros::init(argc, argv, "geomagic_teleop");
     ros::NodeHandle node;
-    ros::Rate rate(1000);
+    std::string slave_name= "";
+    std::string device_name= "";
+    int pub_rate;
+    node.param(std::string("arm"), slave_name, std::string("PSM1"));
+    node.param(std::string("rate"), pub_rate, 1000);
+    node.param(std::string("device_name"), device_name, std::string("Geomagic"));
+    ros::Rate rate(pub_rate);
     tf::Vector3 pos_geomagic, pos_psm;
     tf::Transform trans_geomagic, trans_psm;
     tf::TransformBroadcaster t_br;
@@ -100,18 +106,19 @@ int main(int argc, char **argv){
     // initialize joint current/command/msg_js
     psm_jnt_cur.position.resize(7);
 
-    psm_pose_sub = node.subscribe("dvrk/PSM1/position_cartesian_current",10,psm_pose_cb);
-    psm_state_sub = node.subscribe("dvrk/PSM1/robot_state",10,psm_state_cb);
-    psm_jnt_state_sub = node.subscribe("dvrk/PSM1/state_joint_current",10,psm_jnt_cb);
-    geomagic_joy_sub = node.subscribe("/Geomagic/joy",10,geomagic_joy_cb);
-    geomagic_pose_sub = node.subscribe("/Geomagic/pose",10,geomagic_pose_cb);
-    psm_teleop = node.advertise<geometry_msgs::Pose>("/dvrk/PSM1/set_position_cartesian",10);
-    psm_state_pub = node.advertise<std_msgs::String>("/dvrk/PSM1/set_robot_state",10);
-    geomagic_force_pub = node.advertise<geomagic_control::OmniFeedback>("/Geomagic/force_feedback",10);
+    psm_pose_sub = node.subscribe("dvrk/" + slave_name + "/position_cartesian_current",10,psm_pose_cb);
+    psm_state_sub = node.subscribe("dvrk/" + slave_name + "/robot_state",10,psm_state_cb);
+    psm_jnt_state_sub = node.subscribe("dvrk/" + slave_name + "/state_joint_current",10,psm_jnt_cb);
+    psm_teleop = node.advertise<geometry_msgs::Pose>("/dvrk/" + slave_name + "/set_position_cartesian",10);
+    psm_state_pub = node.advertise<std_msgs::String>("/dvrk/" + slave_name + "/set_robot_state",10);
+
+    geomagic_joy_sub = node.subscribe("/" + device_name + "/joy",10,geomagic_joy_cb);
+    geomagic_pose_sub = node.subscribe("/" + device_name + "/pose",10,geomagic_pose_cb);
+    geomagic_force_pub = node.advertise<geomagic_control::OmniFeedback>("/" + device_name + "/force_feedback",10);
 
     std_msgs::String state_msg;
     state_msg.data = req_state.c_str();
-    ROS_INFO("Setting PSM1 to %s state",req_state.c_str());
+    ROS_INFO("Setting %s to %s state", slave_name.c_str(), req_state.c_str());
     psm_state_pub.publish(state_msg);
     ros::spinOnce();
     rate.sleep();
@@ -243,7 +250,7 @@ int main(int argc, char **argv){
 
         }
         else{
-            ROS_INFO("DVRK PSM in %s, CURRENT STATE IS %s ", req_state.c_str(), psm_state_cur.data.c_str());
+            ROS_INFO("DVRK %s in %s, CURRENT STATE IS %s ", slave_name.c_str(), req_state.c_str(), psm_state_cur.data.c_str());
             psm_state_pub.publish(state_msg);
             sleep(2);
         }
