@@ -9,7 +9,7 @@ void DVRK_MTM::init(){
     ros::init(s, "my_node");
 
     n = new ros::NodeHandle;
-    rate = new ros::Rate(1500);
+    rate = new ros::Rate(1000);
 
     n->param(std::string("arm"), arm_name, std::string("MTMR"));
 
@@ -67,18 +67,18 @@ void DVRK_MTM::_rate_sleep(){
 }
 
 bool DVRK_MTM::set_mode(std::string str){
-    std_msgs::String msg;
-    msg.data = str;
-    state_pub.publish(msg);
+    state_cmd.data = str;
+    state_pub.publish(state_cmd);
     ros::spinOnce();
     rate->sleep();
     if(strcmp(str.c_str(),_m_effort_mode.c_str()) == 0){
-        std_msgs::Bool check;
-        check.data = true;
-        force_orientation_safety_pub.publish(check);
+        std_msgs::Bool _is_effort_mode;
+        _is_effort_mode.data = true;
+        force_orientation_safety_pub.publish(_is_effort_mode);
+        ros::spinOnce();
+        rate->sleep();
     }
-    //sleep(0.5);
-    //ROS_INFO("Setting Robot State to %s", str.c_str());
+    return true;
 }
 
 bool DVRK_MTM::set_force(double fx, double fy, double fz){

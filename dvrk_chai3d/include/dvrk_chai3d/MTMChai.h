@@ -35,6 +35,7 @@ public:
     geometry_msgs::Quaternion gm_cur_ori;
     tf::Quaternion tf_cur_ori;
     tf::Matrix3x3 mat_ori, ori_corr;
+    std_msgs::String state_cmd;
 
     std::string arm_name;
     std::string _m_effort_mode = "DVRK_EFFORT_CARTESIAN";
