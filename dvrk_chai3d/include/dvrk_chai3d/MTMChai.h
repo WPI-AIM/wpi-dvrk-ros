@@ -22,6 +22,7 @@ public:
     void pose_sub_cb(const geometry_msgs::PoseStampedConstPtr &msg);
     void joint_sub_cb(const sensor_msgs::JointStateConstPtr &msg);
     void init();
+    void _rate_sleep();
 
     bool _is_mtm_available();
     bool set_mode(std::string str);
@@ -48,6 +49,7 @@ private:
     ros::Subscriber state_sub;
     ros::Publisher state_pub;
     ros::AsyncSpinner *spinner;
+    ros::Rate *rate;
 
 };
 #endif

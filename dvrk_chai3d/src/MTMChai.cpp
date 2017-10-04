@@ -9,7 +9,8 @@ void DVRK_MTM::init(){
     ros::init(s, "my_node");
 
     n = new ros::NodeHandle;
-    spinner = new ros::AsyncSpinner(4);
+    spinner = new ros::AsyncSpinner(1);
+    rate = new ros::Rate(1500);
 
     n->param(std::string("arm"), arm_name, std::string("MTMR"));
 
@@ -61,6 +62,11 @@ bool DVRK_MTM::_is_mtm_available(){
 //    else
 //        return false;
     return true;
+}
+
+void DVRK_MTM::_rate_sleep(){
+    //rate->sleep();
+    sleep(0.01);
 }
 
 bool DVRK_MTM::set_mode(std::string str){
