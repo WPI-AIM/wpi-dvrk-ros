@@ -65,6 +65,17 @@ bool DVRK_MTM::_is_mtm_available(){
 
 }
 
+bool DVRK_MTM::_in_effort_mode(){
+    if(_is_mtm_available()){
+        if(strcmp(cur_state.data.c_str(), _m_effort_mode.c_str()) == 0){
+            return true;
+        }
+    }
+    else{
+        return false;
+    }
+}
+
 void DVRK_MTM::_rate_sleep(){
     sleep(0.01);
 }
@@ -80,8 +91,9 @@ bool DVRK_MTM::set_mode(std::string str){
         force_orientation_safety_pub.publish(_is_effort_mode);
         ros::spinOnce();
         rate->sleep();
+        sleep(0.5);
     }
-    return _is_mtm_available();
+    return _in_effort_mode();
 }
 
 bool DVRK_MTM::set_force(double fx, double fy, double fz){

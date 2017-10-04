@@ -25,6 +25,7 @@ public:
     void _rate_sleep();
 
     bool _is_mtm_available();
+    bool _in_effort_mode();
     bool set_mode(std::string str);
     bool set_force(double fx, double fy, double fz);
 
