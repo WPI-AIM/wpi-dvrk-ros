@@ -9,7 +9,6 @@ void DVRK_MTM::init(){
     ros::init(s, "my_node");
 
     n = new ros::NodeHandle;
-    spinner = new ros::AsyncSpinner(1);
     rate = new ros::Rate(1500);
 
     n->param(std::string("arm"), arm_name, std::string("MTMR"));
@@ -21,7 +20,6 @@ void DVRK_MTM::init(){
     state_pub = n->advertise<std_msgs::String>("/dvrk/" + arm_name + "/set_robot_state", 10);
     force_pub = n->advertise<geometry_msgs::Wrench>("/dvrk/" + arm_name + "/set_wrench_body", 10);
     force_orientation_safety_pub = n->advertise<std_msgs::Bool>("/dvrk/" + arm_name + "/set_wrench_body_orientation_absolute",10);
-    spinner->start();
     sleep(1);
     //set_mode(std::string("Home"));
     ori_corr.setValue( 0 ,-1 , 0,
@@ -65,7 +63,6 @@ bool DVRK_MTM::_is_mtm_available(){
 }
 
 void DVRK_MTM::_rate_sleep(){
-    //rate->sleep();
     sleep(0.01);
 }
 
@@ -74,6 +71,7 @@ bool DVRK_MTM::set_mode(std::string str){
     msg.data = str;
     state_pub.publish(msg);
     ros::spinOnce();
+    rate->sleep();
     if(strcmp(str.c_str(),_m_effort_mode.c_str()) == 0){
         std_msgs::Bool check;
         check.data = true;
@@ -90,9 +88,10 @@ bool DVRK_MTM::set_force(double fx, double fy, double fz){
 
     force_pub.publish(cmd_wrench);
     ros::spinOnce();
+    rate->sleep();
 }
 
 DVRK_MTM::~DVRK_MTM(){
     delete n;
-    delete spinner;
+    delete rate;
 }

@@ -48,7 +48,6 @@ private:
     ros::Subscriber joint_sub;
     ros::Subscriber state_sub;
     ros::Publisher state_pub;
-    ros::AsyncSpinner *spinner;
     ros::Rate *rate;
 
 };
