@@ -54,12 +54,15 @@ void DVRK_MTM::state_sub_cb(const std_msgs::StringConstPtr &msg){
 
 // TASK::Create an ENUM and check for all the good states
 bool DVRK_MTM::_is_mtm_available(){
-//    if (strcmp("DVRK_READY", cur_state.data.c_str()) == 0 || strcmp("DVRK_EFFORT_CARTESIAN", cur_state.data.c_str()) == 0){
-//        return true;
-//    }
-//    else
-//        return false;
-    return true;
+    if (state_pub.getNumSubscribers() > 0 && state_sub.getNumPublishers() > 0 && pose_sub.getNumPublishers() > 0){
+        // If there are listeners to the state_publisher and pose publisher and subscribers to state msg, most likely the MTM is available
+        // Doing 3 seperate topic checks for redundancy
+        return true;
+    }
+    else{
+        return false;
+    }
+
 }
 
 void DVRK_MTM::_rate_sleep(){
@@ -78,7 +81,7 @@ bool DVRK_MTM::set_mode(std::string str){
         ros::spinOnce();
         rate->sleep();
     }
-    return true;
+    return _is_mtm_available();
 }
 
 bool DVRK_MTM::set_force(double fx, double fy, double fz){
