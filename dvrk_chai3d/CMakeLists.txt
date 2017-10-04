@@ -105,7 +105,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
    INCLUDE_DIRS include
-#  LIBRARIES dvrk_chai3d
+   LIBRARIES dvrk_chai3d
 #  CATKIN_DEPENDS geometry_msgs roscpp sensor_msgs tf
 #  DEPENDS system_lib
 )
@@ -122,7 +122,7 @@ include_directories(
 )
 
 ## Declare a C++ library
- add_library(mtm_chai_node
+ add_library(dvrk_chai3d
    src/MTMChai.cpp include/${PROJECT_NAME}/MTMChai.h
  )
 
@@ -147,7 +147,7 @@ include_directories(
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
- target_link_libraries(mtm_chai_node
+ target_link_libraries(dvrk_chai3d
    ${catkin_LIBRARIES}
  )
 
