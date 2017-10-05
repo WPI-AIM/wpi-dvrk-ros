@@ -39,9 +39,9 @@ void DVRK_MTM::joint_sub_cb(const sensor_msgs::JointStateConstPtr &msg){
 void DVRK_MTM::pose_sub_cb(const geometry_msgs::PoseStampedConstPtr &msg){
     pre_pose = cur_pose;
     cur_pose = *msg;
-    cur_pose.pose.position.x += pos_offset[0];
-    cur_pose.pose.position.y += pos_offset[1];
-    cur_pose.pose.position.z += pos_offset[2];
+    cur_pose.pose.position.x;
+    cur_pose.pose.position.y;
+    cur_pose.pose.position.z;
 
     tf::quaternionMsgToTF(cur_pose.pose.orientation, tf_cur_ori);
     mat_ori.setRotation(tf_cur_ori);
@@ -74,6 +74,12 @@ bool DVRK_MTM::_in_effort_mode(){
     else{
         return false;
     }
+}
+
+void DVRK_MTM::get_cur_position(double &x, double &y, double &z){
+    y = -(cur_pose.pose.position.x + pos_offset[0]);
+    x =  (cur_pose.pose.position.y + pos_offset[1]);
+    z =  (cur_pose.pose.position.z + pos_offset[2]);
 }
 
 void DVRK_MTM::_rate_sleep(){

@@ -37,6 +37,7 @@ public:
     tf::Quaternion tf_cur_ori;
     tf::Matrix3x3 mat_ori, ori_corr;
     std_msgs::String state_cmd;
+    void get_cur_position(double &x, double &y, double &z);
 
     std::string arm_name;
     std::string _m_effort_mode = "DVRK_EFFORT_CARTESIAN";
@@ -49,6 +50,7 @@ private:
     ros::Subscriber pose_sub;
     ros::Subscriber joint_sub;
     ros::Subscriber state_sub;
+    ros::Subscriber clutch_sub;
     ros::Publisher state_pub;
     ros::Rate *rate;
 
