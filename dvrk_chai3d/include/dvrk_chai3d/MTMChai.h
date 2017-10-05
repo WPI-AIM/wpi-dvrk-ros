@@ -4,6 +4,7 @@
 #include "ros/ros.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "sensor_msgs/JointState.h"
+#include "sensor_msgs/Joy.h"
 #include "std_msgs/String.h"
 #include "std_msgs/Bool.h"
 #include "geometry_msgs/Wrench.h"
@@ -21,6 +22,7 @@ public:
     void state_sub_cb(const std_msgs::StringConstPtr &msg);
     void pose_sub_cb(const geometry_msgs::PoseStampedConstPtr &msg);
     void joint_sub_cb(const sensor_msgs::JointStateConstPtr &msg);
+    void clutch_sub_cb(const sensor_msgs::JoyConstPtr &msg);
     void init();
     void _rate_sleep();
 
@@ -53,6 +55,9 @@ private:
     ros::Subscriber clutch_sub;
     ros::Publisher state_pub;
     ros::Rate *rate;
+    bool _clutch_pressed;
+    double chai_origin[3];
+    double scale;
 
 };
 #endif
