@@ -8,7 +8,7 @@ This package enables support for dVRK MTMs in CHAI-3D
 * download and compile dvrk-ros from
   https://github.com/jhu-dvrk/dvrk-ros
 * download and compile CHAI-3D from 
-  https://github.com/adnanmunawar/chai3d.git
+  https://github.com/WPI-AIM/chai3d.git
 * download and compile this package. CHAI-3D will use the library from this package for MTM interface
 
 # Run
