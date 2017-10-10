@@ -37,6 +37,8 @@ public:
     bool set_orientation(const geometry_msgs::Quaternion &quat);
     bool set_orientation(const tf::Matrix3x3 &mat);
 
+    bool set_pose(const geometry_msgs::PoseStamped &pose);
+
     void get_cur_position(double &x, double &y, double &z);
     void get_cur_position(tf::Vector3 &pos);
     void get_cur_position(geometry_msgs::Point &pos);
@@ -56,11 +58,14 @@ private:
     ros::NodeHandle *n;
     ros::Publisher force_pub;
     ros::Publisher force_orientation_safety_pub;
+    ros::Publisher state_pub;
+    ros::Publisher pose_pub;
+    ros::Publisher joint_pub;
+
     ros::Subscriber pose_sub;
     ros::Subscriber joint_sub;
     ros::Subscriber state_sub;
     ros::Subscriber clutch_sub, coag_sub;
-    ros::Publisher state_pub;
     ros::Rate *rate;
     bool _clutch_pressed, _coag_pressed;
     double scale;
@@ -74,7 +79,7 @@ private:
     void coag_sub_cb(const sensor_msgs::JoyConstPtr &msg);
 
 
-    geometry_msgs::PoseStamped cur_pose, pre_pose;
+    geometry_msgs::PoseStamped cur_pose, pre_pose, cmd_pose;
     sensor_msgs::JointState cur_joint, pre_joint;
     std_msgs::String cur_state;
     geometry_msgs::Wrench cur_wrench, cmd_wrench;

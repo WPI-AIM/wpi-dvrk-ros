@@ -40,6 +40,8 @@ void DVRK_Arm::init(){
     clutch_sub = n->subscribe("/dvrk/footpedals/clutch", 10, &DVRK_Arm::clutch_sub_cb, this);
     coag_sub = n->subscribe("/dvrk/footpedals/coag", 10, &DVRK_Arm::coag_sub_cb, this);
 
+    joint_pub = n->advertise<sensor_msgs::JointState>("/dvrk/" + arm_name + "/set_position_joint", 10);
+    pose_pub  = n->advertise<geometry_msgs::PoseStamped>("/dvrk/" + arm_name + "/set_position_cartesian", 10);
     state_pub = n->advertise<std_msgs::String>("/dvrk/" + arm_name + "/set_robot_state", 10);
     force_pub = n->advertise<geometry_msgs::Wrench>("/dvrk/" + arm_name + "/set_wrench_body", 10);
     force_orientation_safety_pub = n->advertise<std_msgs::Bool>("/dvrk/" + arm_name + "/set_wrench_body_orientation_absolute",10);
@@ -151,6 +153,55 @@ bool DVRK_Arm::set_mode(std::string str){
         sleep(0.5);
     }
     return _in_effort_mode();
+}
+
+bool DVRK_Arm::set_position(const double &x, const double &y, const double &z){
+    cmd_pose.pose.position.x = x;
+    cmd_pose.pose.position.y = y;
+    cmd_pose.pose.position.z = z;
+    set_pose(cmd_pose);
+}
+
+bool DVRK_Arm::set_position(const geometry_msgs::Point &pos){
+    cmd_pose.pose.position = pos;
+    set_pose(cmd_pose);
+}
+
+bool DVRK_Arm::set_position(const tf::Vector3 &pos){
+    cmd_pose.pose.position.x = pos.getX();
+    cmd_pose.pose.position.y = pos.getY();
+    cmd_pose.pose.position.z = pos.getZ();
+    set_pose(cmd_pose);
+}
+
+bool DVRK_Arm::set_orientation(const double &roll, const double &pitch, const double &yaw){
+    tf::Quaternion tf_quat;
+    geometry_msgs::Quaternion gm_quat;
+    tf_quat.setRPY(roll, pitch, yaw);
+    tf::quaternionTFToMsg(tf_quat, gm_quat);
+    cmd_pose.pose.orientation = gm_quat;
+
+    set_pose(cmd_pose);
+}
+
+bool DVRK_Arm::set_orientation(const geometry_msgs::Quaternion &quat){
+    cmd_pose.pose.orientation = quat;
+
+    set_pose(cmd_pose);
+}
+
+bool DVRK_Arm::set_orientation(const tf::Matrix3x3 &mat){
+    tf::Quaternion tf_quat;
+    geometry_msgs::Quaternion gm_quat;
+    mat.getRotation(tf_quat);
+    tf::quaternionTFToMsg(tf_quat, gm_quat);
+    cmd_pose.pose.orientation = gm_quat;
+
+    set_pose(cmd_pose);
+}
+
+bool DVRK_Arm::set_pose(const geometry_msgs::PoseStamped &pose){
+    pose_pub.publish(pose);
 }
 
 bool DVRK_Arm::set_force(const double &fx, const double &fy, const double &fz){
