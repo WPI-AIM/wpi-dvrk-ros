@@ -120,17 +120,13 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  include
   ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
- add_library(mtm_interface
-   src/${PROJECT_NAME}/MTM.cpp include/${PROJECT_NAME}/MTM.h
- )
-
- add_library(psm_interface
-   src/${PROJECT_NAME}/PSM.cpp include/${PROJECT_NAME}/PSM.h
+ add_library(arm_interface
+   src/Arm.cpp include/${PROJECT_NAME}/Arm.h
  )
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -153,10 +149,7 @@ include_directories(
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
- target_link_libraries(mtm_interface
-   ${catkin_LIBRARIES}
- )
- target_link_libraries(psm_interface
+ target_link_libraries(arm_interface
    ${catkin_LIBRARIES}
  )
 #############
