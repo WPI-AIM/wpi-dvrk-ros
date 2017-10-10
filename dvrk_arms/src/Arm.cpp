@@ -1,22 +1,44 @@
 #include "dvrk_arms/Arm.h"
-DVRK_Arm::DVRK_Arm(){
+DVRK_Arm::DVRK_Arm(const std::string &arm_name){
+    valid_arms.push_back("MTML");
+    valid_arms.push_back("MTMR");
+    valid_arms.push_back("PSM1");
+    valid_arms.push_back("PSM2");
+    valid_arms.push_back("PSM3");
+
+    bool _valid_arm = false;
+
+    for(size_t i = 0; i < valid_arms.size(); i ++){
+        if (strcmp(arm_name.c_str(), valid_arms[i].c_str()) == 0){
+           _valid_arm = true;
+        }
+    }
+
+    if(_valid_arm){
+        ROS_INFO("Arm %s specified", arm_name.c_str());
+        init();
+    }
+    else{
+        ROS_ERROR("%s Invalid Arm Specified", arm_name.c_str());
+    }
+
+
 }
 
 void DVRK_Arm::init(){
     int argc;
     char** argv;
     ros::M_string s;
-    ros::init(s, "Arm_node");
+    ros::init(s, arm_name + "_interface_node");
 
     n = new ros::NodeHandle;
     rate = new ros::Rate(1000);
-
-    n->param(std::string("arm"), arm_name, std::string("ArmR"));
 
     pose_sub = n->subscribe("/dvrk/" + arm_name + "/position_cartesian_current", 10, &DVRK_Arm::pose_sub_cb, this);
     state_sub = n->subscribe("/dvrk/" + arm_name + "/robot_state", 10, &DVRK_Arm::state_sub_cb, this);
     joint_sub = n->subscribe("/dvrk/" + arm_name + "/position_joint_current", 10, &DVRK_Arm::joint_sub_cb, this);
     clutch_sub = n->subscribe("/dvrk/footpedals/clutch", 10, &DVRK_Arm::clutch_sub_cb, this);
+    coag_sub = n->subscribe("/dvrk/footpedals/coag", 10, &DVRK_Arm::coag_sub_cb, this);
 
     state_pub = n->advertise<std_msgs::String>("/dvrk/" + arm_name + "/set_robot_state", 10);
     force_pub = n->advertise<geometry_msgs::Wrench>("/dvrk/" + arm_name + "/set_wrench_body", 10);
@@ -51,6 +73,10 @@ void DVRK_Arm::clutch_sub_cb(const sensor_msgs::JoyConstPtr &msg){
     _clutch_pressed = msg->buttons[0];
 }
 
+void DVRK_Arm::coag_sub_cb(const sensor_msgs::JoyConstPtr &msg){
+    _coag_pressed = msg->buttons[0];
+}
+
 // TASK::Create an ENUM and check for all the good states
 bool DVRK_Arm::_is_available(){
     if (state_pub.getNumSubscribers() > 0 && state_sub.getNumPublishers() > 0 && pose_sub.getNumPublishers() > 0){
@@ -79,6 +105,32 @@ void DVRK_Arm::get_cur_position(double &x, double &y, double &z){
     x = cur_pose.pose.position.x;
     y = cur_pose.pose.position.y;
     z = cur_pose.pose.position.z;
+}
+
+void DVRK_Arm::get_cur_position(tf::Vector3 &pos){
+    pos.setX(cur_pose.pose.position.x);
+    pos.setY(cur_pose.pose.position.y);
+    pos.setZ(cur_pose.pose.position.z);
+}
+
+void DVRK_Arm::get_cur_position(geometry_msgs::Point &pos){
+    pos = cur_pose.pose.position;
+}
+
+void DVRK_Arm::get_cur_orientation(double &roll, double &pitch, double &yaw){
+    mat_ori.getRPY(roll,pitch,yaw);
+}
+
+void DVRK_Arm::get_cur_orientation(tf::Quaternion &quat){
+    quat = tf_cur_ori;
+}
+
+void DVRK_Arm::get_cur_orientation(geometry_msgs::Quaternion &quat){
+    quat = gm_cur_ori;
+}
+
+void DVRK_Arm::get_cur_orientation(tf::Matrix3x3 &mat){
+    mat = mat_ori;
 }
 
 void DVRK_Arm::_rate_sleep(){
