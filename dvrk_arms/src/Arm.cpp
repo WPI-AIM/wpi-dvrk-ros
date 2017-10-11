@@ -51,8 +51,8 @@ void DVRK_Arm::init(){
     origin_pos.y = 0;
     origin_pos.z = 0;
     reorient_mat.setValue( 1 , 0 , 0,
-                       0 , 1 , 0,
-                       0 , 0 , 1);
+                           0 , 1 , 0,
+                           0 , 0 , 1);
     _clutch_pressed = false;
     scale = 0.1;
 
