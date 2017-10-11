@@ -125,7 +125,7 @@ include_directories(
 )
 
 ## Declare a C++ library
- add_library(arm_interface
+ add_library(dvrk_arms
    src/Arm.cpp include/${PROJECT_NAME}/Arm.h
  )
 ## Add cmake target dependencies of the library
@@ -149,7 +149,7 @@ include_directories(
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
- target_link_libraries(arm_interface
+ target_link_libraries(dvrk_arms
    ${catkin_LIBRARIES}
  )
 #############

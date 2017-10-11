@@ -10,6 +10,7 @@ DVRK_Arm::DVRK_Arm(const std::string &arm_name){
 
     for(size_t i = 0; i < valid_arms.size(); i ++){
         if (strcmp(arm_name.c_str(), valid_arms[i].c_str()) == 0){
+            this->arm_name = valid_arms[i];
            _valid_arm = true;
         }
     }
@@ -41,7 +42,7 @@ void DVRK_Arm::init(){
     coag_sub = n->subscribe("/dvrk/footpedals/coag", 10, &DVRK_Arm::coag_sub_cb, this);
 
     joint_pub = n->advertise<sensor_msgs::JointState>("/dvrk/" + arm_name + "/set_position_joint", 10);
-    pose_pub  = n->advertise<geometry_msgs::PoseStamped>("/dvrk/" + arm_name + "/set_position_cartesian", 10);
+    pose_pub  = n->advertise<geometry_msgs::Pose>("/dvrk/" + arm_name + "/set_position_cartesian", 10);
     state_pub = n->advertise<std_msgs::String>("/dvrk/" + arm_name + "/set_robot_state", 10);
     force_pub = n->advertise<geometry_msgs::Wrench>("/dvrk/" + arm_name + "/set_wrench_body", 10);
     force_orientation_safety_pub = n->advertise<std_msgs::Bool>("/dvrk/" + arm_name + "/set_wrench_body_orientation_absolute",10);
@@ -254,7 +255,7 @@ bool DVRK_Arm::set_orientation(const tf::Matrix3x3 &mat){
 }
 
 bool DVRK_Arm::set_pose(const geometry_msgs::PoseStamped &pose){
-    pose_pub.publish(pose);
+    pose_pub.publish(pose.pose);
 }
 
 bool DVRK_Arm::set_force(const double &fx, const double &fy, const double &fz){

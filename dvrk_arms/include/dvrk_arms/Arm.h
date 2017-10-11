@@ -14,7 +14,7 @@
 
 class DVRK_Arm{
 public:
-    DVRK_Arm(const std::string &arm_name = "MTMR");
+    DVRK_Arm(const std::string &arm_name);
     ~DVRK_Arm();
 
     bool home();
@@ -60,6 +60,8 @@ public:
     void get_cur_pose(geometry_msgs::Pose &pose);
 
     std::string _m_effort_mode = "DVRK_EFFORT_CARTESIAN";
+    std::string _m_jnt_pos_mode = "DVRK_POSITION_JOINT";
+    std::string _m_cart_pos_mode = "DVRK_POSITION_CARTESIAN";
 
 private:
     std::string arm_name;
