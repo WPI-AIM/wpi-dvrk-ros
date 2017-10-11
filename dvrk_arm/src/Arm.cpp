@@ -274,7 +274,10 @@ bool DVRK_Arm::set_orientation(const tf::Matrix3x3 &mat){
     set_pose(cmd_pose);
 }
 
-bool DVRK_Arm::set_pose(const geometry_msgs::PoseStamped &pose){
+bool DVRK_Arm::set_pose(geometry_msgs::PoseStamped &pose){
+    pose.pose.position.x -= origin_pos.x;
+    pose.pose.position.y -= origin_pos.y;
+    pose.pose.position.z -= origin_pos.z;
     pose_pub.publish(pose.pose);
 }
 

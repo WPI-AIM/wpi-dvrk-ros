@@ -48,7 +48,7 @@ public:
     bool set_orientation(const geometry_msgs::Quaternion &gm_quat);
     bool set_orientation(const tf::Matrix3x3 &mat);
 
-    bool set_pose(const geometry_msgs::PoseStamped &pose);
+    bool set_pose(geometry_msgs::PoseStamped &pose);
 
     void get_cur_position(double &x, double &y, double &z);
     void get_cur_position(tf::Vector3 &pos);
