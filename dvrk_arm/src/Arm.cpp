@@ -1,4 +1,4 @@
-#include "dvrk_arms/Arm.h"
+#include "dvrk_arm/Arm.h"
 DVRK_Arm::DVRK_Arm(const std::string &arm_name){
     valid_arms.push_back("MTML");
     valid_arms.push_back("MTMR");

@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>dvrk_arms</name>
+  <name>dvrk_arm</name>
   <version>0.0.0</version>
-  <description>The dvrk_arms package</description>
+  <description>The dvrk_arm package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
