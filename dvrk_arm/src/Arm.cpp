@@ -65,9 +65,9 @@ void DVRK_Arm::pose_sub_cb(const geometry_msgs::PoseStampedConstPtr &msg){
     pre_pose = cur_pose;
     cur_pose = *msg;
 
-    cur_pose.pose.position.x += origin_pos.x;
-    cur_pose.pose.position.y += origin_pos.y;
-    cur_pose.pose.position.z += origin_pos.z;
+    cur_pose.pose.position.x -= origin_pos.x;
+    cur_pose.pose.position.y -= origin_pos.y;
+    cur_pose.pose.position.z -= origin_pos.z;
 
     // Below, we are using the matrix ori_corr to re_orient that EE frame wrt
     // to it.
