@@ -51,9 +51,7 @@ void DVRK_Arm::init(){
     origin_pos.x = 0;
     origin_pos.y = 0;
     origin_pos.z = 0;
-    reorient_mat.setValue( 1 , 0 , 0,
-                           0 , 1 , 0,
-                           0 , 0 , 1);
+    reorient_mat.setIdentity();
     _clutch_pressed = false;
     scale = 0.1;
 
@@ -109,6 +107,28 @@ bool DVRK_Arm::_is_available(){
 bool DVRK_Arm::_in_effort_mode(){
     if(_is_available()){
         if(strcmp(cur_state.data.c_str(), _m_effort_mode.c_str()) == 0){
+            return true;
+        }
+    }
+    else{
+        return false;
+    }
+}
+
+bool DVRK_Arm::_in_cart_pos_mode(){
+    if(_is_available()){
+        if(strcmp(cur_state.data.c_str(), _m_cart_pos_mode.c_str()) == 0){
+            return true;
+        }
+    }
+    else{
+        return false;
+    }
+}
+
+bool DVRK_Arm::_in_jnt_pos_mode(){
+    if(_is_available()){
+        if(strcmp(cur_state.data.c_str(), _m_jnt_pos_mode.c_str()) == 0){
             return true;
         }
     }

@@ -22,6 +22,8 @@ public:
 
     bool _is_available();
     bool _in_effort_mode();
+    bool _in_cart_pos_mode();
+    bool _in_jnt_pos_mode();
 
     bool set_mode(std::string str);
     bool set_force(const double &fx,const double &fy,const double &fz);
