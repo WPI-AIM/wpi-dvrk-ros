@@ -28,13 +28,22 @@ public:
     bool set_moment(const double &nx,const double &ny,const double &nz);
     bool set_wrench(const double &fx,const double &fy,const double &fz,const double &nx,const double &ny,const double &nz);
 
+    void set_origin_pos(const double &x, const double &y, const double &);
+    void set_origin_pos(const geometry_msgs::Point &pos);
+    void set_origin_pos(const tf::Vector3 &pos);
+
+    void reorient_ee_frame(const double &roll, const double &pitch, const double &yaw);
+    void reorient_ee_frame(const tf::Quaternion &tf_quat);
+    void reorient_ee_frame(const geometry_msgs::Quaternion &gm_quat);
+    void reorient_ee_frame(const tf::Matrix3x3 &mat);
+
     bool set_position(const double &x, const double &y, const double &z);
     bool set_position(const geometry_msgs::Point &pos);
     bool set_position(const tf::Vector3 &pos);
 
     bool set_orientation(const double &roll, const double &pitch, const double &yaw);
-    bool set_orientation(const tf::Quaternion &quat);
-    bool set_orientation(const geometry_msgs::Quaternion &quat);
+    bool set_orientation(const tf::Quaternion &tf_quat);
+    bool set_orientation(const geometry_msgs::Quaternion &gm_quat);
     bool set_orientation(const tf::Matrix3x3 &mat);
 
     bool set_pose(const geometry_msgs::PoseStamped &pose);
@@ -44,8 +53,8 @@ public:
     void get_cur_position(geometry_msgs::Point &pos);
 
     void get_cur_orientation(double &roll, double &pitch, double &yaw);
-    void get_cur_orientation(tf::Quaternion &quat);
-    void get_cur_orientation(geometry_msgs::Quaternion &quat);
+    void get_cur_orientation(tf::Quaternion &tf_quat);
+    void get_cur_orientation(geometry_msgs::Quaternion &gm_quat);
     void get_cur_orientation(tf::Matrix3x3 &mat);
 
     void get_cur_pose(geometry_msgs::Pose &pose);
@@ -80,12 +89,13 @@ private:
 
 
     geometry_msgs::PoseStamped cur_pose, pre_pose, cmd_pose;
+    geometry_msgs::Point origin_pos;
     sensor_msgs::JointState cur_joint, pre_joint;
     std_msgs::String cur_state;
     geometry_msgs::Wrench cur_wrench, cmd_wrench;
     geometry_msgs::Quaternion gm_cur_ori;
     tf::Quaternion tf_cur_ori;
-    tf::Matrix3x3 mat_ori, ori_corr;
+    tf::Matrix3x3 mat_ori, reorient_mat;
     std_msgs::String state_cmd;
 
 
