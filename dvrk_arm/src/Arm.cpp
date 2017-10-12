@@ -64,21 +64,27 @@ void DVRK_Arm::joint_sub_cb(const sensor_msgs::JointStateConstPtr &msg){
 void DVRK_Arm::pose_sub_cb(const geometry_msgs::PoseStampedConstPtr &msg){
     pre_pose = cur_pose;
     cur_pose = *msg;
-
-    cur_pose.pose.position.x -= origin_pos.x();
-    cur_pose.pose.position.y -= origin_pos.y();
-    cur_pose.pose.position.z -= origin_pos.z();
-
-    // Below, we are using the matrix ori_corr to re_orient that EE frame wrt
-    // to it.
-
-    tf::quaternionMsgToTF(cur_pose.pose.orientation, tf_cur_ori);
-    mat_ori.setRotation(tf_cur_ori);
-    mat_ori =  reorient_mat * mat_ori;
-    mat_ori.getRotation(tf_cur_ori);
-    tf::quaternionTFToMsg(tf_cur_ori, cur_pose.pose.orientation);
-
+    transform_pose_wrt_origin();
 }
+
+void DVRK_Arm::transform_pose_wrt_origin(){
+
+    cisst_pos.setX(cur_pose.pose.position.x);
+    cisst_pos.setY(cur_pose.pose.position.y);
+    cisst_pos.setZ(cur_pose.pose.position.z);
+
+    tf::quaternionMsgToTF(cur_pose.pose.orientation, cisst_ori_quat);
+
+    cisst_trans.setOrigin(cisst_pos);
+    cisst_trans.setRotation(cisst_ori_quat);
+
+    ee_trans = origin_trans * cisst_trans;
+
+    ee_pos = ee_trans.getOrigin();
+    ee_ori_quat = ee_trans.getRotation();
+    ee_ori_mat.setRotation(ee_ori_quat);
+}
+
 void DVRK_Arm::state_sub_cb(const std_msgs::StringConstPtr &msg){
     cur_state = *msg;
 }
@@ -137,6 +143,16 @@ bool DVRK_Arm::_in_jnt_pos_mode(){
     }
 }
 
+void DVRK_Arm::set_origin_trans(const tf::Vector3 &pos, const tf::Matrix3x3 &tf_mat){
+    tf_mat.getRotation(origin_ori_quat);
+    set_origin_trans(pos, origin_ori_quat);
+}
+
+void DVRK_Arm::set_origin_trans(const tf::Vector3 &pos, const tf::Quaternion &tf_quat){
+    origin_trans.setOrigin(pos);
+    origin_trans.setRotation(tf_quat);
+}
+
 void DVRK_Arm::set_origin_pos(const double &x, const double &y, const double &z){
     origin_pos.setX(x);
     origin_pos.setY(y);
@@ -153,54 +169,52 @@ void DVRK_Arm::set_origin_pos(const tf::Vector3 &pos){
     origin_pos = pos;
 }
 
-void DVRK_Arm::reorient_ee_frame(const double &roll, const double &pitch, const double &yaw){
-    reorient_mat.setRPY(roll, pitch, yaw);
+void DVRK_Arm::set_origin_rot(const double &roll, const double &pitch, const double &yaw){
+    origin_ori_quat.setRPY(roll, pitch, yaw);
 }
 
-void DVRK_Arm::reorient_ee_frame(const tf::Quaternion &tf_quat){
-    reorient_mat.setRotation(tf_quat);
+void DVRK_Arm::set_origin_rot(const tf::Quaternion &tf_quat){
+    origin_ori_quat = tf_quat;
 }
 
-void DVRK_Arm::reorient_ee_frame(const geometry_msgs::Quaternion &gm_quat){
-    tf::Quaternion tf_quat;
-    tf::quaternionMsgToTF(gm_quat, tf_quat);
-    reorient_mat.setRotation(tf_quat);
+void DVRK_Arm::set_origin_rot(const geometry_msgs::Quaternion &gm_quat){
+    tf::quaternionMsgToTF(gm_quat, origin_ori_quat);
 }
 
-void DVRK_Arm::reorient_ee_frame(const tf::Matrix3x3 &mat){
-    reorient_mat = mat;
+void DVRK_Arm::set_origin_rot(const tf::Matrix3x3 &mat){
+    mat.getRotation(origin_ori_quat);
 }
 
 void DVRK_Arm::get_cur_position(double &x, double &y, double &z){
-    x = cur_pose.pose.position.x;
-    y = cur_pose.pose.position.y;
-    z = cur_pose.pose.position.z;
+    x = ee_pos.getX();
+    y = ee_pos.getY();
+    z = ee_pos.getZ();
 }
 
 void DVRK_Arm::get_cur_position(tf::Vector3 &pos){
-    pos.setX(cur_pose.pose.position.x);
-    pos.setY(cur_pose.pose.position.y);
-    pos.setZ(cur_pose.pose.position.z);
+    pos = ee_pos;
 }
 
 void DVRK_Arm::get_cur_position(geometry_msgs::Point &pos){
-    pos = cur_pose.pose.position;
+    pos.x = ee_pos.getX();
+    pos.y = ee_pos.getY();
+    pos.z = ee_pos.getZ();
 }
 
 void DVRK_Arm::get_cur_orientation(double &roll, double &pitch, double &yaw){
-    mat_ori.getRPY(roll,pitch,yaw);
+    ee_ori_mat.getRPY(roll, pitch, yaw);
 }
 
 void DVRK_Arm::get_cur_orientation(tf::Quaternion &tf_quat){
-    tf_quat = tf_cur_ori;
+    tf_quat = ee_ori_quat;
 }
 
 void DVRK_Arm::get_cur_orientation(geometry_msgs::Quaternion &gm_quat){
-    gm_quat = gm_cur_ori;
+    tf::quaternionTFToMsg(ee_ori_quat, gm_quat);
 }
 
 void DVRK_Arm::get_cur_orientation(tf::Matrix3x3 &mat){
-    mat = mat_ori;
+    mat.setRotation(ee_ori_quat);
 }
 
 void DVRK_Arm::_rate_sleep(){
@@ -244,10 +258,8 @@ bool DVRK_Arm::set_position(const tf::Vector3 &pos){
 
 bool DVRK_Arm::set_orientation(const double &roll, const double &pitch, const double &yaw){
     tf::Quaternion tf_quat;
-    geometry_msgs::Quaternion gm_quat;
     tf_quat.setRPY(roll, pitch, yaw);
-    tf::quaternionTFToMsg(tf_quat, gm_quat);
-    cmd_pose.pose.orientation = gm_quat;
+    tf::quaternionTFToMsg(tf_quat, cmd_pose.pose.orientation);
 
     set_pose(cmd_pose);
 }
@@ -266,18 +278,27 @@ bool DVRK_Arm::set_orientation(const geometry_msgs::Quaternion &gm_quat){
 
 bool DVRK_Arm::set_orientation(const tf::Matrix3x3 &mat){
     tf::Quaternion tf_quat;
-    geometry_msgs::Quaternion gm_quat;
     mat.getRotation(tf_quat);
-    tf::quaternionTFToMsg(tf_quat, gm_quat);
-    cmd_pose.pose.orientation = gm_quat;
+    tf::quaternionTFToMsg(tf_quat, cmd_pose.pose.orientation);
 
     set_pose(cmd_pose);
 }
 
 bool DVRK_Arm::set_pose(geometry_msgs::PoseStamped &pose){
-    pose.pose.position.x += origin_pos.x();
-    pose.pose.position.y += origin_pos.y();
-    pose.pose.position.z += origin_pos.z();
+    cisst_pos.setX(pose.pose.position.x);
+    cisst_pos.setY(pose.pose.position.y);
+    cisst_pos.setZ(pose.pose.position.z);
+
+    tf::quaternionMsgToTF(pose.pose.orientation, cisst_ori_quat);
+    cisst_trans.setOrigin(cisst_pos);
+    cisst_trans.setRotation(cisst_ori_quat);
+
+    cisst_trans = origin_trans.inverse() * cisst_trans;
+    pose.pose.position.x = cisst_trans.getOrigin().getX();
+    pose.pose.position.y = cisst_trans.getOrigin().getY();
+    pose.pose.position.z = cisst_trans.getOrigin().getZ();
+
+    tf::quaternionTFToMsg(cisst_trans.getRotation(), pose.pose.orientation);
     pose_pub.publish(pose.pose);
 }
 

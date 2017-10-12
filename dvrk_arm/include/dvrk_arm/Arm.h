@@ -12,7 +12,31 @@
 #include "tf/tf.h"
 #include "tf/LinearMath/Matrix3x3.h"
 
-class DVRK_Arm{
+struct OriginTrans{
+public:
+    tf::Transform origin_trans;
+    tf::Vector3 origin_pos;
+    tf::Quaternion origin_ori_quat;
+    tf::Matrix3x3 origin_ori_mat;
+};
+
+struct EETrans{
+public:
+    tf::Transform ee_trans;
+    tf::Vector3 ee_pos;
+    tf::Quaternion ee_ori_quat;
+    tf::Matrix3x3 ee_ori_mat;
+};
+
+struct EETransCisst{
+public:
+    tf::Transform cisst_trans;
+    tf::Vector3 cisst_pos;
+    tf::Quaternion cisst_ori_quat;
+    tf::Matrix3x3 cisst_ori_mat;
+};
+
+class DVRK_Arm: public OriginTrans, public EETrans, public EETransCisst{
 public:
     DVRK_Arm(const std::string &arm_name);
     ~DVRK_Arm();
@@ -25,19 +49,23 @@ public:
     bool _in_cart_pos_mode();
     bool _in_jnt_pos_mode();
 
-    bool set_mode(std::string str);
-    bool set_force(const double &fx,const double &fy,const double &fz);
-    bool set_moment(const double &nx,const double &ny,const double &nz);
-    bool set_wrench(const double &fx,const double &fy,const double &fz,const double &nx,const double &ny,const double &nz);
 
     void set_origin_pos(const double &x, const double &y, const double &);
     void set_origin_pos(const geometry_msgs::Point &pos);
     void set_origin_pos(const tf::Vector3 &pos);
 
-    void reorient_ee_frame(const double &roll, const double &pitch, const double &yaw);
-    void reorient_ee_frame(const tf::Quaternion &tf_quat);
-    void reorient_ee_frame(const geometry_msgs::Quaternion &gm_quat);
-    void reorient_ee_frame(const tf::Matrix3x3 &mat);
+    void set_origin_rot(const double &roll, const double &pitch, const double &yaw);
+    void set_origin_rot(const tf::Quaternion &tf_quat);
+    void set_origin_rot(const geometry_msgs::Quaternion &gm_quat);
+    void set_origin_rot(const tf::Matrix3x3 &mat);
+
+    void set_origin_trans(const tf::Vector3 &pos, const tf::Quaternion &tf_quat);
+    void set_origin_trans(const tf::Vector3 &pos, const tf::Matrix3x3 &tf_mat);
+
+    bool set_mode(std::string str);
+    bool set_force(const double &fx,const double &fy,const double &fz);
+    bool set_moment(const double &nx,const double &ny,const double &nz);
+    bool set_wrench(const double &fx,const double &fy,const double &fz,const double &nx,const double &ny,const double &nz);
 
     bool set_position(const double &x, const double &y, const double &z);
     bool set_position(const geometry_msgs::Point &pos);
@@ -90,10 +118,10 @@ private:
     void joint_sub_cb(const sensor_msgs::JointStateConstPtr &msg);
     void clutch_sub_cb(const sensor_msgs::JoyConstPtr &msg);
     void coag_sub_cb(const sensor_msgs::JoyConstPtr &msg);
+    void transform_pose_wrt_origin();
 
 
     geometry_msgs::PoseStamped cur_pose, pre_pose, cmd_pose;
-    tf::Vector3 origin_pos;
     sensor_msgs::JointState cur_joint, pre_joint;
     std_msgs::String cur_state;
     geometry_msgs::Wrench cur_wrench, cmd_wrench;
@@ -101,7 +129,6 @@ private:
     tf::Quaternion tf_cur_ori;
     tf::Matrix3x3 mat_ori, reorient_mat;
     std_msgs::String state_cmd;
-    tf::Transform origin_trans;
 
 
 };
