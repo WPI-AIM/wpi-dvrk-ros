@@ -118,8 +118,8 @@ private:
     void joint_sub_cb(const sensor_msgs::JointStateConstPtr &msg);
     void clutch_sub_cb(const sensor_msgs::JoyConstPtr &msg);
     void coag_sub_cb(const sensor_msgs::JoyConstPtr &msg);
-    void transform_pose_wrt_origin();
-
+    void cisstPose_to_userTransform(const geometry_msgs::PoseStamped &pose);
+    void userPose_to_cisstPose(geometry_msgs::PoseStamped &pose);
 
     geometry_msgs::PoseStamped cur_pose, pre_pose, cmd_pose;
     sensor_msgs::JointState cur_joint, pre_joint;

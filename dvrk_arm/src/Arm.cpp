@@ -64,20 +64,19 @@ void DVRK_Arm::joint_sub_cb(const sensor_msgs::JointStateConstPtr &msg){
 void DVRK_Arm::pose_sub_cb(const geometry_msgs::PoseStampedConstPtr &msg){
     pre_pose = cur_pose;
     cur_pose = *msg;
-    transform_pose_wrt_origin();
+
+    cisstPose_to_userTransform(cur_pose);
 }
 
-void DVRK_Arm::transform_pose_wrt_origin(){
+void DVRK_Arm::cisstPose_to_userTransform(const geometry_msgs::PoseStamped &pose){
 
-    cisst_pos.setX(cur_pose.pose.position.x);
-    cisst_pos.setY(cur_pose.pose.position.y);
-    cisst_pos.setZ(cur_pose.pose.position.z);
-
-    tf::quaternionMsgToTF(cur_pose.pose.orientation, cisst_ori_quat);
+    cisst_pos.setX(pose.pose.position.x);
+    cisst_pos.setY(pose.pose.position.y);
+    cisst_pos.setZ(pose.pose.position.z);
+    tf::quaternionMsgToTF(pose.pose.orientation, cisst_ori_quat);
 
     cisst_trans.setOrigin(cisst_pos);
     cisst_trans.setRotation(cisst_ori_quat);
-
     ee_trans = origin_trans * cisst_trans;
 
     ee_pos = ee_trans.getOrigin();
@@ -284,7 +283,7 @@ bool DVRK_Arm::set_orientation(const tf::Matrix3x3 &mat){
     set_pose(cmd_pose);
 }
 
-bool DVRK_Arm::set_pose(geometry_msgs::PoseStamped &pose){
+void DVRK_Arm::userPose_to_cisstPose(geometry_msgs::PoseStamped &pose){
     cisst_pos.setX(pose.pose.position.x);
     cisst_pos.setY(pose.pose.position.y);
     cisst_pos.setZ(pose.pose.position.z);
@@ -299,6 +298,10 @@ bool DVRK_Arm::set_pose(geometry_msgs::PoseStamped &pose){
     pose.pose.position.z = cisst_trans.getOrigin().getZ();
 
     tf::quaternionTFToMsg(cisst_trans.getRotation(), pose.pose.orientation);
+}
+
+bool DVRK_Arm::set_pose(geometry_msgs::PoseStamped &pose){
+    userPose_to_cisstPose(pose);
     pose_pub.publish(pose.pose);
 }
 
