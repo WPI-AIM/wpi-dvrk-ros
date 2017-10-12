@@ -93,7 +93,7 @@ private:
 
 
     geometry_msgs::PoseStamped cur_pose, pre_pose, cmd_pose;
-    geometry_msgs::Point origin_pos;
+    tf::Vector3 origin_pos;
     sensor_msgs::JointState cur_joint, pre_joint;
     std_msgs::String cur_state;
     geometry_msgs::Wrench cur_wrench, cmd_wrench;
@@ -101,6 +101,7 @@ private:
     tf::Quaternion tf_cur_ori;
     tf::Matrix3x3 mat_ori, reorient_mat;
     std_msgs::String state_cmd;
+    tf::Transform origin_trans;
 
 
 };

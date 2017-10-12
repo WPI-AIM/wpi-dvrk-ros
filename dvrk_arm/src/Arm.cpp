@@ -48,9 +48,9 @@ void DVRK_Arm::init(){
     force_orientation_safety_pub = n->advertise<std_msgs::Bool>("/dvrk/" + arm_name + "/set_wrench_body_orientation_absolute",10);
     sleep(1);
     //set_mode(std::string("Home"));
-    origin_pos.x = 0;
-    origin_pos.y = 0;
-    origin_pos.z = 0;
+    origin_pos.setX(0);
+    origin_pos.setY(0);
+    origin_pos.setZ(0);
     reorient_mat.setIdentity();
     _clutch_pressed = false;
     scale = 0.1;
@@ -65,9 +65,9 @@ void DVRK_Arm::pose_sub_cb(const geometry_msgs::PoseStampedConstPtr &msg){
     pre_pose = cur_pose;
     cur_pose = *msg;
 
-    cur_pose.pose.position.x -= origin_pos.x;
-    cur_pose.pose.position.y -= origin_pos.y;
-    cur_pose.pose.position.z -= origin_pos.z;
+    cur_pose.pose.position.x -= origin_pos.x();
+    cur_pose.pose.position.y -= origin_pos.y();
+    cur_pose.pose.position.z -= origin_pos.z();
 
     // Below, we are using the matrix ori_corr to re_orient that EE frame wrt
     // to it.
@@ -138,19 +138,19 @@ bool DVRK_Arm::_in_jnt_pos_mode(){
 }
 
 void DVRK_Arm::set_origin_pos(const double &x, const double &y, const double &z){
-    origin_pos.x = x;
-    origin_pos.y = y;
-    origin_pos.z = z;
+    origin_pos.setX(x);
+    origin_pos.setY(y);
+    origin_pos.setZ(z);
 }
 
 void DVRK_Arm::set_origin_pos(const geometry_msgs::Point &pos){
-    origin_pos = pos;
+    origin_pos.setX(pos.x);
+    origin_pos.setY(pos.y);
+    origin_pos.setZ(pos.z);
 }
 
 void DVRK_Arm::set_origin_pos(const tf::Vector3 &pos){
-    origin_pos.x = pos.getX();
-    origin_pos.y = pos.getY();
-    origin_pos.z = pos.getZ();
+    origin_pos = pos;
 }
 
 void DVRK_Arm::reorient_ee_frame(const double &roll, const double &pitch, const double &yaw){
@@ -275,9 +275,9 @@ bool DVRK_Arm::set_orientation(const tf::Matrix3x3 &mat){
 }
 
 bool DVRK_Arm::set_pose(geometry_msgs::PoseStamped &pose){
-    pose.pose.position.x -= origin_pos.x;
-    pose.pose.position.y -= origin_pos.y;
-    pose.pose.position.z -= origin_pos.z;
+    pose.pose.position.x += origin_pos.x();
+    pose.pose.position.y += origin_pos.y();
+    pose.pose.position.z += origin_pos.z();
     pose_pub.publish(pose.pose);
 }
 
