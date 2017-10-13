@@ -228,6 +228,10 @@ void DVRK_Arm::get_cur_orientation(tf::Matrix3x3 &mat){
     mat.setRotation(ee_trans.getRotation());
 }
 
+void DVRK_Arm::get_cur_transform(tf::Transform &trans){
+    trans = ee_trans;
+}
+
 void DVRK_Arm::_rate_sleep(){
     sleep(0.01);
 }
@@ -297,8 +301,8 @@ bool DVRK_Arm::set_pose(geometry_msgs::PoseStamped &pose){
     move_arm_cartesian(ee_trans_cmd);
 }
 
-bool DVRK_Arm::set_pose(tf::Transform &tr){
-    ee_trans_cmd = tr;
+bool DVRK_Arm::set_transform(tf::Transform &trans){
+    ee_trans_cmd = trans;
     move_arm_cartesian(ee_trans_cmd);
 }
 

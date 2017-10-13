@@ -77,7 +77,7 @@ public:
     bool set_orientation(const tf::Matrix3x3 &mat);
 
     bool set_pose(geometry_msgs::PoseStamped &pose);
-    bool set_pose(tf::Transform &tr);
+    bool set_transform(tf::Transform &trans);
 
     void get_cur_position(double &x, double &y, double &z);
     void get_cur_position(tf::Vector3 &pos);
@@ -89,6 +89,7 @@ public:
     void get_cur_orientation(tf::Matrix3x3 &mat);
 
     void get_cur_pose(geometry_msgs::Pose &pose);
+    void get_cur_transform(tf::Transform &trans);
 
     const std::string _m_effort_mode = "DVRK_EFFORT_CARTESIAN";
     const std::string _m_jnt_pos_mode = "DVRK_POSITION_JOINT";
