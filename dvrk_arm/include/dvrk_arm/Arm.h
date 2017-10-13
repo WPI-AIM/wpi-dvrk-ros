@@ -34,6 +34,8 @@ public:
     tf::Vector3 ee_pos_cmd;
     tf::Quaternion ee_ori_quat_cmd;
     tf::Matrix3x3 ee_ori_mat_cmd;
+    tf::Vector3 ee_force_cmd;
+    tf::Vector3 ee_moment_cmd;
 };
 
 class DVRK_Arm: public OriginTrans, public EETrans, public EETransCmd{
@@ -123,6 +125,7 @@ private:
     void cisstPose_to_userTransform(const geometry_msgs::PoseStamped &pose);
     void userPose_to_cisstPose(geometry_msgs::PoseStamped &pose);
     void move_arm_cartesian(tf::Transform &trans);
+    void set_arm_wrench(tf::Vector3 &force, tf::Vector3 &wrench);
 
     geometry_msgs::PoseStamped cur_pose, pre_pose, cmd_pose;
     sensor_msgs::JointState cur_joint, pre_joint;

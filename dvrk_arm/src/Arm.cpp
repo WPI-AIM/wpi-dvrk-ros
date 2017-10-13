@@ -317,22 +317,38 @@ void DVRK_Arm::move_arm_cartesian(tf::Transform &trans){
 }
 
 bool DVRK_Arm::set_force(const double &fx, const double &fy, const double &fz){
-    set_wrench(fx, fy, fz, 0 , 0 , 0);
+    ee_force_cmd.setX(fx);
+    ee_force_cmd.setY(fy);
+    ee_force_cmd.setZ(fz);
+
+    set_arm_wrench(ee_force_cmd, ee_moment_cmd);
 }
 
 bool DVRK_Arm::set_moment(const double &nx, const double &ny, const double &nz){
-    set_wrench(0, 0, 0, nx, ny, nz);
+    ee_moment_cmd.setX(nx);
+    ee_moment_cmd.setX(ny);
+    ee_moment_cmd.setX(nz);
+
+    set_arm_wrench(ee_force_cmd, ee_moment_cmd);
 }
 
 bool DVRK_Arm::set_wrench(const double &fx,const double &fy,const double &fz,const double &nx,const double &ny,const double &nz){
-    if(_clutch_pressed == false){
-        cmd_wrench.force.x = fx;
-        cmd_wrench.force.y = fy;
-        cmd_wrench.force.z = fz;
 
-        cmd_wrench.torque.x = nx;
-        cmd_wrench.torque.y = ny;
-        cmd_wrench.torque.z = nz;
+    ee_force_cmd.setX(fx);
+    ee_force_cmd.setY(fy);
+    ee_force_cmd.setZ(fz);
+
+    ee_moment_cmd.setX(nx);
+    ee_moment_cmd.setX(ny);
+    ee_moment_cmd.setX(nz);
+
+    set_arm_wrench(ee_force_cmd, ee_moment_cmd);
+}
+
+void DVRK_Arm::set_arm_wrench(tf::Vector3 &force, tf::Vector3 &moment){
+    if(_clutch_pressed == false){
+        tf::vector3TFToMsg(origin_trans.inverse() * force, cmd_wrench.force);
+        tf::vector3TFToMsg(origin_trans.inverse() * moment, cmd_wrench.torque);
     }
     else{
         cmd_wrench.force.x = 0;
@@ -347,6 +363,7 @@ bool DVRK_Arm::set_wrench(const double &fx,const double &fy,const double &fz,con
     force_pub.publish(cmd_wrench);
     ros::spinOnce();
     rate->sleep();
+
 }
 
 DVRK_Arm::~DVRK_Arm(){
