@@ -16,7 +16,7 @@ DVRK_Arm::DVRK_Arm(const std::string &arm_name){
     }
 
     if(_valid_arm){
-        ROS_INFO("Arm %s specified", arm_name.c_str());
+        ROS_INFO("Specified arm is %s:", arm_name.c_str());
         init();
     }
     else{
@@ -46,14 +46,16 @@ void DVRK_Arm::init(){
     state_pub = n->advertise<std_msgs::String>("/dvrk/" + arm_name + "/set_robot_state", 10);
     force_pub = n->advertise<geometry_msgs::Wrench>("/dvrk/" + arm_name + "/set_wrench_body", 10);
     force_orientation_safety_pub = n->advertise<std_msgs::Bool>("/dvrk/" + arm_name + "/set_wrench_body_orientation_absolute",10);
-    sleep(1);
     //set_mode(std::string("Home"));
-    origin_pos.setX(0);
-    origin_pos.setY(0);
-    origin_pos.setZ(0);
-    reorient_mat.setIdentity();
+    origin_trans.setOrigin(tf::Vector3(0,0,0));
+    tf::Quaternion temp_quat;
+    temp_quat.setRPY(0,0,0);
+    origin_trans.setRotation(temp_quat);
     _clutch_pressed = false;
     scale = 0.1;
+
+    sleep(1);
+    ros::spinOnce();
 
 }
 
@@ -217,10 +219,10 @@ void DVRK_Arm::get_cur_orientation(double &roll, double &pitch, double &yaw){
 }
 
 void DVRK_Arm::get_cur_orientation(double &x, double &y, double &z, double &w){
-    x = ee_trans_cmd.getRotation().getX();
-    y = ee_trans_cmd.getRotation().getY();
-    z = ee_trans_cmd.getRotation().getZ();
-    w = ee_trans_cmd.getRotation().getW();
+    x = ee_trans.getRotation().getX();
+    y = ee_trans.getRotation().getY();
+    z = ee_trans.getRotation().getZ();
+    w = ee_trans.getRotation().getW();
 }
 
 void DVRK_Arm::get_cur_orientation(tf::Quaternion &tf_quat){
