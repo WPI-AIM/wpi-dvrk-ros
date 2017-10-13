@@ -70,14 +70,14 @@ void DVRK_Arm::pose_sub_cb(const geometry_msgs::PoseStampedConstPtr &msg){
 
 void DVRK_Arm::cisstPose_to_userTransform(const geometry_msgs::PoseStamped &pose){
 
-    cisst_pos.setX(pose.pose.position.x);
-    cisst_pos.setY(pose.pose.position.y);
-    cisst_pos.setZ(pose.pose.position.z);
-    tf::quaternionMsgToTF(pose.pose.orientation, cisst_ori_quat);
+    ee_pos.setX(pose.pose.position.x);
+    ee_pos.setY(pose.pose.position.y);
+    ee_pos.setZ(pose.pose.position.z);
+    tf::quaternionMsgToTF(pose.pose.orientation, ee_ori_quat);
 
-    cisst_trans.setOrigin(cisst_pos);
-    cisst_trans.setRotation(cisst_ori_quat);
-    ee_trans = origin_trans * cisst_trans;
+    ee_trans.setOrigin(ee_pos);
+    ee_trans.setRotation(ee_ori_quat);
+    ee_trans = origin_trans * ee_trans;
 
     ee_pos = ee_trans.getOrigin();
     ee_ori_quat = ee_trans.getRotation();
@@ -199,35 +199,33 @@ void DVRK_Arm::set_origin_rot(const tf::Matrix3x3 &mat){
 }
 
 void DVRK_Arm::get_cur_position(double &x, double &y, double &z){
-    x = ee_pos.getX();
-    y = ee_pos.getY();
-    z = ee_pos.getZ();
+    x = ee_trans.getOrigin().getX();
+    y = ee_trans.getOrigin().getY();
+    z = ee_trans.getOrigin().getZ();
 }
 
 void DVRK_Arm::get_cur_position(tf::Vector3 &pos){
-    pos = ee_pos;
+    pos = ee_trans.getOrigin();
 }
 
 void DVRK_Arm::get_cur_position(geometry_msgs::Point &pos){
-    pos.x = ee_pos.getX();
-    pos.y = ee_pos.getY();
-    pos.z = ee_pos.getZ();
+    tf::pointTFToMsg(ee_trans.getOrigin(), pos);
 }
 
 void DVRK_Arm::get_cur_orientation(double &roll, double &pitch, double &yaw){
-    ee_ori_mat.getRPY(roll, pitch, yaw);
+    tf::Matrix3x3(ee_trans.getRotation()).getRPY(roll, pitch, yaw);
 }
 
 void DVRK_Arm::get_cur_orientation(tf::Quaternion &tf_quat){
-    tf_quat = ee_ori_quat;
+    tf_quat = ee_trans.getRotation();
 }
 
 void DVRK_Arm::get_cur_orientation(geometry_msgs::Quaternion &gm_quat){
-    tf::quaternionTFToMsg(ee_ori_quat, gm_quat);
+    tf::quaternionTFToMsg(ee_trans.getRotation(), gm_quat);
 }
 
 void DVRK_Arm::get_cur_orientation(tf::Matrix3x3 &mat){
-    mat.setRotation(ee_ori_quat);
+    mat.setRotation(ee_trans.getRotation());
 }
 
 void DVRK_Arm::_rate_sleep(){
@@ -251,72 +249,67 @@ bool DVRK_Arm::set_mode(std::string str){
 }
 
 bool DVRK_Arm::set_position(const double &x, const double &y, const double &z){
-    cmd_pose.pose.position.x = x;
-    cmd_pose.pose.position.y = y;
-    cmd_pose.pose.position.z = z;
-    set_pose(cmd_pose);
+    ee_trans_cmd.setOrigin(tf::Vector3(x,y,z));
+    move_arm_cartesian(ee_trans_cmd);
 }
 
 bool DVRK_Arm::set_position(const geometry_msgs::Point &pos){
-    cmd_pose.pose.position = pos;
-    set_pose(cmd_pose);
+    ee_trans_cmd.setOrigin(tf::Vector3(pos.x, pos.y, pos.z));
+    move_arm_cartesian(ee_trans_cmd);
 }
 
 bool DVRK_Arm::set_position(const tf::Vector3 &pos){
-    cmd_pose.pose.position.x = pos.getX();
-    cmd_pose.pose.position.y = pos.getY();
-    cmd_pose.pose.position.z = pos.getZ();
-    set_pose(cmd_pose);
+    ee_trans_cmd.setOrigin(pos);
+    move_arm_cartesian(ee_trans_cmd);
 }
 
 bool DVRK_Arm::set_orientation(const double &roll, const double &pitch, const double &yaw){
-    tf::Quaternion tf_quat;
-    tf_quat.setRPY(roll, pitch, yaw);
-    tf::quaternionTFToMsg(tf_quat, cmd_pose.pose.orientation);
-
-    set_pose(cmd_pose);
+    ee_ori_quat_cmd.setRPY(roll, pitch, yaw);
+    ee_trans_cmd.setRotation(ee_ori_quat);
+    move_arm_cartesian(ee_trans_cmd);
 }
 
 bool DVRK_Arm::set_orientation(const tf::Quaternion &tf_quat){
-    tf::quaternionTFToMsg(tf_quat, cmd_pose.pose.orientation);
-
-    set_pose(cmd_pose);
+    ee_trans_cmd.setRotation(tf_quat);
+    move_arm_cartesian(ee_trans_cmd);
 }
 
 bool DVRK_Arm::set_orientation(const geometry_msgs::Quaternion &gm_quat){
-    cmd_pose.pose.orientation = gm_quat;
-
-    set_pose(cmd_pose);
+    ee_trans_cmd.setRotation(tf::Quaternion(gm_quat.x, gm_quat.y, gm_quat.z, gm_quat.w));
+    move_arm_cartesian(ee_trans_cmd);
 }
 
 bool DVRK_Arm::set_orientation(const tf::Matrix3x3 &mat){
-    tf::Quaternion tf_quat;
-    mat.getRotation(tf_quat);
-    tf::quaternionTFToMsg(tf_quat, cmd_pose.pose.orientation);
-
-    set_pose(cmd_pose);
-}
-
-void DVRK_Arm::userPose_to_cisstPose(geometry_msgs::PoseStamped &pose){
-    cisst_pos.setX(pose.pose.position.x);
-    cisst_pos.setY(pose.pose.position.y);
-    cisst_pos.setZ(pose.pose.position.z);
-
-    tf::quaternionMsgToTF(pose.pose.orientation, cisst_ori_quat);
-    cisst_trans.setOrigin(cisst_pos);
-    cisst_trans.setRotation(cisst_ori_quat);
-
-    cisst_trans = origin_trans.inverse() * cisst_trans;
-    pose.pose.position.x = cisst_trans.getOrigin().getX();
-    pose.pose.position.y = cisst_trans.getOrigin().getY();
-    pose.pose.position.z = cisst_trans.getOrigin().getZ();
-
-    tf::quaternionTFToMsg(cisst_trans.getRotation(), pose.pose.orientation);
+    mat.getRotation(ee_ori_quat_cmd);
+    ee_trans_cmd.setRotation(ee_ori_quat_cmd);
+    move_arm_cartesian(ee_trans_cmd);
 }
 
 bool DVRK_Arm::set_pose(geometry_msgs::PoseStamped &pose){
-    userPose_to_cisstPose(pose);
-    pose_pub.publish(pose.pose);
+    ee_trans_cmd.setOrigin(tf::Vector3(pose.pose.position.x,
+                           pose.pose.position.y,
+                           pose.pose.position.z));
+
+    ee_trans_cmd.setRotation(tf::Quaternion(pose.pose.orientation.x,
+                             pose.pose.orientation.y,
+                             pose.pose.orientation.z,
+                             pose.pose.orientation.w));
+    move_arm_cartesian(ee_trans_cmd);
+}
+
+bool DVRK_Arm::set_pose(tf::Transform &tr){
+    ee_trans_cmd = tr;
+    move_arm_cartesian(ee_trans_cmd);
+}
+
+void DVRK_Arm::move_arm_cartesian(tf::Transform &trans){
+    trans = origin_trans.inverse() * trans;
+    cmd_pose.pose.position.x = trans.getOrigin().getX();
+    cmd_pose.pose.position.y = trans.getOrigin().getY();
+    cmd_pose.pose.position.z = trans.getOrigin().getZ();
+    tf::quaternionTFToMsg(trans.getRotation(), cmd_pose.pose.orientation);
+
+    pose_pub.publish(cmd_pose);
 }
 
 bool DVRK_Arm::set_force(const double &fx, const double &fy, const double &fz){

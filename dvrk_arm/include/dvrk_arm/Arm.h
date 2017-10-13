@@ -28,15 +28,15 @@ public:
     tf::Matrix3x3 ee_ori_mat;
 };
 
-struct EETransCisst{
+struct EETransCmd{
 public:
-    tf::Transform cisst_trans;
-    tf::Vector3 cisst_pos;
-    tf::Quaternion cisst_ori_quat;
-    tf::Matrix3x3 cisst_ori_mat;
+    tf::Transform ee_trans_cmd;
+    tf::Vector3 ee_pos_cmd;
+    tf::Quaternion ee_ori_quat_cmd;
+    tf::Matrix3x3 ee_ori_mat_cmd;
 };
 
-class DVRK_Arm: public OriginTrans, public EETrans, public EETransCisst{
+class DVRK_Arm: public OriginTrans, public EETrans, public EETransCmd{
 public:
     DVRK_Arm(const std::string &arm_name);
     ~DVRK_Arm();
@@ -77,6 +77,7 @@ public:
     bool set_orientation(const tf::Matrix3x3 &mat);
 
     bool set_pose(geometry_msgs::PoseStamped &pose);
+    bool set_pose(tf::Transform &tr);
 
     void get_cur_position(double &x, double &y, double &z);
     void get_cur_position(tf::Vector3 &pos);
@@ -120,6 +121,7 @@ private:
     void coag_sub_cb(const sensor_msgs::JoyConstPtr &msg);
     void cisstPose_to_userTransform(const geometry_msgs::PoseStamped &pose);
     void userPose_to_cisstPose(geometry_msgs::PoseStamped &pose);
+    void move_arm_cartesian(tf::Transform &trans);
 
     geometry_msgs::PoseStamped cur_pose, pre_pose, cmd_pose;
     sensor_msgs::JointState cur_joint, pre_joint;
