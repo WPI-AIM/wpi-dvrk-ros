@@ -216,6 +216,13 @@ void DVRK_Arm::get_cur_orientation(double &roll, double &pitch, double &yaw){
     tf::Matrix3x3(ee_trans.getRotation()).getRPY(roll, pitch, yaw);
 }
 
+void DVRK_Arm::get_cur_orientation(double &x, double &y, double &z, double &w){
+    x = ee_trans_cmd.getRotation().getX();
+    y = ee_trans_cmd.getRotation().getY();
+    z = ee_trans_cmd.getRotation().getZ();
+    w = ee_trans_cmd.getRotation().getW();
+}
+
 void DVRK_Arm::get_cur_orientation(tf::Quaternion &tf_quat){
     tf_quat = ee_trans.getRotation();
 }
@@ -226,6 +233,14 @@ void DVRK_Arm::get_cur_orientation(geometry_msgs::Quaternion &gm_quat){
 
 void DVRK_Arm::get_cur_orientation(tf::Matrix3x3 &mat){
     mat.setRotation(ee_trans.getRotation());
+}
+
+void DVRK_Arm::get_cur_pose(geometry_msgs::Pose &pose){
+    pose.position.x = ee_trans.getOrigin().getX();
+    pose.position.y = ee_trans.getOrigin().getY();
+    pose.position.z = ee_trans.getOrigin().getZ();
+
+    tf::quaternionTFToMsg(ee_trans.getRotation(), pose.orientation);
 }
 
 void DVRK_Arm::get_cur_transform(tf::Transform &trans){
@@ -270,6 +285,11 @@ bool DVRK_Arm::set_position(const tf::Vector3 &pos){
 bool DVRK_Arm::set_orientation(const double &roll, const double &pitch, const double &yaw){
     ee_ori_quat_cmd.setRPY(roll, pitch, yaw);
     ee_trans_cmd.setRotation(ee_ori_quat);
+    move_arm_cartesian(ee_trans_cmd);
+}
+
+bool DVRK_Arm::set_orientation(const double &x, const double &y, const double &z, const double &w){
+    ee_trans_cmd.setRotation(tf::Quaternion(x,y,z,w));
     move_arm_cartesian(ee_trans_cmd);
 }
 

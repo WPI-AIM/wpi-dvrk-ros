@@ -74,6 +74,7 @@ public:
     bool set_position(const tf::Vector3 &pos);
 
     bool set_orientation(const double &roll, const double &pitch, const double &yaw);
+    bool set_orientation(const double &x, const double &y, const double &z, const double &w);
     bool set_orientation(const tf::Quaternion &tf_quat);
     bool set_orientation(const geometry_msgs::Quaternion &gm_quat);
     bool set_orientation(const tf::Matrix3x3 &mat);
@@ -86,6 +87,7 @@ public:
     void get_cur_position(geometry_msgs::Point &pos);
 
     void get_cur_orientation(double &roll, double &pitch, double &yaw);
+    void get_cur_orientation(double &x, double &y, double &z, double &w);
     void get_cur_orientation(tf::Quaternion &tf_quat);
     void get_cur_orientation(geometry_msgs::Quaternion &gm_quat);
     void get_cur_orientation(tf::Matrix3x3 &mat);
