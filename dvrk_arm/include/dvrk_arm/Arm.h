@@ -90,9 +90,9 @@ public:
 
     void get_cur_pose(geometry_msgs::Pose &pose);
 
-    std::string _m_effort_mode = "DVRK_EFFORT_CARTESIAN";
-    std::string _m_jnt_pos_mode = "DVRK_POSITION_JOINT";
-    std::string _m_cart_pos_mode = "DVRK_POSITION_CARTESIAN";
+    const std::string _m_effort_mode = "DVRK_EFFORT_CARTESIAN";
+    const std::string _m_jnt_pos_mode = "DVRK_POSITION_JOINT";
+    const std::string _m_cart_pos_mode = "DVRK_POSITION_CARTESIAN";
 
 private:
     std::string arm_name;
