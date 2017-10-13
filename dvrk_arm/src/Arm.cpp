@@ -346,20 +346,12 @@ bool DVRK_Arm::set_wrench(const double &fx,const double &fy,const double &fz,con
 }
 
 void DVRK_Arm::set_arm_wrench(tf::Vector3 &force, tf::Vector3 &moment){
-    if(_clutch_pressed == false){
-        tf::vector3TFToMsg(origin_trans.inverse() * force, cmd_wrench.force);
-        tf::vector3TFToMsg(origin_trans.inverse() * moment, cmd_wrench.torque);
+    if(_clutch_pressed == true){
+        force.setZero();
+        moment.setZero();
     }
-    else{
-        cmd_wrench.force.x = 0;
-        cmd_wrench.force.y = 0;
-        cmd_wrench.force.z = 0;
-
-        cmd_wrench.torque.x = 0;
-        cmd_wrench.torque.y = 0;
-        cmd_wrench.torque.z = 0;
-    }
-
+    tf::vector3TFToMsg(origin_trans.inverse() * force, cmd_wrench.force);
+    tf::vector3TFToMsg(origin_trans.inverse() * moment, cmd_wrench.torque);
     force_pub.publish(cmd_wrench);
     ros::spinOnce();
     rate->sleep();
