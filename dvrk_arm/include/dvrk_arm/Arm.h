@@ -138,6 +138,7 @@ private:
     tf::Quaternion tf_cur_ori;
     tf::Matrix3x3 mat_ori, reorient_mat;
     std_msgs::String state_cmd;
+    ros::AsyncSpinner *aspin;
 
 
 };

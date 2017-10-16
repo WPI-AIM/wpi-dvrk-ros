@@ -53,7 +53,8 @@ void DVRK_Arm::init(){
     origin_trans.setRotation(temp_quat);
     _clutch_pressed = false;
     scale = 0.1;
-
+    aspin = new ros::AsyncSpinner(1);
+    aspin->start();
     sleep(1);
 }
 
@@ -338,6 +339,8 @@ void DVRK_Arm::move_arm_cartesian(tf::Transform &trans){
     tf::quaternionTFToMsg(trans.getRotation(), cmd_pose.pose.orientation);
 
     pose_pub.publish(cmd_pose);
+    ros::spinOnce();
+    rate->sleep();
 }
 
 bool DVRK_Arm::set_force(const double &fx, const double &fy, const double &fz){
@@ -385,4 +388,5 @@ void DVRK_Arm::set_arm_wrench(tf::Vector3 &force, tf::Vector3 &moment){
 DVRK_Arm::~DVRK_Arm(){
     delete n;
     delete rate;
+    delete aspin;
 }
