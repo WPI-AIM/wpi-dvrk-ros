@@ -63,6 +63,7 @@ public:
 
     void set_origin_trans(const tf::Vector3 &pos, const tf::Quaternion &tf_quat);
     void set_origin_trans(const tf::Vector3 &pos, const tf::Matrix3x3 &tf_mat);
+    void set_origin_trans(const tf::Transform &trans);
 
     bool set_mode(std::string str);
     bool set_force(const double &fx,const double &fy,const double &fz);
@@ -108,7 +109,6 @@ private:
     ros::Publisher state_pub;
     ros::Publisher pose_pub;
     ros::Publisher joint_pub;
-    ros::Publisher node_active_pub;
 
     ros::Subscriber pose_sub;
     ros::Subscriber joint_sub;
@@ -129,7 +129,6 @@ private:
     void userPose_to_cisstPose(geometry_msgs::PoseStamped &pose);
     void move_arm_cartesian(tf::Transform &trans);
     void set_arm_wrench(tf::Vector3 &force, tf::Vector3 &wrench);
-    void run();
 
     geometry_msgs::PoseStamped cur_pose, pre_pose, cmd_pose;
     sensor_msgs::JointState cur_joint, pre_joint;
@@ -139,7 +138,6 @@ private:
     tf::Quaternion tf_cur_ori;
     tf::Matrix3x3 mat_ori, reorient_mat;
     std_msgs::String state_cmd;
-    std_msgs::Bool _node_active;
 
 
 };

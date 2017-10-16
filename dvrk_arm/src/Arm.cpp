@@ -46,7 +46,6 @@ void DVRK_Arm::init(){
     state_pub = n->advertise<std_msgs::String>("/dvrk/" + arm_name + "/set_robot_state", 10);
     force_pub = n->advertise<geometry_msgs::Wrench>("/dvrk/" + arm_name + "/set_wrench_body", 10);
     force_orientation_safety_pub = n->advertise<std_msgs::Bool>("/dvrk/" + arm_name + "/set_wrench_body_orientation_absolute",10);
-    node_active_pub = n->advertise<std_msgs::Bool>("/dvrk/" + arm_name + "/node_active", 10);
     //set_mode(std::string("Home"));
     origin_trans.setOrigin(tf::Vector3(0,0,0));
     tf::Quaternion temp_quat;
@@ -56,8 +55,6 @@ void DVRK_Arm::init(){
     scale = 0.1;
 
     sleep(1);
-    run();
-
 }
 
 void DVRK_Arm::joint_sub_cb(const sensor_msgs::JointStateConstPtr &msg){
@@ -153,6 +150,10 @@ void DVRK_Arm::set_origin_trans(const tf::Vector3 &pos, const tf::Matrix3x3 &tf_
 void DVRK_Arm::set_origin_trans(const tf::Vector3 &pos, const tf::Quaternion &tf_quat){
     origin_trans.setOrigin(pos);
     origin_trans.setRotation(tf_quat);
+}
+
+void DVRK_Arm::set_origin_trans(const tf::Transform &trans){
+    origin_trans = trans;
 }
 
 void DVRK_Arm::set_origin_pos(const double &x, const double &y, const double &z){
@@ -379,13 +380,6 @@ void DVRK_Arm::set_arm_wrench(tf::Vector3 &force, tf::Vector3 &moment){
     ros::spinOnce();
     rate->sleep();
 
-}
-
-void DVRK_Arm::run(){
-    _node_active.data = true;
-    node_active_pub.publish(_node_active);
-    ros::spinOnce();
-    rate->sleep();
 }
 
 DVRK_Arm::~DVRK_Arm(){
