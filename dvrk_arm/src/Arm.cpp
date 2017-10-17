@@ -256,6 +256,7 @@ void DVRK_Arm::get_cur_pose(geometry_msgs::Pose &pose){
 
 void DVRK_Arm::get_cur_transform(tf::Transform &trans){
     trans = ee_trans;
+    trans.setRotation(trans.getRotation().normalized());
 }
 
 void DVRK_Arm::_rate_sleep(){
