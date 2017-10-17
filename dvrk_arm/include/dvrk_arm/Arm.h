@@ -28,6 +28,14 @@ public:
     tf::Matrix3x3 ee_ori_mat;
 };
 
+struct TipTrans{
+public:
+    tf::Transform tip_trans;
+    tf::Transform tip_pos;
+    tf::Transform tip_ori_quat;
+    tf::Transform tip_ori_mat;
+};
+
 struct EETransCmd{
 public:
     tf::Transform ee_trans_cmd;
@@ -38,7 +46,7 @@ public:
     tf::Vector3 ee_moment_cmd;
 };
 
-class DVRK_Arm: public OriginTrans, public EETrans, public EETransCmd{
+class DVRK_Arm: public OriginTrans, public EETrans, public EETransCmd, public TipTrans{
 public:
     DVRK_Arm(const std::string &arm_name);
     ~DVRK_Arm();
@@ -64,6 +72,8 @@ public:
     void set_origin_trans(const tf::Vector3 &pos, const tf::Quaternion &tf_quat);
     void set_origin_trans(const tf::Vector3 &pos, const tf::Matrix3x3 &tf_mat);
     void set_origin_trans(const tf::Transform &trans);
+
+    void affix_tip_frame(const tf::Transform &trans);
 
     bool set_mode(std::string str);
     bool set_force(const double &fx,const double &fy,const double &fz);

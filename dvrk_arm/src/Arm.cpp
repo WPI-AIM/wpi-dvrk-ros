@@ -51,6 +51,8 @@ void DVRK_Arm::init(){
     tf::Quaternion temp_quat;
     temp_quat.setRPY(0,0,0);
     origin_trans.setRotation(temp_quat);
+    tip_trans.setOrigin(tf::Vector3(0,0,0));
+    tip_trans.setRotation(temp_quat);
     _clutch_pressed = false;
     scale = 0.1;
     aspin = new ros::AsyncSpinner(1);
@@ -78,7 +80,7 @@ void DVRK_Arm::cisstPose_to_userTransform(const geometry_msgs::PoseStamped &pose
 
     ee_trans.setOrigin(ee_pos);
     ee_trans.setRotation(ee_ori_quat);
-    ee_trans = origin_trans * ee_trans;
+    ee_trans = origin_trans * ee_trans * tip_trans;
 
     ee_pos = ee_trans.getOrigin();
     ee_ori_quat = ee_trans.getRotation();
@@ -163,6 +165,10 @@ void DVRK_Arm::set_origin_pos(const double &x, const double &y, const double &z)
     origin_pos.setZ(z);
 
     set_origin_trans(origin_pos, origin_ori_quat);
+}
+
+void DVRK_Arm::affix_tip_frame(const tf::Transform &trans){
+    tip_trans = trans;
 }
 
 void DVRK_Arm::set_origin_pos(const geometry_msgs::Point &pos){
@@ -332,7 +338,7 @@ bool DVRK_Arm::set_transform(tf::Transform &trans){
 }
 
 void DVRK_Arm::move_arm_cartesian(tf::Transform &trans){
-    trans = origin_trans.inverse() * trans;
+    trans = origin_trans.inverse() * trans * tip_trans.inverse();
     cmd_pose.pose.position.x = trans.getOrigin().getX();
     cmd_pose.pose.position.y = trans.getOrigin().getY();
     cmd_pose.pose.position.z = trans.getOrigin().getZ();
