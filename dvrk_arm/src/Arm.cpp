@@ -55,8 +55,10 @@ void DVRK_Arm::init(){
     tip_trans.setRotation(temp_quat);
     _clutch_pressed = false;
     scale = 0.1;
-    aspin = new ros::AsyncSpinner(1);
-    aspin->start();
+//    aspin = new ros::AsyncSpinner(1);
+//    aspin->start();
+    ros::spinOnce();
+    rate->sleep();
     sleep(1);
 }
 
@@ -113,6 +115,7 @@ bool DVRK_Arm::_is_available(){
 }
 
 bool DVRK_Arm::_in_effort_mode(){
+    _rate_sleep();
     if(_is_available()){
         if(strcmp(cur_state.data.c_str(), _m_effort_mode.c_str()) == 0){
             return true;
@@ -124,6 +127,7 @@ bool DVRK_Arm::_in_effort_mode(){
 }
 
 bool DVRK_Arm::_in_cart_pos_mode(){
+    _rate_sleep();
     if(_is_available()){
         if(strcmp(cur_state.data.c_str(), _m_cart_pos_mode.c_str()) == 0){
             return true;
@@ -135,6 +139,7 @@ bool DVRK_Arm::_in_cart_pos_mode(){
 }
 
 bool DVRK_Arm::_in_jnt_pos_mode(){
+    _rate_sleep();
     if(_is_available()){
         if(strcmp(cur_state.data.c_str(), _m_jnt_pos_mode.c_str()) == 0){
             return true;
@@ -146,20 +151,24 @@ bool DVRK_Arm::_in_jnt_pos_mode(){
 }
 
 void DVRK_Arm::set_origin_trans(const tf::Vector3 &pos, const tf::Matrix3x3 &tf_mat){
+    _rate_sleep();
     tf_mat.getRotation(origin_ori_quat);
     set_origin_trans(pos, origin_ori_quat);
 }
 
 void DVRK_Arm::set_origin_trans(const tf::Vector3 &pos, const tf::Quaternion &tf_quat){
+    _rate_sleep();
     origin_trans.setOrigin(pos);
     origin_trans.setRotation(tf_quat);
 }
 
 void DVRK_Arm::set_origin_trans(const tf::Transform &trans){
+    _rate_sleep();
     origin_trans = trans;
 }
 
 void DVRK_Arm::set_origin_pos(const double &x, const double &y, const double &z){
+    _rate_sleep();
     origin_pos.setX(x);
     origin_pos.setY(y);
     origin_pos.setZ(z);
@@ -168,10 +177,12 @@ void DVRK_Arm::set_origin_pos(const double &x, const double &y, const double &z)
 }
 
 void DVRK_Arm::affix_tip_frame(const tf::Transform &trans){
+    _rate_sleep();
     tip_trans = trans;
 }
 
 void DVRK_Arm::set_origin_pos(const geometry_msgs::Point &pos){
+    _rate_sleep();
     origin_pos.setX(pos.x);
     origin_pos.setY(pos.y);
     origin_pos.setZ(pos.z);
@@ -180,54 +191,64 @@ void DVRK_Arm::set_origin_pos(const geometry_msgs::Point &pos){
 }
 
 void DVRK_Arm::set_origin_pos(const tf::Vector3 &pos){
+    _rate_sleep();
     origin_pos = pos;
 
     set_origin_trans(origin_pos, origin_ori_quat);
 }
 
 void DVRK_Arm::set_origin_rot(const double &roll, const double &pitch, const double &yaw){
+    _rate_sleep();
     origin_ori_quat.setRPY(roll, pitch, yaw);
 
     set_origin_trans(origin_pos, origin_ori_quat);
 }
 
 void DVRK_Arm::set_origin_rot(const tf::Quaternion &tf_quat){
+    _rate_sleep();
     origin_ori_quat = tf_quat;
 
     set_origin_trans(origin_pos, origin_ori_quat);
 }
 
 void DVRK_Arm::set_origin_rot(const geometry_msgs::Quaternion &gm_quat){
+    _rate_sleep();
     tf::quaternionMsgToTF(gm_quat, origin_ori_quat);
 
     set_origin_trans(origin_pos, origin_ori_quat);
 }
 
 void DVRK_Arm::set_origin_rot(const tf::Matrix3x3 &mat){
+    _rate_sleep();
     mat.getRotation(origin_ori_quat);
 
     set_origin_trans(origin_pos, origin_ori_quat);
 }
 
 void DVRK_Arm::get_cur_position(double &x, double &y, double &z){
+    _rate_sleep();
     x = ee_trans.getOrigin().getX();
     y = ee_trans.getOrigin().getY();
     z = ee_trans.getOrigin().getZ();
 }
 
 void DVRK_Arm::get_cur_position(tf::Vector3 &pos){
+    _rate_sleep();
     pos = ee_trans.getOrigin();
 }
 
 void DVRK_Arm::get_cur_position(geometry_msgs::Point &pos){
+    _rate_sleep();
     tf::pointTFToMsg(ee_trans.getOrigin(), pos);
 }
 
 void DVRK_Arm::get_cur_orientation(double &roll, double &pitch, double &yaw){
+    _rate_sleep();
     tf::Matrix3x3(ee_trans.getRotation()).getRPY(roll, pitch, yaw);
 }
 
 void DVRK_Arm::get_cur_orientation(double &x, double &y, double &z, double &w){
+    _rate_sleep();
     x = ee_trans.getRotation().getX();
     y = ee_trans.getRotation().getY();
     z = ee_trans.getRotation().getZ();
@@ -235,18 +256,23 @@ void DVRK_Arm::get_cur_orientation(double &x, double &y, double &z, double &w){
 }
 
 void DVRK_Arm::get_cur_orientation(tf::Quaternion &tf_quat){
+    _rate_sleep();
     tf_quat = ee_trans.getRotation();
+    tf_quat.normalize();
 }
 
 void DVRK_Arm::get_cur_orientation(geometry_msgs::Quaternion &gm_quat){
+    _rate_sleep();
     tf::quaternionTFToMsg(ee_trans.getRotation(), gm_quat);
 }
 
 void DVRK_Arm::get_cur_orientation(tf::Matrix3x3 &mat){
+    _rate_sleep();
     mat.setRotation(ee_trans.getRotation());
 }
 
 void DVRK_Arm::get_cur_pose(geometry_msgs::Pose &pose){
+    _rate_sleep();
     pose.position.x = ee_trans.getOrigin().getX();
     pose.position.y = ee_trans.getOrigin().getY();
     pose.position.z = ee_trans.getOrigin().getZ();
@@ -255,12 +281,14 @@ void DVRK_Arm::get_cur_pose(geometry_msgs::Pose &pose){
 }
 
 void DVRK_Arm::get_cur_transform(tf::Transform &trans){
+    _rate_sleep();
     trans = ee_trans;
     trans.setRotation(trans.getRotation().normalized());
 }
 
 void DVRK_Arm::_rate_sleep(){
-    sleep(0.01);
+    ros::spinOnce();
+    rate->sleep();
 }
 
 bool DVRK_Arm::set_mode(std::string str){
@@ -395,5 +423,5 @@ void DVRK_Arm::set_arm_wrench(tf::Vector3 &force, tf::Vector3 &moment){
 DVRK_Arm::~DVRK_Arm(){
     delete n;
     delete rate;
-    delete aspin;
+//    delete aspin;
 }
