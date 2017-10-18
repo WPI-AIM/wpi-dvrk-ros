@@ -25,6 +25,9 @@ Not only that, one might wants the self defined directional coordinates of the E
 When setting the positions or forces on the dvrk Manipulators, the frames are already handeled so you just specify
 the values w.r.t to the frames you set.
 
+#### IMPORTANT
+While setting just the position of **Origin Tranfrom** or **Tip Transform**, the orientation is not altered, it remains whatever it was set before, or if it wasn't set before, it remains identity matrix. The vice versa for setting just the orientation.
+
 ### Using the library (Example)
     DVRK_Arm arm("MTMR");
     sleep(1);
@@ -49,9 +52,9 @@ the values w.r.t to the frames you set.
     // Now, we might want the origin trans to be placed at the tip, so all position and angular
     // offsets are zero. Just take the inverse of the cur_trans and set it as origin trans;
     arm.set_origin_trans(ee_tran_cur.inverse());
-    // Now, lets say, we want the EE trans to be orientated differently
-    tf::Transform tip_trans;
+    // Now, lets say, we want the EE trans to be orientated differently.
     tf::Quaternion tip_quat;
     tip_quat.setRPY(0, M_PI/2, 0);
-    tip_trans.setRotation(tip_quat);
-    arm.affix_tip_frame(tip_trans);
+    arm.affix_tip_frame_rot(tip_quat);
+    // We can also move the tip frame anywhere we want.
+    arm.affix_tip_frame_pos(-1,0,2);
