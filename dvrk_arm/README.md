@@ -51,7 +51,7 @@ While setting just the position of **Origin Tranfrom** or **Tip Transform**, the
     arm.get_cur_trans(ee_tran_cur);
     // Now, we might want the origin trans to be placed at the tip, so all position and angular
     // offsets are zero. Just take the inverse of the cur_trans and set it as origin trans;
-    arm.set_origin_trans(ee_tran_cur.inverse());
+    arm.set_origin_frame(ee_tran_cur.inverse());
     // Now, lets say, we want the EE trans to be orientated differently.
     tf::Quaternion tip_quat;
     tip_quat.setRPY(0, M_PI/2, 0);
