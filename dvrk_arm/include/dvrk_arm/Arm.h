@@ -31,9 +31,9 @@ public:
 struct TipTrans{
 public:
     tf::Transform tip_trans;
-    tf::Transform tip_pos;
-    tf::Transform tip_ori_quat;
-    tf::Transform tip_ori_mat;
+    tf::Vector3 tip_pos;
+    tf::Quaternion tip_ori_quat;
+    tf::Matrix3x3 tip_ori_mat;
 };
 
 struct EETransCmd{
@@ -73,6 +73,17 @@ public:
     void set_origin_trans(const tf::Vector3 &pos, const tf::Matrix3x3 &tf_mat);
     void set_origin_trans(const tf::Transform &trans);
 
+    void affix_tip_frame_pos(const double &x, const double &y, const double &z);
+    void affix_tip_frame_pos(const tf::Vector3 &pos);
+    void affix_tip_frame_pos(const geometry_msgs::Point &pos);
+
+    void affix_tip_frame_rot(const tf::Quaternion &tf_quat);
+    void affix_tip_frame_rot(const geometry_msgs::Quaternion &gm_quat);
+    void affix_tip_frame_rot(const double &quat_x, const double &quat_y, const double &quat_z, const double &quat_w);
+    void affix_tip_frame_rot(const double &roll, const double &pitch, const double &yaw);
+
+    void affix_tip_frame(const tf::Vector3 &pos, const tf::Quaternion &tf_quat);
+    void affix_tip_frame(const tf::Vector3 &pos, const tf::Matrix3x3 &tf_mat);
     void affix_tip_frame(const tf::Transform &trans);
 
     bool set_mode(std::string str);
