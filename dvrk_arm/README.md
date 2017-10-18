@@ -15,6 +15,15 @@ Standalone, however, you do need a working **dvrk-ros** for anything useful from
     find_package(catkin REQUIRED COMPONENTS dvrk_arm)
     include_directories(${catkin_INCLUDE_DIRS})
     ...
+### Origin and Tip Tranfroms
+Keeping in mind the intended use of the library for different applications and UI devices, we can 
+set the **Origin Transform**, such that all the **End Effector Transforms** (+ Position and Orientaiton, Forces and Moments)
+using the numerous overloaded functions are w.r.t the defined w.r.t Origin Transfrom. 
+
+Not only that, one might wants the self defined directional coordinates of the End Effector (i.e. where should the x,y and z unit vectors of the tip be pointing). For this purpose, the Tip Tranform can be set places another transform on the tip and form here on, each Tranfrom component is reported w.r.t to the tip tranfrom.
+
+When setting the positions or forces on the dvrk Manipulators, the frames are already handeled so you just specify
+the values w.r.t to the frames you set.
 
 ### Using the library (Example)
     DVRK_Arm arm("MTMR");
