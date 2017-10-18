@@ -60,18 +60,18 @@ public:
     bool _in_jnt_pos_mode();
 
 
-    void set_origin_pos(const double &x, const double &y, const double &);
-    void set_origin_pos(const geometry_msgs::Point &pos);
-    void set_origin_pos(const tf::Vector3 &pos);
+    void set_origin_frame_pos(const double &x, const double &y, const double &);
+    void set_origin_frame_pos(const geometry_msgs::Point &pos);
+    void set_origin_frame_pos(const tf::Vector3 &pos);
 
-    void set_origin_rot(const double &roll, const double &pitch, const double &yaw);
-    void set_origin_rot(const tf::Quaternion &tf_quat);
-    void set_origin_rot(const geometry_msgs::Quaternion &gm_quat);
-    void set_origin_rot(const tf::Matrix3x3 &mat);
+    void set_origin_frame_rot(const double &roll, const double &pitch, const double &yaw);
+    void set_origin_frame_rot(const tf::Quaternion &tf_quat);
+    void set_origin_frame_rot(const geometry_msgs::Quaternion &gm_quat);
+    void set_origin_frame_rot(const tf::Matrix3x3 &mat);
 
-    void set_origin_trans(const tf::Vector3 &pos, const tf::Quaternion &tf_quat);
-    void set_origin_trans(const tf::Vector3 &pos, const tf::Matrix3x3 &tf_mat);
-    void set_origin_trans(const tf::Transform &trans);
+    void set_origin_frame(const tf::Vector3 &pos, const tf::Quaternion &tf_quat);
+    void set_origin_frame(const tf::Vector3 &pos, const tf::Matrix3x3 &tf_mat);
+    void set_origin_frame(const tf::Transform &trans);
 
     void affix_tip_frame_pos(const double &x, const double &y, const double &z);
     void affix_tip_frame_pos(const tf::Vector3 &pos);

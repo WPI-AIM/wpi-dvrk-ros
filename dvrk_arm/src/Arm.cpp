@@ -150,30 +150,30 @@ bool DVRK_Arm::_in_jnt_pos_mode(){
     }
 }
 
-void DVRK_Arm::set_origin_trans(const tf::Vector3 &pos, const tf::Matrix3x3 &tf_mat){
+void DVRK_Arm::set_origin_frame(const tf::Vector3 &pos, const tf::Matrix3x3 &tf_mat){
     _rate_sleep();
     tf_mat.getRotation(origin_ori_quat);
-    set_origin_trans(pos, origin_ori_quat);
+    set_origin_frame(pos, origin_ori_quat);
 }
 
-void DVRK_Arm::set_origin_trans(const tf::Vector3 &pos, const tf::Quaternion &tf_quat){
+void DVRK_Arm::set_origin_frame(const tf::Vector3 &pos, const tf::Quaternion &tf_quat){
     _rate_sleep();
     origin_trans.setOrigin(pos);
     origin_trans.setRotation(tf_quat);
 }
 
-void DVRK_Arm::set_origin_trans(const tf::Transform &trans){
+void DVRK_Arm::set_origin_frame(const tf::Transform &trans){
     _rate_sleep();
     origin_trans = trans;
 }
 
-void DVRK_Arm::set_origin_pos(const double &x, const double &y, const double &z){
+void DVRK_Arm::set_origin_frame_pos(const double &x, const double &y, const double &z){
     _rate_sleep();
     origin_pos.setX(x);
     origin_pos.setY(y);
     origin_pos.setZ(z);
 
-    set_origin_trans(origin_pos, origin_ori_quat);
+    set_origin_frame(origin_pos, origin_ori_quat);
 }
 
 void DVRK_Arm::affix_tip_frame_pos(const double &x, const double &y, const double &z){
@@ -232,48 +232,48 @@ void DVRK_Arm::affix_tip_frame(const tf::Transform &trans){
     tip_trans = trans;
 }
 
-void DVRK_Arm::set_origin_pos(const geometry_msgs::Point &pos){
+void DVRK_Arm::set_origin_frame_pos(const geometry_msgs::Point &pos){
     _rate_sleep();
     origin_pos.setX(pos.x);
     origin_pos.setY(pos.y);
     origin_pos.setZ(pos.z);
 
-    set_origin_trans(origin_pos, origin_ori_quat);
+    set_origin_frame(origin_pos, origin_ori_quat);
 }
 
-void DVRK_Arm::set_origin_pos(const tf::Vector3 &pos){
+void DVRK_Arm::set_origin_frame_pos(const tf::Vector3 &pos){
     _rate_sleep();
     origin_pos = pos;
 
-    set_origin_trans(origin_pos, origin_ori_quat);
+    set_origin_frame(origin_pos, origin_ori_quat);
 }
 
-void DVRK_Arm::set_origin_rot(const double &roll, const double &pitch, const double &yaw){
+void DVRK_Arm::set_origin_frame_rot(const double &roll, const double &pitch, const double &yaw){
     _rate_sleep();
     origin_ori_quat.setRPY(roll, pitch, yaw);
 
-    set_origin_trans(origin_pos, origin_ori_quat);
+    set_origin_frame(origin_pos, origin_ori_quat);
 }
 
-void DVRK_Arm::set_origin_rot(const tf::Quaternion &tf_quat){
+void DVRK_Arm::set_origin_frame_rot(const tf::Quaternion &tf_quat){
     _rate_sleep();
     origin_ori_quat = tf_quat;
 
-    set_origin_trans(origin_pos, origin_ori_quat);
+    set_origin_frame(origin_pos, origin_ori_quat);
 }
 
-void DVRK_Arm::set_origin_rot(const geometry_msgs::Quaternion &gm_quat){
+void DVRK_Arm::set_origin_frame_rot(const geometry_msgs::Quaternion &gm_quat){
     _rate_sleep();
     tf::quaternionMsgToTF(gm_quat, origin_ori_quat);
 
-    set_origin_trans(origin_pos, origin_ori_quat);
+    set_origin_frame(origin_pos, origin_ori_quat);
 }
 
-void DVRK_Arm::set_origin_rot(const tf::Matrix3x3 &mat){
+void DVRK_Arm::set_origin_frame_rot(const tf::Matrix3x3 &mat){
     _rate_sleep();
     mat.getRotation(origin_ori_quat);
 
-    set_origin_trans(origin_pos, origin_ori_quat);
+    set_origin_frame(origin_pos, origin_ori_quat);
 }
 
 void DVRK_Arm::get_cur_position(double &x, double &y, double &z){
