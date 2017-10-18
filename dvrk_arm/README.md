@@ -40,3 +40,18 @@ the values w.r.t to the frames you set.
     //Check if arm is available
     
     bool check = arm._is_available();
+    
+### Setting Origin and Tip Frames
+    DVRK_Arm arm("MTML");
+    // Lets say we want to know what the current Transform between tip and origin is
+    tf::Transform ee_tran_cur;
+    arm.get_cur_trans(ee_tran_cur);
+    // Now, we might want the origin trans to be placed at the tip, so all position and angular
+    // offsets are zero. Just take the inverse of the cur_trans and set it as origin trans;
+    arm.set_origin_trans(ee_tran_cur.inverse());
+    // Now, lets say, we want the EE trans to be orientated differently
+    tf::Transform tip_trans;
+    tf::Quaternion tip_quat;
+    tip_quat.setRPY(0, M_PI/2, 0);
+    tip_trans.setRotation(tip_quat);
+    arm.affix_tip_frame(tip_trans);
