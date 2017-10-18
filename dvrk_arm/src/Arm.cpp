@@ -176,61 +176,7 @@ void DVRK_Arm::set_origin_frame_pos(const double &x, const double &y, const doub
     set_origin_frame(origin_pos, origin_ori_quat);
 }
 
-void DVRK_Arm::affix_tip_frame_pos(const double &x, const double &y, const double &z){
-    _rate_sleep();
-    tip_trans.setOrigin(tf::Vector3(x,y,z));
 
-}
-
-void DVRK_Arm::affix_tip_frame_pos(const geometry_msgs::Point &pos){
-    _rate_sleep();
-    tip_trans.setOrigin(tf::Vector3(pos.x, pos.y, pos.z));
-}
-
-void DVRK_Arm::affix_tip_frame_pos(const tf::Vector3 &pos){
-    _rate_sleep();
-    tip_trans.setOrigin(pos);
-}
-
-void DVRK_Arm::affix_tip_frame_rot(const double &roll, const double &pitch, const double &yaw){
-    _rate_sleep();
-    tip_ori_quat.setRPY(roll, pitch, yaw);
-    tip_trans.setRotation(tip_ori_quat);
-}
-
-void DVRK_Arm::affix_tip_frame_rot(const double &quat_x, const double &quat_y, const double &quat_z, const double &quat_w){
-    _rate_sleep();
-    tip_trans.setRotation(tf::Quaternion(quat_x, quat_y, quat_z, quat_w));
-}
-
-void DVRK_Arm::affix_tip_frame_rot(const geometry_msgs::Quaternion &gm_quat){
-    _rate_sleep();
-    tf::quaternionMsgToTF(gm_quat, tip_ori_quat);
-    tip_trans.setRotation(tip_ori_quat);
-}
-
-void DVRK_Arm::affix_tip_frame_rot(const tf::Quaternion &tf_quat){
-    _rate_sleep();
-    tip_trans.setRotation(tf_quat);
-}
-
-void DVRK_Arm::affix_tip_frame(const tf::Vector3 &pos, const tf::Quaternion &tf_quat){
-    _rate_sleep();
-    tip_trans.setOrigin(pos);
-    tip_trans.setRotation(tf_quat);
-}
-
-void DVRK_Arm::affix_tip_frame(const tf::Vector3 &pos, const tf::Matrix3x3 &tf_mat){
-    _rate_sleep();
-    tip_trans.setOrigin(pos);
-    tf_mat.getRotation(tip_ori_quat);
-    tip_trans.setRotation(tip_ori_quat);
-}
-
-void DVRK_Arm::affix_tip_frame(const tf::Transform &trans){
-    _rate_sleep();
-    tip_trans = trans;
-}
 
 void DVRK_Arm::set_origin_frame_pos(const geometry_msgs::Point &pos){
     _rate_sleep();
@@ -274,6 +220,73 @@ void DVRK_Arm::set_origin_frame_rot(const tf::Matrix3x3 &mat){
     mat.getRotation(origin_ori_quat);
 
     set_origin_frame(origin_pos, origin_ori_quat);
+}
+
+void DVRK_Arm::affix_tip_frame_pos(const double &x, const double &y, const double &z){
+    _rate_sleep();
+    tip_pos.setX(x);
+    tip_pos.setY(y);
+    tip_pos.setZ(z);
+    affix_tip_frame(tip_pos, tip_ori_quat);
+}
+
+void DVRK_Arm::affix_tip_frame_pos(const geometry_msgs::Point &pos){
+    _rate_sleep();
+    tip_pos.setX(pos.x);
+    tip_pos.setY(pos.y);
+    tip_pos.setZ(pos.z);
+    affix_tip_frame(tip_pos, tip_ori_quat);
+}
+
+void DVRK_Arm::affix_tip_frame_pos(const tf::Vector3 &pos){
+    _rate_sleep();
+    tip_pos = pos;
+    affix_tip_frame(tip_pos, tip_ori_quat);
+}
+
+void DVRK_Arm::affix_tip_frame_rot(const double &roll, const double &pitch, const double &yaw){
+    _rate_sleep();
+    tip_ori_quat.setRPY(roll, pitch, yaw);
+    affix_tip_frame(tip_pos, tip_ori_quat);
+}
+
+void DVRK_Arm::affix_tip_frame_rot(const double &quat_x, const double &quat_y, const double &quat_z, const double &quat_w){
+    _rate_sleep();
+    tip_ori_quat.setX(quat_x);
+    tip_ori_quat.setY(quat_y);
+    tip_ori_quat.setZ(quat_z);
+    tip_ori_quat.setW(quat_w);
+    affix_tip_frame(tip_pos, tip_ori_quat);
+}
+
+void DVRK_Arm::affix_tip_frame_rot(const geometry_msgs::Quaternion &gm_quat){
+    _rate_sleep();
+    tf::quaternionMsgToTF(gm_quat, tip_ori_quat);
+    affix_tip_frame(tip_pos, tip_ori_quat);
+}
+
+void DVRK_Arm::affix_tip_frame_rot(const tf::Quaternion &tf_quat){
+    _rate_sleep();
+    tip_ori_quat = tf_quat;
+    affix_tip_frame(tip_pos, tip_ori_quat);
+}
+
+void DVRK_Arm::affix_tip_frame(const tf::Vector3 &pos, const tf::Quaternion &tf_quat){
+    _rate_sleep();
+    tip_trans.setOrigin(pos);
+    tip_trans.setRotation(tf_quat);
+}
+
+void DVRK_Arm::affix_tip_frame(const tf::Vector3 &pos, const tf::Matrix3x3 &tf_mat){
+    _rate_sleep();
+    tip_pos = pos;
+    tf_mat.getRotation(tip_ori_quat);
+    affix_tip_frame(tip_pos, tip_ori_quat);
+}
+
+void DVRK_Arm::affix_tip_frame(const tf::Transform &trans){
+    _rate_sleep();
+    tip_trans = trans;
 }
 
 void DVRK_Arm::get_cur_position(double &x, double &y, double &z){
