@@ -1,5 +1,6 @@
 #ifndef CDVRK_CONSOLEH
 #define CDVRK_CONSOLEH
+#include "dvrk_arm/Bridge.h"
 
 class DVRK_Bridge;
 

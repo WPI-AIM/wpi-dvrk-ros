@@ -1,5 +1,5 @@
 #include "dvrk_arm/Arm.h"
-DVRK_Arm::DVRK_Arm(const std::string &arm_name){
+DVRK_Arm::DVRK_Arm(const std::string &arm_name): DVRK_Bridge(arm_name){
 }
 
 void DVRK_Arm::init(){
@@ -285,6 +285,22 @@ bool DVRK_Arm::set_transform(tf::Transform &trans){
     move_arm_cartesian(ee_trans_cmd);
 }
 
+bool DVRK_Arm::set_mode(std::string str){
+    state_cmd.data = str;
+    state_pub.publish(state_cmd);
+    ros::spinOnce();
+    rate->sleep();
+    if(strcmp(str.c_str(),_m_effort_mode.c_str()) == 0){
+        std_msgs::Bool _is_effort_mode;
+        _is_effort_mode.data = true;
+        force_orientation_safety_pub.publish(_is_effort_mode);
+        ros::spinOnce();
+        rate->sleep();
+        sleep(0.5);
+    }
+    return _in_effort_mode();
+}
+
 void DVRK_Arm::move_arm_cartesian(tf::Transform trans){
     trans = origin_trans.inverse() * trans * tip_trans.inverse();
     cmd_pose.pose.position.x = trans.getOrigin().getX();
@@ -339,8 +355,20 @@ void DVRK_Arm::set_arm_wrench(tf::Vector3 &force, tf::Vector3 &moment){
 
 }
 
+// TASK::Create an ENUM and check for all the good states
+bool DVRK_Arm::_is_available(){
+    if (state_pub.getNumSubscribers() > 0 && state_sub.getNumPublishers() > 0 && pose_sub.getNumPublishers() > 0){
+        // If there are listeners to the state_publisher and pose publisher and subscribers to state msg, most likely the Arm is available
+        // Doing 3 seperate topic checks for redundancy
+        return true;
+    }
+    else{
+        return false;
+    }
 
-bool DVRK_Bridge::_in_effort_mode(){
+}
+
+bool DVRK_Arm::_in_effort_mode(){
     _rate_sleep();
     if(_is_available()){
         if(strcmp(cur_state.data.c_str(), _m_effort_mode.c_str()) == 0){
@@ -352,7 +380,7 @@ bool DVRK_Bridge::_in_effort_mode(){
     }
 }
 
-bool DVRK_Bridge::_in_cart_pos_mode(){
+bool DVRK_Arm::_in_cart_pos_mode(){
     _rate_sleep();
     if(_is_available()){
         if(strcmp(cur_state.data.c_str(), _m_cart_pos_mode.c_str()) == 0){
@@ -364,7 +392,7 @@ bool DVRK_Bridge::_in_cart_pos_mode(){
     }
 }
 
-bool DVRK_Bridge::_in_jnt_pos_mode(){
+bool DVRK_Arm::_in_jnt_pos_mode(){
     _rate_sleep();
     if(_is_available()){
         if(strcmp(cur_state.data.c_str(), _m_jnt_pos_mode.c_str()) == 0){

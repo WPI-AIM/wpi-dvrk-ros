@@ -8,15 +8,13 @@
 #include "std_msgs/String.h"
 #include "std_msgs/Bool.h"
 #include "geometry_msgs/Wrench.h"
-#include "Footpedals.h"
+#include "FootPedals.h"
 #include "Console.h"
-#include "String.h"
+#include "string.h"
 
 class DVRK_Arm;
-class DVRK_FootPedals;
-class DVRK_Console;
 
-class DVRK_Bridge{
+class DVRK_Bridge: public DVRK_FootPedals{
 
     friend class DVRK_Arm;
     friend class DVRK_FootPedals;
@@ -48,7 +46,7 @@ private:
 
     geometry_msgs::PoseStamped cur_pose, pre_pose, cmd_pose;
     sensor_msgs::JointState cur_joint, pre_joint;
-    std_msgs::String cur_state;
+    std_msgs::String cur_state, state_cmd;
     geometry_msgs::Wrench cur_wrench, cmd_wrench;
 };
 #endif

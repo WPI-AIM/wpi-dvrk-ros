@@ -1,14 +1,7 @@
 #ifndef CDVRK_ArmH
 #define CDVRK_ArmH
 
-#include "ros/ros.h"
-#include "geometry_msgs/PoseStamped.h"
-#include "sensor_msgs/JointState.h"
-#include "sensor_msgs/Joy.h"
-#include "std_msgs/String.h"
-#include "std_msgs/Bool.h"
-#include "geometry_msgs/Wrench.h"
-#include "string.h"
+#include "Bridge.h"
 #include "tf/tf.h"
 #include "tf/LinearMath/Matrix3x3.h"
 
@@ -46,9 +39,9 @@ public:
     tf::Vector3 ee_moment_cmd;
 };
 
-class DVRK_Arm: public OriginTrans, public EETrans, public EETransCmd, public TipTrans: public DVRK_Bridge{
+class DVRK_Arm: public OriginTrans, public EETrans, public EETransCmd, public TipTrans, public DVRK_Bridge{
 public:
-    DVRK_Arm(const std::string &arm_name):DVRK_Bridge(arm_name);
+    DVRK_Arm(const std::string &arm_name);
     ~DVRK_Arm();
 
     bool home();

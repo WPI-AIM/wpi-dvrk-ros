@@ -126,11 +126,13 @@ include_directories(
 
 set(SRC_FILES
    src/Arm.cpp
+   src/Bridge.cpp
    src/Console.cpp
    src/FootPedals.cpp
 )
 set(HDR_FILES
    include/${PROJECT_NAME}/Arm.h
+   include/${PROJECT_NAME}/Bridge.h
    include/${PROJECT_NAME}/Console.h
    include/${PROJECT_NAME}/FootPedals.h
 )
