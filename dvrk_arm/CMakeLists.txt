@@ -124,9 +124,20 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
+set(SRC_FILES
+   src/Arm.cpp
+   src/Console.cpp
+   src/FootPedals.cpp
+)
+set(HDR_FILES
+   include/${PROJECT_NAME}/Arm.h
+   include/${PROJECT_NAME}/Console.h
+   include/${PROJECT_NAME}/FootPedals.h
+)
+
 ## Declare a C++ library
  add_library(dvrk_arm
-   src/Arm.cpp include/${PROJECT_NAME}/Arm.h
+   ${SRC_FILES} ${HDR_FILES}
  )
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
