@@ -24,6 +24,7 @@ class DVRK_Bridge{
 
     DVRK_Bridge(const std::string &arm_name);
     ~DVRK_Bridge();
+    void _rate_sleep();
 private:
     std::string arm_name;
 
@@ -44,7 +45,6 @@ private:
     void state_sub_cb(const std_msgs::StringConstPtr &msg);
     void pose_sub_cb(const geometry_msgs::PoseStampedConstPtr &msg);
     void joint_sub_cb(const sensor_msgs::JointStateConstPtr &msg);
-    void set_arm_wrench(tf::Vector3 &force, tf::Vector3 &wrench);
 
     geometry_msgs::PoseStamped cur_pose, pre_pose, cmd_pose;
     sensor_msgs::JointState cur_joint, pre_joint;

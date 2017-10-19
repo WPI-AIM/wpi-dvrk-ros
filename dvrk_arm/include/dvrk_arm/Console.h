@@ -7,6 +7,7 @@ class DVRK_Console{
   friend class DVRK_Bridge;
   DVRK_Console();
  ~DVRK_Console();
+ void init(ros::NodeHandle *n);
 private:
 
 };

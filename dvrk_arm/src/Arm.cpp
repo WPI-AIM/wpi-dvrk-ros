@@ -28,55 +28,6 @@ void DVRK_Arm::cisstPose_to_userTransform(const geometry_msgs::PoseStamped &pose
     ee_ori_mat.setRotation(ee_ori_quat);
 }
 
-// TASK::Create an ENUM and check for all the good states
-bool DVRK_Arm::_is_available(){
-    if (state_pub.getNumSubscribers() > 0 && state_sub.getNumPublishers() > 0 && pose_sub.getNumPublishers() > 0){
-        // If there are listeners to the state_publisher and pose publisher and subscribers to state msg, most likely the Arm is available
-        // Doing 3 seperate topic checks for redundancy
-        return true;
-    }
-    else{
-        return false;
-    }
-
-}
-
-bool DVRK_Arm::_in_effort_mode(){
-    _rate_sleep();
-    if(_is_available()){
-        if(strcmp(cur_state.data.c_str(), _m_effort_mode.c_str()) == 0){
-            return true;
-        }
-    }
-    else{
-        return false;
-    }
-}
-
-bool DVRK_Arm::_in_cart_pos_mode(){
-    _rate_sleep();
-    if(_is_available()){
-        if(strcmp(cur_state.data.c_str(), _m_cart_pos_mode.c_str()) == 0){
-            return true;
-        }
-    }
-    else{
-        return false;
-    }
-}
-
-bool DVRK_Arm::_in_jnt_pos_mode(){
-    _rate_sleep();
-    if(_is_available()){
-        if(strcmp(cur_state.data.c_str(), _m_jnt_pos_mode.c_str()) == 0){
-            return true;
-        }
-    }
-    else{
-        return false;
-    }
-}
-
 void DVRK_Arm::set_origin_frame(const tf::Vector3 &pos, const tf::Matrix3x3 &tf_mat){
     _rate_sleep();
     tf_mat.getRotation(origin_ori_quat);
@@ -102,8 +53,6 @@ void DVRK_Arm::set_origin_frame_pos(const double &x, const double &y, const doub
 
     set_origin_frame(origin_pos, origin_ori_quat);
 }
-
-
 
 void DVRK_Arm::set_origin_frame_pos(const geometry_msgs::Point &pos){
     _rate_sleep();
@@ -277,27 +226,6 @@ void DVRK_Arm::get_cur_transform(tf::Transform &trans){
     trans.setRotation(trans.getRotation().normalized());
 }
 
-void DVRK_Arm::_rate_sleep(){
-    ros::spinOnce();
-    rate->sleep();
-}
-
-bool DVRK_Arm::set_mode(std::string str){
-    state_cmd.data = str;
-    state_pub.publish(state_cmd);
-    ros::spinOnce();
-    rate->sleep();
-    if(strcmp(str.c_str(),_m_effort_mode.c_str()) == 0){
-        std_msgs::Bool _is_effort_mode;
-        _is_effort_mode.data = true;
-        force_orientation_safety_pub.publish(_is_effort_mode);
-        ros::spinOnce();
-        rate->sleep();
-        sleep(0.5);
-    }
-    return _in_effort_mode();
-}
-
 bool DVRK_Arm::set_position(const double &x, const double &y, const double &z){
     ee_trans_cmd.setOrigin(tf::Vector3(x,y,z));
     move_arm_cartesian(ee_trans_cmd);
@@ -411,8 +339,42 @@ void DVRK_Arm::set_arm_wrench(tf::Vector3 &force, tf::Vector3 &moment){
 
 }
 
+
+bool DVRK_Bridge::_in_effort_mode(){
+    _rate_sleep();
+    if(_is_available()){
+        if(strcmp(cur_state.data.c_str(), _m_effort_mode.c_str()) == 0){
+            return true;
+        }
+    }
+    else{
+        return false;
+    }
+}
+
+bool DVRK_Bridge::_in_cart_pos_mode(){
+    _rate_sleep();
+    if(_is_available()){
+        if(strcmp(cur_state.data.c_str(), _m_cart_pos_mode.c_str()) == 0){
+            return true;
+        }
+    }
+    else{
+        return false;
+    }
+}
+
+bool DVRK_Bridge::_in_jnt_pos_mode(){
+    _rate_sleep();
+    if(_is_available()){
+        if(strcmp(cur_state.data.c_str(), _m_jnt_pos_mode.c_str()) == 0){
+            return true;
+        }
+    }
+    else{
+        return false;
+    }
+}
+
 DVRK_Arm::~DVRK_Arm(){
-    delete n;
-    delete rate;
-//    delete aspin;
 }

@@ -46,13 +46,12 @@ public:
     tf::Vector3 ee_moment_cmd;
 };
 
-class DVRK_Arm: public OriginTrans, public EETrans, public EETransCmd, public TipTrans{
+class DVRK_Arm: public OriginTrans, public EETrans, public EETransCmd, public TipTrans: public DVRK_Bridge{
 public:
-    DVRK_Arm(const std::string &arm_name);
+    DVRK_Arm(const std::string &arm_name):DVRK_Bridge(arm_name);
     ~DVRK_Arm();
 
     bool home();
-    void _rate_sleep();
 
     bool _is_available();
     bool _in_effort_mode();
@@ -122,45 +121,12 @@ public:
     const std::string _m_cart_pos_mode = "DVRK_POSITION_CARTESIAN";
 
 private:
-    std::string arm_name;
-
-    ros::NodeHandle *n;
-    ros::Publisher force_pub;
-    ros::Publisher force_orientation_safety_pub;
-    ros::Publisher state_pub;
-    ros::Publisher pose_pub;
-    ros::Publisher joint_pub;
-
-    ros::Subscriber pose_sub;
-    ros::Subscriber joint_sub;
-    ros::Subscriber state_sub;
-    ros::Subscriber clutch_sub, coag_sub;
-    ros::Rate *rate;
-    bool _clutch_pressed, _coag_pressed;
-    double scale;
-    std::vector<std::string> valid_arms;
 
     void init();
-    void state_sub_cb(const std_msgs::StringConstPtr &msg);
-    void pose_sub_cb(const geometry_msgs::PoseStampedConstPtr &msg);
-    void joint_sub_cb(const sensor_msgs::JointStateConstPtr &msg);
-    void clutch_sub_cb(const sensor_msgs::JoyConstPtr &msg);
-    void coag_sub_cb(const sensor_msgs::JoyConstPtr &msg);
     void cisstPose_to_userTransform(const geometry_msgs::PoseStamped &pose);
     void userPose_to_cisstPose(geometry_msgs::PoseStamped &pose);
     void move_arm_cartesian(tf::Transform trans);
     void set_arm_wrench(tf::Vector3 &force, tf::Vector3 &wrench);
-
-    geometry_msgs::PoseStamped cur_pose, pre_pose, cmd_pose;
-    sensor_msgs::JointState cur_joint, pre_joint;
-    std_msgs::String cur_state;
-    geometry_msgs::Wrench cur_wrench, cmd_wrench;
-    geometry_msgs::Quaternion gm_cur_ori;
-    tf::Quaternion tf_cur_ori;
-    tf::Matrix3x3 mat_ori, reorient_mat;
-    std_msgs::String state_cmd;
-    //ros::AsyncSpinner *aspin;
-
 
 };
 #endif

@@ -7,6 +7,7 @@ class DVRK_FootPedals{
   friend class DVRK_Bridge;
   DVRK_FootPedals();
   ~DVRK_FootPedals();
+  void init(ros::NodeHandle *n);
 private:
       ros::Subscriber clutch_sub, coag_sub;
       bool _clutch_pressed, _coag_pressed;
