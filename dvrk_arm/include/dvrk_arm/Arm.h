@@ -148,7 +148,7 @@ private:
     void coag_sub_cb(const sensor_msgs::JoyConstPtr &msg);
     void cisstPose_to_userTransform(const geometry_msgs::PoseStamped &pose);
     void userPose_to_cisstPose(geometry_msgs::PoseStamped &pose);
-    void move_arm_cartesian(tf::Transform &trans);
+    void move_arm_cartesian(tf::Transform trans);
     void set_arm_wrench(tf::Vector3 &force, tf::Vector3 &wrench);
 
     geometry_msgs::PoseStamped cur_pose, pre_pose, cmd_pose;

@@ -53,6 +53,7 @@ void DVRK_Arm::init(){
     origin_trans.setRotation(temp_quat);
     tip_trans.setOrigin(tf::Vector3(0,0,0));
     tip_trans.setRotation(temp_quat);
+    ee_trans_cmd.setRotation(temp_quat);
     _clutch_pressed = false;
     scale = 0.1;
 //    aspin = new ros::AsyncSpinner(1);
@@ -388,7 +389,7 @@ bool DVRK_Arm::set_position(const tf::Vector3 &pos){
 
 bool DVRK_Arm::set_orientation(const double &roll, const double &pitch, const double &yaw){
     ee_ori_quat_cmd.setRPY(roll, pitch, yaw);
-    ee_trans_cmd.setRotation(ee_ori_quat);
+    ee_trans_cmd.setRotation(ee_ori_quat_cmd);
     move_arm_cartesian(ee_trans_cmd);
 }
 
@@ -430,14 +431,14 @@ bool DVRK_Arm::set_transform(tf::Transform &trans){
     move_arm_cartesian(ee_trans_cmd);
 }
 
-void DVRK_Arm::move_arm_cartesian(tf::Transform &trans){
+void DVRK_Arm::move_arm_cartesian(tf::Transform trans){
     trans = origin_trans.inverse() * trans * tip_trans.inverse();
     cmd_pose.pose.position.x = trans.getOrigin().getX();
     cmd_pose.pose.position.y = trans.getOrigin().getY();
     cmd_pose.pose.position.z = trans.getOrigin().getZ();
-    tf::quaternionTFToMsg(trans.getRotation(), cmd_pose.pose.orientation);
+    tf::quaternionTFToMsg(trans.getRotation().normalized(), cmd_pose.pose.orientation);
 
-    pose_pub.publish(cmd_pose);
+    pose_pub.publish(cmd_pose.pose);
     ros::spinOnce();
     rate->sleep();
 }
@@ -452,8 +453,8 @@ bool DVRK_Arm::set_force(const double &fx, const double &fy, const double &fz){
 
 bool DVRK_Arm::set_moment(const double &nx, const double &ny, const double &nz){
     ee_moment_cmd.setX(nx);
-    ee_moment_cmd.setX(ny);
-    ee_moment_cmd.setX(nz);
+    ee_moment_cmd.setY(ny);
+    ee_moment_cmd.setZ(nz);
 
     set_arm_wrench(ee_force_cmd, ee_moment_cmd);
 }
