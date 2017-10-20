@@ -46,11 +46,10 @@ void DVRK_Bridge::init(){
     force_orientation_safety_pub = n->advertise<std_msgs::Bool>("/dvrk/" + arm_name + "/set_wrench_body_orientation_absolute",10);
 
     DVRK_FootPedals::init(n);
-
+    sleep(1);
     scale = 0.1;
     ros::spinOnce();
     rate->sleep();
-    sleep(1);
 }
 
 void DVRK_Bridge::joint_sub_cb(const sensor_msgs::JointStateConstPtr &msg){

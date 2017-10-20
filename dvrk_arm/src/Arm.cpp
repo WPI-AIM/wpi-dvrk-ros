@@ -1,19 +1,21 @@
 #include "dvrk_arm/Arm.h"
 DVRK_Arm::DVRK_Arm(const std::string &arm_name): DVRK_Bridge(arm_name){
+    init();
 }
 
 void DVRK_Arm::init(){
     origin_trans.setOrigin(tf::Vector3(0,0,0));
     tf::Quaternion temp_quat;
     temp_quat.setRPY(0,0,0);
+    origin_trans.setOrigin(tf::Vector3(0,0,0));
     origin_trans.setRotation(temp_quat);
     tip_trans.setOrigin(tf::Vector3(0,0,0));
     tip_trans.setRotation(temp_quat);
+    ee_trans_cmd.setOrigin(tf::Vector3(0,0,0));
     ee_trans_cmd.setRotation(temp_quat);
 }
 
 void DVRK_Arm::cisstPose_to_userTransform(const geometry_msgs::PoseStamped &pose){
-
     ee_pos.setX(pose.pose.position.x);
     ee_pos.setY(pose.pose.position.y);
     ee_pos.setZ(pose.pose.position.z);
@@ -167,6 +169,7 @@ void DVRK_Arm::affix_tip_frame(const tf::Transform &trans){
 
 void DVRK_Arm::get_cur_position(double &x, double &y, double &z){
     _rate_sleep();
+    handle_frames();
     x = ee_trans.getOrigin().getX();
     y = ee_trans.getOrigin().getY();
     z = ee_trans.getOrigin().getZ();
@@ -174,21 +177,25 @@ void DVRK_Arm::get_cur_position(double &x, double &y, double &z){
 
 void DVRK_Arm::get_cur_position(tf::Vector3 &pos){
     _rate_sleep();
+    handle_frames();
     pos = ee_trans.getOrigin();
 }
 
 void DVRK_Arm::get_cur_position(geometry_msgs::Point &pos){
     _rate_sleep();
+    handle_frames();
     tf::pointTFToMsg(ee_trans.getOrigin(), pos);
 }
 
 void DVRK_Arm::get_cur_orientation(double &roll, double &pitch, double &yaw){
     _rate_sleep();
+    handle_frames();
     tf::Matrix3x3(ee_trans.getRotation()).getRPY(roll, pitch, yaw);
 }
 
 void DVRK_Arm::get_cur_orientation(double &x, double &y, double &z, double &w){
     _rate_sleep();
+    handle_frames();
     x = ee_trans.getRotation().getX();
     y = ee_trans.getRotation().getY();
     z = ee_trans.getRotation().getZ();
@@ -197,22 +204,26 @@ void DVRK_Arm::get_cur_orientation(double &x, double &y, double &z, double &w){
 
 void DVRK_Arm::get_cur_orientation(tf::Quaternion &tf_quat){
     _rate_sleep();
+    handle_frames();
     tf_quat = ee_trans.getRotation();
     tf_quat.normalize();
 }
 
 void DVRK_Arm::get_cur_orientation(geometry_msgs::Quaternion &gm_quat){
     _rate_sleep();
+    handle_frames();
     tf::quaternionTFToMsg(ee_trans.getRotation(), gm_quat);
 }
 
 void DVRK_Arm::get_cur_orientation(tf::Matrix3x3 &mat){
     _rate_sleep();
+    handle_frames();
     mat.setRotation(ee_trans.getRotation());
 }
 
 void DVRK_Arm::get_cur_pose(geometry_msgs::Pose &pose){
     _rate_sleep();
+    handle_frames();
     pose.position.x = ee_trans.getOrigin().getX();
     pose.position.y = ee_trans.getOrigin().getY();
     pose.position.z = ee_trans.getOrigin().getZ();
@@ -222,6 +233,7 @@ void DVRK_Arm::get_cur_pose(geometry_msgs::Pose &pose){
 
 void DVRK_Arm::get_cur_transform(tf::Transform &trans){
     _rate_sleep();
+    handle_frames();
     trans = ee_trans;
     trans.setRotation(trans.getRotation().normalized());
 }
@@ -402,6 +414,10 @@ bool DVRK_Arm::_in_jnt_pos_mode(){
     else{
         return false;
     }
+}
+
+void DVRK_Arm::handle_frames(){
+    cisstPose_to_userTransform(cur_pose);
 }
 
 DVRK_Arm::~DVRK_Arm(){
