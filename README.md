@@ -25,3 +25,5 @@ https://github.com/jhu-cisst/cisst/wiki/Compiling-cisst-and-SAW-with-CMake#13-bu
 **mtmr_rviz:** MoveIt interfaces for MTMR
 
 **psm1_rviz:** MoveIt interfaces for PSM1
+
+**dvrk_arm:** Generic C++ Interface for controlling PSMs/MTMs
