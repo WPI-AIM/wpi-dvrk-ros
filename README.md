@@ -27,3 +27,7 @@ https://github.com/jhu-cisst/cisst/wiki/Compiling-cisst-and-SAW-with-CMake#13-bu
 **psm1_rviz:** MoveIt interfaces for PSM1
 
 **dvrk_arm:** Generic C++ Interface for controlling PSMs/MTMs
+
+**falcon_teleop** Code for Teleop of PSMs using Novint Falcon
+
+**geomagic_teleop** TeleOp of PSMs using Geomagic Touch / Phantom Omni
