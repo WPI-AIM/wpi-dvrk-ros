@@ -17,7 +17,7 @@ void DVRK_Arm::init(){
     ee_trans_cmd.setRotation(temp_quat);
 }
 
-void DVRK_Arm::cisstPose_to_userTransform(geometry_msgs::PoseStamped pose){
+void DVRK_Arm::cisstPose_to_userTransform(const geometry_msgs::PoseStamped &pose){
     ee_pos.setX(pose.pose.position.x);
     ee_pos.setY(pose.pose.position.y);
     ee_pos.setZ(pose.pose.position.z);
