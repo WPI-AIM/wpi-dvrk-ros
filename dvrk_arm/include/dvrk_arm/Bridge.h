@@ -11,6 +11,7 @@
 #include "FootPedals.h"
 #include "Console.h"
 #include "string.h"
+#include <functional>
 
 class DVRK_Arm;
 
@@ -23,6 +24,23 @@ class DVRK_Bridge: public DVRK_FootPedals{
     DVRK_Bridge(const std::string &arm_name);
     ~DVRK_Bridge();
     void _rate_sleep();
+    typedef boost::function<void(geometry_msgs::PoseStamped)> Callback;
+    void (DVRK_Arm::*my_func)(geometry_msgs::PoseStamped pose) = NULL;
+
+    //template <class T1>
+    //void (T1::*conv_fcn)(const geometry_msgs::PoseStamped pose);
+    //using conv_fcn = void (T1::*)(const geometry_msgs::PoseStamped pose);
+    //std::function<void (T1)> conv_func;
+
+    template <class T, class U>
+    void assign_conversion_fcn(void (T::*conversion_fcn)(U), T *obj);
+    DVRK_Arm *my_obj;
+    //void assign_conversion_fcn(Callback conversion_fcn, T *obj);
+    //void (DVRK_Bridge::*conversion_func)(const geometry_msgs::PoseStamped &pose);
+    //template <typename T>
+
+    //Callback my_func;
+
 private:
     std::string arm_name;
 
@@ -38,6 +56,7 @@ private:
     ros::Subscriber state_sub;
     ros::Rate *rate;
     double scale;
+    bool _is_cnvFcn_set;
     std::vector<std::string> valid_arms;
     void init();
     void state_sub_cb(const std_msgs::StringConstPtr &msg);
@@ -49,4 +68,14 @@ private:
     std_msgs::String cur_state, state_cmd;
     geometry_msgs::Wrench cur_wrench, cmd_wrench;
 };
+
+template <class T, class U>
+void DVRK_Bridge::assign_conversion_fcn(void (T::*conversion_fcn)(U), T *obj){
+    //cnv_fcn = conversion_fcn;
+    //my_func = boost::bind(conversion_fcn, obj);
+    my_func = (conversion_fcn);
+    my_obj = obj;
+    _is_cnvFcn_set = true;
+}
+
 #endif

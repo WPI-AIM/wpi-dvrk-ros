@@ -46,6 +46,7 @@ void DVRK_Bridge::init(){
     force_orientation_safety_pub = n->advertise<std_msgs::Bool>("/dvrk/" + arm_name + "/set_wrench_body_orientation_absolute",10);
 
     DVRK_FootPedals::init(n);
+    _is_cnvFcn_set = false;
     sleep(1);
     scale = 0.1;
     ros::spinOnce();
@@ -59,6 +60,9 @@ void DVRK_Bridge::joint_sub_cb(const sensor_msgs::JointStateConstPtr &msg){
 void DVRK_Bridge::pose_sub_cb(const geometry_msgs::PoseStampedConstPtr &msg){
     pre_pose = cur_pose;
     cur_pose = *msg;
+    if(_is_cnvFcn_set){
+        (my_obj->*my_func)(cur_pose);
+    }
 }
 
 void DVRK_Bridge::state_sub_cb(const std_msgs::StringConstPtr &msg){
