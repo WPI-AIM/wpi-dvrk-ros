@@ -5,41 +5,35 @@
 #include "tf/tf.h"
 #include "tf/LinearMath/Matrix3x3.h"
 
-struct OriginTrans{
+struct Frame{
 public:
-    tf::Transform origin_trans;
-    tf::Vector3 origin_pos;
-    tf::Quaternion origin_ori_quat;
-    tf::Matrix3x3 origin_ori_mat;
+    Frame(){
+        pos.setZero();
+        rot_quat.setRPY(0,0,0);
+        rot_mat.setRotation(rot_quat);
+        trans.setOrigin(pos);
+        trans.setRotation(rot_quat);
+    }
+    ~Frame(){}
+    tf::Transform trans;
+    tf::Vector3 pos;
+    tf::Quaternion rot_quat;
+    tf::Matrix3x3 rot_mat;
 };
 
-struct EETrans{
+struct Command: public Frame{
 public:
-    tf::Transform ee_trans;
-    tf::Vector3 ee_pos;
-    tf::Quaternion ee_ori_quat;
-    tf::Matrix3x3 ee_ori_mat;
+    Command(){
+        force.setZero();
+        moment.setZero();
+    }
+    ~Command(){}
+    tf::Vector3 force;
+    tf::Vector3 moment;
 };
 
-struct TipTrans{
-public:
-    tf::Transform tip_trans;
-    tf::Vector3 tip_pos;
-    tf::Quaternion tip_ori_quat;
-    tf::Matrix3x3 tip_ori_mat;
-};
 
-struct EETransCmd{
-public:
-    tf::Transform ee_trans_cmd;
-    tf::Vector3 ee_pos_cmd;
-    tf::Quaternion ee_ori_quat_cmd;
-    tf::Matrix3x3 ee_ori_mat_cmd;
-    tf::Vector3 ee_force_cmd;
-    tf::Vector3 ee_moment_cmd;
-};
-
-class DVRK_Arm: public OriginTrans, public EETrans, public EETransCmd, public TipTrans, public DVRK_Bridge{
+class DVRK_Arm: public DVRK_Bridge{
 public:
     DVRK_Arm(const std::string &arm_name);
     ~DVRK_Arm();
@@ -121,6 +115,9 @@ private:
     void userPose_to_cisstPose(geometry_msgs::PoseStamped &pose);
     void move_arm_cartesian(tf::Transform trans);
     void set_arm_wrench(tf::Vector3 &force, tf::Vector3 &wrench);
+    // afxdTipFrame is the affixedTipFrame;
+    Frame originFrame, afxdTipFrame, eeFrame, cmd_eeFrame;
+    Command eeCmd;
 
 };
 #endif
