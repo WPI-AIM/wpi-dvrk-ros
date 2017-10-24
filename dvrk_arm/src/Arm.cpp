@@ -9,7 +9,6 @@ DVRK_Arm::DVRK_Arm(const std::string &arm_name): DVRK_Bridge(arm_name), originFr
 }
 
 void DVRK_Arm::init(){
-    handle_frames();
 }
 
 void DVRK_Arm::cisstPose_to_userTransform(const geometry_msgs::PoseStamped &pose){
@@ -25,6 +24,7 @@ void DVRK_Arm::cisstPose_to_userTransform(const geometry_msgs::PoseStamped &pose
     eeFramePtr->pos = eeFramePtr->trans.getOrigin();
     eeFramePtr->rot_quat = eeFramePtr->trans.getRotation();
     eeFramePtr->rot_mat.setRotation(eeFramePtr->rot_quat);
+    handle_frames();
 }
 
 void DVRK_Arm::set_origin_frame(const tf::Vector3 &pos, const tf::Matrix3x3 &tf_mat){
