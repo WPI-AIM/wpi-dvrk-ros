@@ -1,7 +1,10 @@
 #include "dvrk_arm/Arm.h"
-DVRK_Arm::DVRK_Arm(const std::string &arm_name): DVRK_Bridge(arm_name), originFrame(new Frame), eeFrame(new Frame), afxdTipFrame(new Frame){
+DVRK_Arm::DVRK_Arm(const std::string &arm_name): DVRK_Bridge(arm_name), originFramePtr(new Frame), eeFramePtr(new Frame), afxdTipFramePtr(new Frame){
     init();
     assign_conversion_fcn(&DVRK_Arm::cisstPose_to_userTransform, this);
+    frameptrVec.push_back(originFramePtr);
+    frameptrVec.push_back(eeFramePtr);
+    frameptrVec.push_back(afxdTipFramePtr);
 
 }
 
@@ -10,215 +13,215 @@ void DVRK_Arm::init(){
 }
 
 void DVRK_Arm::cisstPose_to_userTransform(const geometry_msgs::PoseStamped &pose){
-    eeFrame->pos.setX(pose.pose.position.x);
-    eeFrame->pos.setY(pose.pose.position.y);
-    eeFrame->pos.setZ(pose.pose.position.z);
-    tf::quaternionMsgToTF(pose.pose.orientation, eeFrame->rot_quat);
+    eeFramePtr->pos.setX(pose.pose.position.x);
+    eeFramePtr->pos.setY(pose.pose.position.y);
+    eeFramePtr->pos.setZ(pose.pose.position.z);
+    tf::quaternionMsgToTF(pose.pose.orientation, eeFramePtr->rot_quat);
 
-    eeFrame->trans.setOrigin(eeFrame->pos);
-    eeFrame->trans.setRotation(eeFrame->rot_quat);
-    eeFrame->trans = originFrame->trans * eeFrame->trans * afxdTipFrame->trans;
+    eeFramePtr->trans.setOrigin(eeFramePtr->pos);
+    eeFramePtr->trans.setRotation(eeFramePtr->rot_quat);
+    eeFramePtr->trans = originFramePtr->trans * eeFramePtr->trans * afxdTipFramePtr->trans;
 
-    eeFrame->pos = eeFrame->trans.getOrigin();
-    eeFrame->rot_quat = eeFrame->trans.getRotation();
-    eeFrame->rot_mat.setRotation(eeFrame->rot_quat);
+    eeFramePtr->pos = eeFramePtr->trans.getOrigin();
+    eeFramePtr->rot_quat = eeFramePtr->trans.getRotation();
+    eeFramePtr->rot_mat.setRotation(eeFramePtr->rot_quat);
 }
 
 void DVRK_Arm::set_origin_frame(const tf::Vector3 &pos, const tf::Matrix3x3 &tf_mat){
     _rate_sleep();
-    tf_mat.getRotation(originFrame->rot_quat);
-    set_origin_frame(pos, originFrame->rot_quat);
+    tf_mat.getRotation(originFramePtr->rot_quat);
+    set_origin_frame(pos, originFramePtr->rot_quat);
 }
 
 void DVRK_Arm::set_origin_frame(const tf::Vector3 &pos, const tf::Quaternion &tf_quat){
     _rate_sleep();
-    originFrame->trans.setOrigin(pos);
-    originFrame->trans.setRotation(tf_quat);
+    originFramePtr->trans.setOrigin(pos);
+    originFramePtr->trans.setRotation(tf_quat);
 }
 
 void DVRK_Arm::set_origin_frame(const tf::Transform &trans){
     _rate_sleep();
-    originFrame->trans = trans;
+    originFramePtr->trans = trans;
 }
 
 void DVRK_Arm::set_origin_frame_pos(const double &x, const double &y, const double &z){
     _rate_sleep();
-    originFrame->pos.setX(x);
-    originFrame->pos.setY(y);
-    originFrame->pos.setZ(z);
+    originFramePtr->pos.setX(x);
+    originFramePtr->pos.setY(y);
+    originFramePtr->pos.setZ(z);
 
-    set_origin_frame(originFrame->pos, originFrame->rot_quat);
+    set_origin_frame(originFramePtr->pos, originFramePtr->rot_quat);
 }
 
 void DVRK_Arm::set_origin_frame_pos(const geometry_msgs::Point &pos){
     _rate_sleep();
-    originFrame->pos.setX(pos.x);
-    originFrame->pos.setY(pos.y);
-    originFrame->pos.setZ(pos.z);
+    originFramePtr->pos.setX(pos.x);
+    originFramePtr->pos.setY(pos.y);
+    originFramePtr->pos.setZ(pos.z);
 
-    set_origin_frame(originFrame->pos, originFrame->rot_quat);
+    set_origin_frame(originFramePtr->pos, originFramePtr->rot_quat);
 }
 
 void DVRK_Arm::set_origin_frame_pos(const tf::Vector3 &pos){
     _rate_sleep();
-    originFrame->pos = pos;
+    originFramePtr->pos = pos;
 
-    set_origin_frame(originFrame->pos, originFrame->rot_quat);
+    set_origin_frame(originFramePtr->pos, originFramePtr->rot_quat);
 }
 
 void DVRK_Arm::set_origin_frame_rot(const double &roll, const double &pitch, const double &yaw){
     _rate_sleep();
-    originFrame->rot_quat.setRPY(roll, pitch, yaw);
+    originFramePtr->rot_quat.setRPY(roll, pitch, yaw);
 
-    set_origin_frame(originFrame->pos, originFrame->rot_quat);
+    set_origin_frame(originFramePtr->pos, originFramePtr->rot_quat);
 }
 
 void DVRK_Arm::set_origin_frame_rot(const tf::Quaternion &tf_quat){
     _rate_sleep();
-    originFrame->rot_quat = tf_quat;
+    originFramePtr->rot_quat = tf_quat;
 
-    set_origin_frame(originFrame->pos, originFrame->rot_quat);
+    set_origin_frame(originFramePtr->pos, originFramePtr->rot_quat);
 }
 
 void DVRK_Arm::set_origin_frame_rot(const geometry_msgs::Quaternion &gm_quat){
     _rate_sleep();
-    tf::quaternionMsgToTF(gm_quat, originFrame->rot_quat);
+    tf::quaternionMsgToTF(gm_quat, originFramePtr->rot_quat);
 
-    set_origin_frame(originFrame->pos, originFrame->rot_quat);
+    set_origin_frame(originFramePtr->pos, originFramePtr->rot_quat);
 }
 
 void DVRK_Arm::set_origin_frame_rot(const tf::Matrix3x3 &mat){
     _rate_sleep();
-    mat.getRotation(originFrame->rot_quat);
+    mat.getRotation(originFramePtr->rot_quat);
 
-    set_origin_frame(originFrame->pos, originFrame->rot_quat);
+    set_origin_frame(originFramePtr->pos, originFramePtr->rot_quat);
 }
 
 void DVRK_Arm::affix_tip_frame_pos(const double &x, const double &y, const double &z){
     _rate_sleep();
-    afxdTipFrame->pos.setX(x);
-    afxdTipFrame->pos.setY(y);
-    afxdTipFrame->pos.setZ(z);
-    affix_tip_frame(afxdTipFrame->pos, afxdTipFrame->rot_quat);
+    afxdTipFramePtr->pos.setX(x);
+    afxdTipFramePtr->pos.setY(y);
+    afxdTipFramePtr->pos.setZ(z);
+    affix_tip_frame(afxdTipFramePtr->pos, afxdTipFramePtr->rot_quat);
 }
 
 void DVRK_Arm::affix_tip_frame_pos(const geometry_msgs::Point &pos){
     _rate_sleep();
-    afxdTipFrame->pos.setX(pos.x);
-    afxdTipFrame->pos.setY(pos.y);
-    afxdTipFrame->pos.setZ(pos.z);
-    affix_tip_frame(afxdTipFrame->pos, afxdTipFrame->rot_quat);
+    afxdTipFramePtr->pos.setX(pos.x);
+    afxdTipFramePtr->pos.setY(pos.y);
+    afxdTipFramePtr->pos.setZ(pos.z);
+    affix_tip_frame(afxdTipFramePtr->pos, afxdTipFramePtr->rot_quat);
 }
 
 void DVRK_Arm::affix_tip_frame_pos(const tf::Vector3 &pos){
     _rate_sleep();
-    afxdTipFrame->pos = pos;
-    affix_tip_frame(afxdTipFrame->pos, afxdTipFrame->rot_quat);
+    afxdTipFramePtr->pos = pos;
+    affix_tip_frame(afxdTipFramePtr->pos, afxdTipFramePtr->rot_quat);
 }
 
 void DVRK_Arm::affix_tip_frame_rot(const double &roll, const double &pitch, const double &yaw){
     _rate_sleep();
-    afxdTipFrame->rot_quat.setRPY(roll, pitch, yaw);
-    affix_tip_frame(afxdTipFrame->pos, afxdTipFrame->rot_quat);
+    afxdTipFramePtr->rot_quat.setRPY(roll, pitch, yaw);
+    affix_tip_frame(afxdTipFramePtr->pos, afxdTipFramePtr->rot_quat);
 }
 
 void DVRK_Arm::affix_tip_frame_rot(const double &quat_x, const double &quat_y, const double &quat_z, const double &quat_w){
     _rate_sleep();
-    afxdTipFrame->rot_quat.setX(quat_x);
-    afxdTipFrame->rot_quat.setY(quat_y);
-    afxdTipFrame->rot_quat.setZ(quat_z);
-    afxdTipFrame->rot_quat.setW(quat_w);
-    affix_tip_frame(afxdTipFrame->pos, afxdTipFrame->rot_quat);
+    afxdTipFramePtr->rot_quat.setX(quat_x);
+    afxdTipFramePtr->rot_quat.setY(quat_y);
+    afxdTipFramePtr->rot_quat.setZ(quat_z);
+    afxdTipFramePtr->rot_quat.setW(quat_w);
+    affix_tip_frame(afxdTipFramePtr->pos, afxdTipFramePtr->rot_quat);
 }
 
 void DVRK_Arm::affix_tip_frame_rot(const geometry_msgs::Quaternion &gm_quat){
     _rate_sleep();
-    tf::quaternionMsgToTF(gm_quat, afxdTipFrame->rot_quat);
-    affix_tip_frame(afxdTipFrame->pos, afxdTipFrame->rot_quat);
+    tf::quaternionMsgToTF(gm_quat, afxdTipFramePtr->rot_quat);
+    affix_tip_frame(afxdTipFramePtr->pos, afxdTipFramePtr->rot_quat);
 }
 
 void DVRK_Arm::affix_tip_frame_rot(const tf::Quaternion &tf_quat){
     _rate_sleep();
-    afxdTipFrame->rot_quat = tf_quat;
-    affix_tip_frame(afxdTipFrame->pos, afxdTipFrame->rot_quat);
+    afxdTipFramePtr->rot_quat = tf_quat;
+    affix_tip_frame(afxdTipFramePtr->pos, afxdTipFramePtr->rot_quat);
 }
 
 void DVRK_Arm::affix_tip_frame(const tf::Vector3 &pos, const tf::Quaternion &tf_quat){
     _rate_sleep();
-    afxdTipFrame->trans.setOrigin(pos);
-    afxdTipFrame->trans.setRotation(tf_quat);
+    afxdTipFramePtr->trans.setOrigin(pos);
+    afxdTipFramePtr->trans.setRotation(tf_quat);
 }
 
 void DVRK_Arm::affix_tip_frame(const tf::Vector3 &pos, const tf::Matrix3x3 &tf_mat){
     _rate_sleep();
-    afxdTipFrame->pos = pos;
-    tf_mat.getRotation(afxdTipFrame->rot_quat);
-    affix_tip_frame(afxdTipFrame->pos, afxdTipFrame->rot_quat);
+    afxdTipFramePtr->pos = pos;
+    tf_mat.getRotation(afxdTipFramePtr->rot_quat);
+    affix_tip_frame(afxdTipFramePtr->pos, afxdTipFramePtr->rot_quat);
 }
 
 void DVRK_Arm::affix_tip_frame(const tf::Transform &trans){
     _rate_sleep();
-    afxdTipFrame->trans = trans;
+    afxdTipFramePtr->trans = trans;
 }
 
 void DVRK_Arm::get_cur_position(double &x, double &y, double &z){
     _rate_sleep();
-    x = eeFrame->trans.getOrigin().getX();
-    y = eeFrame->trans.getOrigin().getY();
-    z = eeFrame->trans.getOrigin().getZ();
+    x = eeFramePtr->trans.getOrigin().getX();
+    y = eeFramePtr->trans.getOrigin().getY();
+    z = eeFramePtr->trans.getOrigin().getZ();
 }
 
 void DVRK_Arm::get_cur_position(tf::Vector3 &pos){
     _rate_sleep();
-    pos = eeFrame->trans.getOrigin();
+    pos = eeFramePtr->trans.getOrigin();
 }
 
 void DVRK_Arm::get_cur_position(geometry_msgs::Point &pos){
     _rate_sleep();
-    tf::pointTFToMsg(eeFrame->trans.getOrigin(), pos);
+    tf::pointTFToMsg(eeFramePtr->trans.getOrigin(), pos);
 }
 
 void DVRK_Arm::get_cur_orientation(double &roll, double &pitch, double &yaw){
     _rate_sleep();
-    tf::Matrix3x3(eeFrame->trans.getRotation()).getRPY(roll, pitch, yaw);
+    tf::Matrix3x3(eeFramePtr->trans.getRotation()).getRPY(roll, pitch, yaw);
 }
 
 void DVRK_Arm::get_cur_orientation(double &x, double &y, double &z, double &w){
     _rate_sleep();
-    x = eeFrame->trans.getRotation().getX();
-    y = eeFrame->trans.getRotation().getY();
-    z = eeFrame->trans.getRotation().getZ();
-    w = eeFrame->trans.getRotation().getW();
+    x = eeFramePtr->trans.getRotation().getX();
+    y = eeFramePtr->trans.getRotation().getY();
+    z = eeFramePtr->trans.getRotation().getZ();
+    w = eeFramePtr->trans.getRotation().getW();
 }
 
 void DVRK_Arm::get_cur_orientation(tf::Quaternion &tf_quat){
     _rate_sleep();
-    tf_quat = eeFrame->trans.getRotation();
+    tf_quat = eeFramePtr->trans.getRotation();
     tf_quat.normalize();
 }
 
 void DVRK_Arm::get_cur_orientation(geometry_msgs::Quaternion &gm_quat){
     _rate_sleep();
-    tf::quaternionTFToMsg(eeFrame->trans.getRotation(), gm_quat);
+    tf::quaternionTFToMsg(eeFramePtr->trans.getRotation(), gm_quat);
 }
 
 void DVRK_Arm::get_cur_orientation(tf::Matrix3x3 &mat){
     _rate_sleep();
-    mat.setRotation(eeFrame->trans.getRotation());
+    mat.setRotation(eeFramePtr->trans.getRotation());
 }
 
 void DVRK_Arm::get_cur_pose(geometry_msgs::Pose &pose){
     _rate_sleep();
-    pose.position.x = eeFrame->trans.getOrigin().getX();
-    pose.position.y = eeFrame->trans.getOrigin().getY();
-    pose.position.z = eeFrame->trans.getOrigin().getZ();
+    pose.position.x = eeFramePtr->trans.getOrigin().getX();
+    pose.position.y = eeFramePtr->trans.getOrigin().getY();
+    pose.position.z = eeFramePtr->trans.getOrigin().getZ();
 
-    tf::quaternionTFToMsg(eeFrame->trans.getRotation(), pose.orientation);
+    tf::quaternionTFToMsg(eeFramePtr->trans.getRotation(), pose.orientation);
 }
 
 void DVRK_Arm::get_cur_transform(tf::Transform &trans){
     _rate_sleep();
-    trans = eeFrame->trans;
+    trans = eeFramePtr->trans;
     trans.setRotation(trans.getRotation().normalized());
 }
 
@@ -298,7 +301,7 @@ bool DVRK_Arm::set_mode(std::string str){
 }
 
 void DVRK_Arm::move_arm_cartesian(tf::Transform trans){
-    trans = originFrame->trans.inverse() * trans * afxdTipFrame->trans.inverse();
+    trans = originFramePtr->trans.inverse() * trans * afxdTipFramePtr->trans.inverse();
     cmd_pose.pose.position.x = trans.getOrigin().getX();
     cmd_pose.pose.position.y = trans.getOrigin().getY();
     cmd_pose.pose.position.z = trans.getOrigin().getZ();
@@ -343,9 +346,9 @@ void DVRK_Arm::set_arm_wrench(tf::Vector3 &force, tf::Vector3 &moment){
         force.setZero();
         moment.setZero();
     }
-    originFrame->rot_mat.setRotation(originFrame->trans.getRotation());
-    tf::vector3TFToMsg(originFrame->rot_mat.inverse() * force, cmd_wrench.force);
-    tf::vector3TFToMsg(originFrame->rot_mat.inverse() * moment, cmd_wrench.torque);
+    originFramePtr->rot_mat.setRotation(originFramePtr->trans.getRotation());
+    tf::vector3TFToMsg(originFramePtr->rot_mat.inverse() * force, cmd_wrench.force);
+    tf::vector3TFToMsg(originFramePtr->rot_mat.inverse() * moment, cmd_wrench.torque);
     //ROS_INFO("Ori F %f %f %f", force.x(),force.y(),force.z());
     //ROS_INFO("Ori M %f %f %f", moment.x(),moment.y(),moment.z());
     //ROS_INFO("Cmd F %f %f %f", cmd_wrench.force.x,cmd_wrench.force.y,cmd_wrench.force.z);
@@ -405,6 +408,31 @@ bool DVRK_Arm::_in_jnt_pos_mode(){
 }
 
 void DVRK_Arm::handle_frames(){
+    for(frameIter = frameptrVec.begin(); frameIter !=frameptrVec.end(); frameIter++){
+        double x,y,z;
+        x = (*frameIter)->trans.getOrigin().getX();
+        y = (*frameIter)->trans.getOrigin().getY();
+        z = (*frameIter)->trans.getOrigin().getZ();
+
+        double qx, qy, qz, qw;
+        qx = (*frameIter)->trans.getRotation().getX();
+        qy = (*frameIter)->trans.getRotation().getY();
+        qz = (*frameIter)->trans.getRotation().getZ();
+        qw = (*frameIter)->trans.getRotation().getW();
+        if (isnan(x) || isnan(y) ||  isnan(z)){
+            (*frameIter)->trans.setOrigin(tf::Vector3(0,0,0));
+            ROS_ERROR("Origin of frame is NAN, setting origin to (0,0,0)");
+        }
+        if (isnan(qx) || isnan(qy) ||  isnan(qz) || isnan(qw)){
+            (*frameIter)->trans.setRotation(tf::Quaternion().getIdentity());
+            ROS_ERROR("Rotation of frame is NAN, setting rotation to (0,0,0)");
+        }
+        //Normalized the rotation quaternion;
+        (*frameIter)->trans.getRotation() = (*frameIter)->trans.getRotation().normalized();
+        (*frameIter)->pos = (*frameIter)->trans.getOrigin();
+        (*frameIter)->rot_quat = (*frameIter)->trans.getRotation();
+        (*frameIter)->rot_mat.setRotation((*frameIter)->rot_quat);
+    }
 }
 
 DVRK_Arm::~DVRK_Arm(){

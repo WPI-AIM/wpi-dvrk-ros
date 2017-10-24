@@ -120,9 +120,10 @@ private:
     void set_arm_wrench(tf::Vector3 &force, tf::Vector3 &wrench);
     // afxdTipFrame is the affixedTipFrame;
 
-    FramePtr originFrame;
-    FramePtr afxdTipFrame, eeFrame;
+    FramePtr originFramePtr, afxdTipFramePtr, eeFramePtr;
     Command eeCmd;
+    std::vector<FramePtr> frameptrVec;
+    std::vector<FramePtr>::iterator frameIter;
 
 };
 #endif
