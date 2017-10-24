@@ -350,8 +350,8 @@ bool DVRK_Arm::set_wrench(const double &fx,const double &fy,const double &fz,con
     ee_force_cmd.setZ(fz);
 
     ee_moment_cmd.setX(nx);
-    ee_moment_cmd.setX(ny);
-    ee_moment_cmd.setX(nz);
+    ee_moment_cmd.setY(ny);
+    ee_moment_cmd.setZ(nz);
 
     set_arm_wrench(ee_force_cmd, ee_moment_cmd);
 }
@@ -361,12 +361,16 @@ void DVRK_Arm::set_arm_wrench(tf::Vector3 &force, tf::Vector3 &moment){
         force.setZero();
         moment.setZero();
     }
-    tf::vector3TFToMsg(origin_trans.inverse() * force, cmd_wrench.force);
-    tf::vector3TFToMsg(origin_trans.inverse() * moment, cmd_wrench.torque);
+    origin_ori_mat.setRotation(origin_trans.getRotation());
+    tf::vector3TFToMsg(origin_ori_mat.inverse() * force, cmd_wrench.force);
+    tf::vector3TFToMsg(origin_ori_mat.inverse() * moment, cmd_wrench.torque);
+    //ROS_INFO("Ori F %f %f %f", force.x(),force.y(),force.z());
+    //ROS_INFO("Ori M %f %f %f", moment.x(),moment.y(),moment.z());
+    //ROS_INFO("Cmd F %f %f %f", cmd_wrench.force.x,cmd_wrench.force.y,cmd_wrench.force.z);
+    //ROS_INFO("Cmd M %f %f %f", cmd_wrench.torque.x,cmd_wrench.torque.y,cmd_wrench.torque.z);
     force_pub.publish(cmd_wrench);
     ros::spinOnce();
     rate->sleep();
-
 }
 
 // TASK::Create an ENUM and check for all the good states
