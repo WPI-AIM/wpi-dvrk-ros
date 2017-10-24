@@ -4,6 +4,7 @@
 #include "Bridge.h"
 #include "tf/tf.h"
 #include "tf/LinearMath/Matrix3x3.h"
+#include "boost/shared_ptr.hpp"
 
 struct Frame{
 public:
@@ -20,6 +21,8 @@ public:
     tf::Quaternion rot_quat;
     tf::Matrix3x3 rot_mat;
 };
+
+typedef boost::shared_ptr<Frame> FramePtr;
 
 struct Command: public Frame{
 public:
@@ -116,7 +119,9 @@ private:
     void move_arm_cartesian(tf::Transform trans);
     void set_arm_wrench(tf::Vector3 &force, tf::Vector3 &wrench);
     // afxdTipFrame is the affixedTipFrame;
-    Frame originFrame, afxdTipFrame, eeFrame, cmd_eeFrame;
+
+    FramePtr originFrame;
+    FramePtr afxdTipFrame, eeFrame;
     Command eeCmd;
 
 };
