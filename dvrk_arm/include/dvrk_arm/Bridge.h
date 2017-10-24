@@ -11,9 +11,8 @@
 #include "FootPedals.h"
 #include "Console.h"
 #include "string.h"
-#include <functional>
-
-class DVRK_Arm;
+#include "boost/bind.hpp"
+#include "boost/function.hpp"
 
 class DVRK_Bridge: public DVRK_FootPedals{
 
@@ -25,11 +24,10 @@ class DVRK_Bridge: public DVRK_FootPedals{
     ~DVRK_Bridge();
     void _rate_sleep();
 
-    void (DVRK_Arm::*my_func)(const geometry_msgs::PoseStamped &pose) = NULL;
+    boost::function<void (const geometry_msgs::PoseStamped &pose)> conversion_function;
 
     template <class T, class U>
     void assign_conversion_fcn(void (T::*conversion_fcn)(U), T *obj);
-    DVRK_Arm *my_obj;
 
 private:
     std::string arm_name;
@@ -61,10 +59,7 @@ private:
 
 template <class T, class U>
 void DVRK_Bridge::assign_conversion_fcn(void (T::*conversion_fcn)(U), T *obj){
-    //cnv_fcn = conversion_fcn;
-    //my_func = boost::bind(conversion_fcn, obj);
-    my_func = (conversion_fcn);
-    my_obj = obj;
+    conversion_function = boost::bind(conversion_fcn, obj, _1);
     _is_cnvFcn_set = true;
 }
 

@@ -61,7 +61,7 @@ void DVRK_Bridge::pose_sub_cb(const geometry_msgs::PoseStampedConstPtr &msg){
     pre_pose = cur_pose;
     cur_pose = *msg;
     if(_is_cnvFcn_set){
-        (my_obj->*my_func)(cur_pose);
+        conversion_function(cur_pose);
     }
 }
 
