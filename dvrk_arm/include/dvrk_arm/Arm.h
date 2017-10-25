@@ -22,8 +22,6 @@ public:
     tf::Matrix3x3 rot_mat;
 };
 
-typedef boost::shared_ptr<Frame> FramePtr;
-
 struct Command: public Frame{
 public:
     Command(){
@@ -120,6 +118,7 @@ private:
     void set_arm_wrench(tf::Vector3 &force, tf::Vector3 &wrench);
     // afxdTipFrame is the affixedTipFrame;
 
+    typedef boost::shared_ptr<Frame> FramePtr;
     FramePtr originFramePtr, afxdTipFramePtr, eeFramePtr;
     Command eeCmd;
     std::vector<FramePtr> frameptrVec;

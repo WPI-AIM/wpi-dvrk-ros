@@ -427,8 +427,9 @@ void DVRK_Arm::handle_frames(){
             (*frameIter)->trans.setRotation(tf::Quaternion().getIdentity());
             ROS_ERROR("Rotation of frame is NAN, setting rotation to (0,0,0)");
         }
-        //Normalized the rotation quaternion;
+        //Normalize the rotation quaternion;
         (*frameIter)->trans.getRotation() = (*frameIter)->trans.getRotation().normalized();
+        //Setting the pos, quat and rot_mat members of the struct so all of them have the same data as trans
         (*frameIter)->pos = (*frameIter)->trans.getOrigin();
         (*frameIter)->rot_quat = (*frameIter)->trans.getRotation();
         (*frameIter)->rot_mat.setRotation((*frameIter)->rot_quat);

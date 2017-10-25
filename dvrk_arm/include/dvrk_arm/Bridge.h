@@ -24,8 +24,6 @@ class DVRK_Bridge: public DVRK_FootPedals{
     ~DVRK_Bridge();
     void _rate_sleep();
 
-    boost::function<void (const geometry_msgs::PoseStamped &pose)> conversion_function;
-
     template <class T, class U>
     void assign_conversion_fcn(void (T::*conversion_fcn)(U), T *obj);
 
@@ -55,6 +53,8 @@ private:
     sensor_msgs::JointState cur_joint, pre_joint;
     std_msgs::String cur_state, state_cmd;
     geometry_msgs::Wrench cur_wrench, cmd_wrench;
+
+    boost::function<void (const geometry_msgs::PoseStamped &pose)> conversion_function;
 };
 
 template <class T, class U>
