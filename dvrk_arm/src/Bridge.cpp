@@ -1,6 +1,5 @@
 #include "dvrk_arm/Bridge.h"
 
-
 DVRK_Bridge::DVRK_Bridge(const std::string &arm_name){
     valid_arms.push_back("MTML");
     valid_arms.push_back("MTMR");
@@ -33,7 +32,10 @@ void DVRK_Bridge::init(){
     ros::init(s, arm_name + "_interface_node");
 
     n = new ros::NodeHandle;
+    n->setCallbackQueue(&cb_queue);
     rate = new ros::Rate(1000);
+    timer = n->createTimer(ros::Duration(), &DVRK_Bridge::timer_cb, this);
+    aspin = new ros::AsyncSpinner(0, &cb_queue);
 
     pose_sub = n->subscribe("/dvrk/" + arm_name + "/position_cartesian_current", 10, &DVRK_Bridge::pose_sub_cb, this);
     state_sub = n->subscribe("/dvrk/" + arm_name + "/robot_state", 10, &DVRK_Bridge::state_sub_cb, this);
@@ -48,9 +50,8 @@ void DVRK_Bridge::init(){
     DVRK_FootPedals::init(n);
     _is_cnvFcn_set = false;
     sleep(1);
+    aspin->start();
     scale = 0.1;
-    ros::spinOnce();
-    rate->sleep();
 }
 
 void DVRK_Bridge::joint_sub_cb(const sensor_msgs::JointStateConstPtr &msg){
@@ -69,14 +70,18 @@ void DVRK_Bridge::state_sub_cb(const std_msgs::StringConstPtr &msg){
     cur_state = *msg;
 }
 
+void DVRK_Bridge::timer_cb(const ros::TimerEvent& event){
+    _rate_sleep();
+}
+
 void DVRK_Bridge::_rate_sleep(){
-    ros::spinOnce();
     rate->sleep();
 }
 
 DVRK_Bridge::~DVRK_Bridge(){
     delete n;
     delete rate;
+    delete aspin;
 }
 
 

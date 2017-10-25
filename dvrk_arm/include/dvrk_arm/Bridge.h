@@ -13,9 +13,10 @@
 #include "string.h"
 #include "boost/bind.hpp"
 #include "boost/function.hpp"
+#include "ros/callback_queue.h"
 
 class DVRK_Bridge: public DVRK_FootPedals{
-
+public:
     friend class DVRK_Arm;
     friend class DVRK_FootPedals;
     friend class DVRK_Console;
@@ -40,6 +41,10 @@ private:
     ros::Subscriber pose_sub;
     ros::Subscriber joint_sub;
     ros::Subscriber state_sub;
+    ros::CallbackQueue cb_queue;
+    ros::Timer timer;
+    ros::AsyncSpinner* aspin;
+
     ros::Rate *rate;
     double scale;
     bool _is_cnvFcn_set;
@@ -48,6 +53,7 @@ private:
     void state_sub_cb(const std_msgs::StringConstPtr &msg);
     void pose_sub_cb(const geometry_msgs::PoseStampedConstPtr &msg);
     void joint_sub_cb(const sensor_msgs::JointStateConstPtr &msg);
+    void timer_cb(const ros::TimerEvent&);
 
     geometry_msgs::PoseStamped cur_pose, pre_pose, cmd_pose;
     sensor_msgs::JointState cur_joint, pre_joint;
