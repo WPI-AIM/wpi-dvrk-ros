@@ -25,8 +25,13 @@ Not only that, one might wants the self defined directional coordinates of the E
 When setting the positions or forces on the dvrk Manipulators, the frames are already handeled so you just specify
 the values w.r.t to the frames you set.
 
+### Conversion Function
+The class **Dvrk_Bridge** handles all the ros-communication. The **cartesian pose callback** from the **cisst-saw** is reported via **geometry_msgs/PoseStamped** msg. The class **Dvrk_Bridge** accepts a conversion callback *member-function* that takes in **const geometry_msgs/PoseStamped &** as an argument as does all the conversion inside of it. 
+
+    assign_conversion_fcn(&DVRK_Arm::cisstPose_to_userTransform, this);
+    
 #### IMPORTANT
-While setting just the position of **Origin Tranfrom** or **Tip Transform**, the orientation is not altered, it remains whatever it was set before, or if it wasn't set before, it remains identity matrix. The vice versa for setting just the orientation.
+While setting just the position of **Origin Tranfrom** or **Tip Transform**, the orientation is not altered, it remains whatever it was set before, or if it wasn't set before, it remains identity matrix. Likewise, when the only the orientation is set, the position remains un-altered.
 
 ### Using the library (Example)
     DVRK_Arm arm("MTMR");
