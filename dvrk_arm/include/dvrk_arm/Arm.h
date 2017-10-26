@@ -39,14 +39,6 @@ public:
     DVRK_Arm(const std::string &arm_name);
     ~DVRK_Arm();
 
-    bool home();
-
-    bool _is_available();
-    bool _in_effort_mode();
-    bool _in_cart_pos_mode();
-    bool _in_jnt_pos_mode();
-
-
     void set_origin_frame_pos(const double &x, const double &y, const double &);
     void set_origin_frame_pos(const geometry_msgs::Point &pos);
     void set_origin_frame_pos(const tf::Vector3 &pos);
@@ -73,7 +65,6 @@ public:
     void affix_tip_frame(const tf::Vector3 &pos, const tf::Matrix3x3 &tf_mat);
     void affix_tip_frame(const tf::Transform &trans);
 
-    bool set_mode(std::string str);
     bool set_force(const double &fx,const double &fy,const double &fz);
     bool set_moment(const double &nx,const double &ny,const double &nz);
     bool set_wrench(const double &fx,const double &fy,const double &fz,const double &nx,const double &ny,const double &nz);
@@ -104,9 +95,7 @@ public:
     void get_cur_pose(geometry_msgs::Pose &pose);
     void get_cur_transform(tf::Transform &trans);
 
-    const std::string _m_effort_mode = "DVRK_EFFORT_CARTESIAN";
-    const std::string _m_jnt_pos_mode = "DVRK_POSITION_JOINT";
-    const std::string _m_cart_pos_mode = "DVRK_POSITION_CARTESIAN";
+    void set_mode(const std::string &state, bool lock_wrench_ori = true);
 
 private:
 

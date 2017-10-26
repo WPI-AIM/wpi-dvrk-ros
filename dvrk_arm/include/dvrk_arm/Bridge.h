@@ -15,25 +15,65 @@
 #include "boost/function.hpp"
 #include "ros/callback_queue.h"
 
-class DVRK_Bridge: public DVRK_FootPedals{
+struct States{
 public:
-    friend class DVRK_Arm;
+    States(){
+        mStates[DVRK_UNINITIALIZED] = "DVRK_UNINITIALIZED";
+        mStates[DVRK_POSITION_JOINT]= "DVRK_POSITION_JOINT";
+        mStates[DVRK_POSITION_CARTESIAN] = "DVRK_POSITION_CARTESIAN";
+        mStates[DVRK_EFFORT_CARTESIAN] = "DVRK_EFFORT_CARTESIAN";
+
+
+        _m_effort_mode = mStates[DVRK_EFFORT_CARTESIAN];
+        _m_jnt_pos_mode = mStates[DVRK_POSITION_JOINT];
+        _m_cart_pos_mode = mStates[DVRK_POSITION_CARTESIAN];
+
+        activeState = DVRK_UNINITIALIZED;
+    }
+
+    enum eSTATES{DVRK_UNINITIALIZED,
+                DVRK_POSITION_CARTESIAN,
+                DVRK_POSITION_JOINT,
+                DVRK_EFFORT_CARTESIAN};
+    eSTATES activeState;
+
+    std::map<eSTATES, std::string> mStates;
+
+    std::string _m_effort_mode;
+    std::string _m_jnt_pos_mode;
+    std::string _m_cart_pos_mode;
+};
+
+class DVRK_Bridge: public States, public DVRK_FootPedals{
+public:
     friend class DVRK_FootPedals;
     friend class DVRK_Console;
 
     DVRK_Bridge(const std::string &arm_name);
     ~DVRK_Bridge();
+
     void _rate_sleep();
 
     template <class T, class U>
     void assign_conversion_fcn(void (T::*conversion_fcn)(U), T *obj);
+    void set_cur_pose(const geometry_msgs::PoseStamped &pose);
+    void set_cur_wrench(const geometry_msgs::Wrench &wrench);
+    void set_cur_joint(const sensor_msgs::JointState &jnt_state);
+    void set_cur_mode(const std::string &state, bool lock_ori);
+
+    bool _is_available();
+    bool _in_effort_mode();
+    bool _in_cart_pos_mode();
+    bool _in_jnt_pos_mode();
+
+    bool _start_pubs;
 
 private:
     std::string arm_name;
 
     ros::NodeHandle *n;
     ros::Publisher force_pub;
-    ros::Publisher force_orientation_safety_pub;
+    ros::Publisher force_orientation_lock_pub;
     ros::Publisher state_pub;
     ros::Publisher pose_pub;
     ros::Publisher joint_pub;
@@ -56,7 +96,7 @@ private:
     void timer_cb(const ros::TimerEvent&);
 
     geometry_msgs::PoseStamped cur_pose, pre_pose, cmd_pose;
-    sensor_msgs::JointState cur_joint, pre_joint;
+    sensor_msgs::JointState cur_joint, pre_joint, cmd_joint;
     std_msgs::String cur_state, state_cmd;
     geometry_msgs::Wrench cur_wrench, cmd_wrench;
 

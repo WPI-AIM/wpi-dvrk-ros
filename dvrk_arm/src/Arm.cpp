@@ -252,30 +252,19 @@ bool DVRK_Arm::set_transform(tf::Transform &trans){
     move_arm_cartesian(eeCmd.trans);
 }
 
-bool DVRK_Arm::set_mode(std::string str){
-    state_cmd.data = str;
-    state_pub.publish(state_cmd);
-    ros::spinOnce();
-    rate->sleep();
-    if(strcmp(str.c_str(),_m_effort_mode.c_str()) == 0){
-        std_msgs::Bool _is_effort_mode;
-        _is_effort_mode.data = true;
-        force_orientation_safety_pub.publish(_is_effort_mode);
-        ros::spinOnce();
-        rate->sleep();
-        sleep(0.5);
-    }
-    return _in_effort_mode();
+void DVRK_Arm::set_mode(const std::string &state, bool lock_wrench_ori){
+    set_cur_mode(state, lock_wrench_ori);
 }
 
 void DVRK_Arm::move_arm_cartesian(tf::Transform trans){
+    geometry_msgs::PoseStamped cmd_pose;
     trans = originFramePtr->trans.inverse() * trans * afxdTipFramePtr->trans.inverse();
     cmd_pose.pose.position.x = trans.getOrigin().getX();
     cmd_pose.pose.position.y = trans.getOrigin().getY();
     cmd_pose.pose.position.z = trans.getOrigin().getZ();
     tf::quaternionTFToMsg(trans.getRotation().normalized(), cmd_pose.pose.orientation);
 
-    pose_pub.publish(cmd_pose.pose);
+    set_cur_pose(cmd_pose);
 }
 
 bool DVRK_Arm::set_force(const double &fx, const double &fy, const double &fz){
@@ -313,59 +302,14 @@ void DVRK_Arm::set_arm_wrench(tf::Vector3 &force, tf::Vector3 &moment){
         moment.setZero();
     }
     originFramePtr->rot_mat.setRotation(originFramePtr->trans.getRotation());
+    geometry_msgs::Wrench cmd_wrench;
     tf::vector3TFToMsg(originFramePtr->rot_mat.inverse() * force, cmd_wrench.force);
     tf::vector3TFToMsg(originFramePtr->rot_mat.inverse() * moment, cmd_wrench.torque);
     //ROS_INFO("Ori F %f %f %f", force.x(),force.y(),force.z());
     //ROS_INFO("Ori M %f %f %f", moment.x(),moment.y(),moment.z());
     //ROS_INFO("Cmd F %f %f %f", cmd_wrench.force.x,cmd_wrench.force.y,cmd_wrench.force.z);
     //ROS_INFO("Cmd M %f %f %f", cmd_wrench.torque.x,cmd_wrench.torque.y,cmd_wrench.torque.z);
-    force_pub.publish(cmd_wrench);
-}
-
-// TASK::Create an ENUM and check for all the good states
-bool DVRK_Arm::_is_available(){
-    if (state_pub.getNumSubscribers() > 0 && state_sub.getNumPublishers() > 0 && pose_sub.getNumPublishers() > 0){
-        // If there are listeners to the state_publisher and pose publisher and subscribers to state msg, most likely the Arm is available
-        // Doing 3 seperate topic checks for redundancy
-        return true;
-    }
-    else{
-        return false;
-    }
-
-}
-
-bool DVRK_Arm::_in_effort_mode(){
-    if(_is_available()){
-        if(strcmp(cur_state.data.c_str(), _m_effort_mode.c_str()) == 0){
-            return true;
-        }
-    }
-    else{
-        return false;
-    }
-}
-
-bool DVRK_Arm::_in_cart_pos_mode(){
-    if(_is_available()){
-        if(strcmp(cur_state.data.c_str(), _m_cart_pos_mode.c_str()) == 0){
-            return true;
-        }
-    }
-    else{
-        return false;
-    }
-}
-
-bool DVRK_Arm::_in_jnt_pos_mode(){
-    if(_is_available()){
-        if(strcmp(cur_state.data.c_str(), _m_jnt_pos_mode.c_str()) == 0){
-            return true;
-        }
-    }
-    else{
-        return false;
-    }
+    set_cur_wrench(cmd_wrench);
 }
 
 void DVRK_Arm::handle_frames(){
