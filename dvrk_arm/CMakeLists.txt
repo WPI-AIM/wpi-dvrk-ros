@@ -135,6 +135,8 @@ set(HDR_FILES
    include/${PROJECT_NAME}/Bridge.h
    include/${PROJECT_NAME}/Console.h
    include/${PROJECT_NAME}/FootPedals.h
+   include/${PROJECT_NAME}/Frame.h
+   include/${PROJECT_NAME}/States.h
 )
 
 ## Declare a C++ library
