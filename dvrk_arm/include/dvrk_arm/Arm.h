@@ -119,7 +119,7 @@ private:
     // afxdTipFrame is the affixedTipFrame;
 
     typedef boost::shared_ptr<Frame> FramePtr;
-    FramePtr originFramePtr, afxdTipFramePtr, eeFramePtr;
+    FramePtr originFramePtr, afxdTipFramePtr, eeFramePtr, freeFramePtr;
     Command eeCmd;
     std::vector<FramePtr> frameptrVec;
     std::vector<FramePtr>::iterator frameIter;

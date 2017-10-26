@@ -1,5 +1,5 @@
 #include "dvrk_arm/Arm.h"
-DVRK_Arm::DVRK_Arm(const std::string &arm_name): DVRK_Bridge(arm_name), originFramePtr(new Frame), eeFramePtr(new Frame), afxdTipFramePtr(new Frame){
+DVRK_Arm::DVRK_Arm(const std::string &arm_name): DVRK_Bridge(arm_name), originFramePtr(new Frame), eeFramePtr(new Frame), afxdTipFramePtr(new Frame), freeFramePtr(new Frame){
     init();
     assign_conversion_fcn(&DVRK_Arm::cisstPose_to_userTransform, this);
     frameptrVec.push_back(originFramePtr);
@@ -12,14 +12,15 @@ void DVRK_Arm::init(){
 }
 
 void DVRK_Arm::cisstPose_to_userTransform(const geometry_msgs::PoseStamped &pose){
-    eeFramePtr->pos.setX(pose.pose.position.x);
-    eeFramePtr->pos.setY(pose.pose.position.y);
-    eeFramePtr->pos.setZ(pose.pose.position.z);
-    tf::quaternionMsgToTF(pose.pose.orientation, eeFramePtr->rot_quat);
+    freeFramePtr->pos.setX(pose.pose.position.x);
+    freeFramePtr->pos.setY(pose.pose.position.y);
+    freeFramePtr->pos.setZ(pose.pose.position.z);
+    tf::quaternionMsgToTF(pose.pose.orientation, freeFramePtr->rot_quat);
 
-    eeFramePtr->trans.setOrigin(eeFramePtr->pos);
-    eeFramePtr->trans.setRotation(eeFramePtr->rot_quat);
-    eeFramePtr->trans = originFramePtr->trans * eeFramePtr->trans * afxdTipFramePtr->trans;
+    freeFramePtr->trans.setOrigin(freeFramePtr->pos);
+    freeFramePtr->trans.setRotation(freeFramePtr->rot_quat);
+    freeFramePtr->trans = originFramePtr->trans * freeFramePtr->trans * afxdTipFramePtr->trans;
+    eeFramePtr->trans = freeFramePtr->trans;
 
     handle_frames();
 }
