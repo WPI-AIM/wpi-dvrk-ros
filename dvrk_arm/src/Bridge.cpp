@@ -1,6 +1,6 @@
 #include "dvrk_arm/Bridge.h"
 
-DVRK_Bridge::DVRK_Bridge(const std::string &arm_name){
+DVRK_Bridge::DVRK_Bridge(const std::string &arm_name, int bridge_frequency): _freq(bridge_frequency){
     valid_arms.push_back("MTML");
     valid_arms.push_back("MTMR");
     valid_arms.push_back("PSM1");
@@ -30,13 +30,12 @@ void DVRK_Bridge::init(){
     char** argv;
     ros::M_string s;
     ros::init(s, arm_name + "_interface_node");
-
     n.reset(new ros::NodeHandle);
     nTimer.reset(new ros::NodeHandle);
     n->setCallbackQueue(&cb_queue);
     nTimer->setCallbackQueue(&cb_queue_timer);
     rate.reset(new ros::Rate(1000));
-    timer = nTimer->createTimer(ros::Duration(), &DVRK_Bridge::timer_cb, this);
+    timer = nTimer->createTimer(ros::Duration(1/(double)_freq), &DVRK_Bridge::timer_cb, this);
     aspin.reset(new ros::AsyncSpinner(0, &cb_queue_timer));
 
     pose_sub = n->subscribe("/dvrk/" + arm_name + "/position_cartesian_current", 10, &DVRK_Bridge::pose_sub_cb, this);
@@ -86,7 +85,6 @@ void DVRK_Bridge::state_sub_cb(const std_msgs::StringConstPtr &msg){
 }
 
 void DVRK_Bridge::timer_cb(const ros::TimerEvent& event){
-    _rate_sleep();
     cb_queue.callAvailable();
     if(_start_pubs == true){
         switch (activeState) {

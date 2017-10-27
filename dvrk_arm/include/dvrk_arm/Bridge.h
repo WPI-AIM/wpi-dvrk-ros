@@ -21,7 +21,7 @@ public:
     friend class DVRK_FootPedals;
     friend class DVRK_Console;
 
-    DVRK_Bridge(const std::string &arm_name);
+    DVRK_Bridge(const std::string &arm_name, int bridge_frequnce = 1000);
     ~DVRK_Bridge();
 
     template <class T, class U>
@@ -61,6 +61,7 @@ private:
     ros::Timer timer;
     AspinPtr aspin;
     RatePtr rate;
+    int _freq;
 
     double scale;
     bool _is_cnvFcn_set;
