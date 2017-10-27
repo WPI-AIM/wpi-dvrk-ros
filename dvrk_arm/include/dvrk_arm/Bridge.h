@@ -24,8 +24,6 @@ public:
     DVRK_Bridge(const std::string &arm_name);
     ~DVRK_Bridge();
 
-    void _rate_sleep();
-
     template <class T, class U>
     void assign_conversion_fcn(void (T::*conversion_fcn)(U), T *obj);
     void set_cur_pose(const geometry_msgs::PoseStamped &pose);
@@ -72,6 +70,7 @@ private:
     void pose_sub_cb(const geometry_msgs::PoseStampedConstPtr &msg);
     void joint_sub_cb(const sensor_msgs::JointStateConstPtr &msg);
     void timer_cb(const ros::TimerEvent&);
+    void _rate_sleep();
 
     geometry_msgs::PoseStamped cur_pose, pre_pose, cmd_pose;
     sensor_msgs::JointState cur_joint, pre_joint, cmd_joint;
