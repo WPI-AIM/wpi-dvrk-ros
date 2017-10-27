@@ -32,10 +32,12 @@ void DVRK_Bridge::init(){
     ros::init(s, arm_name + "_interface_node");
 
     n.reset(new ros::NodeHandle);
+    nTimer.reset(new ros::NodeHandle);
     n->setCallbackQueue(&cb_queue);
+    nTimer->setCallbackQueue(&cb_queue_timer);
     rate.reset(new ros::Rate(1000));
-    timer = n->createTimer(ros::Duration(), &DVRK_Bridge::timer_cb, this);
-    aspin.reset(new ros::AsyncSpinner(0, &cb_queue));
+    timer = nTimer->createTimer(ros::Duration(), &DVRK_Bridge::timer_cb, this);
+    aspin.reset(new ros::AsyncSpinner(0, &cb_queue_timer));
 
     pose_sub = n->subscribe("/dvrk/" + arm_name + "/position_cartesian_current", 10, &DVRK_Bridge::pose_sub_cb, this);
     state_sub = n->subscribe("/dvrk/" + arm_name + "/robot_state", 10, &DVRK_Bridge::state_sub_cb, this);
@@ -85,6 +87,7 @@ void DVRK_Bridge::state_sub_cb(const std_msgs::StringConstPtr &msg){
 
 void DVRK_Bridge::timer_cb(const ros::TimerEvent& event){
     _rate_sleep();
+    cb_queue.callAvailable();
     if(_start_pubs == true){
         switch (activeState) {
         case DVRK_POSITION_JOINT:
@@ -180,6 +183,14 @@ bool DVRK_Bridge::_in_jnt_pos_mode(){
     else{
         return false;
     }
+}
+
+bool DVRK_Bridge::shutDown(){
+    ROS_WARN("Shutdown called");
+    cb_queue.clear();
+    aspin->stop();
+    ros::shutdown();
+    return true;
 }
 
 DVRK_Bridge::~DVRK_Bridge(){

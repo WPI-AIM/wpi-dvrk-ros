@@ -44,10 +44,12 @@ public:
     typedef boost::shared_ptr<ros::Rate> RatePtr;
     typedef boost::shared_ptr<ros::AsyncSpinner> AspinPtr;
 
+    bool shutDown();
+
 private:
     std::string arm_name;
 
-    NodePtr n;
+    NodePtr n, nTimer;
     ros::Publisher force_pub;
     ros::Publisher force_orientation_lock_pub;
     ros::Publisher state_pub;
@@ -57,7 +59,7 @@ private:
     ros::Subscriber pose_sub;
     ros::Subscriber joint_sub;
     ros::Subscriber state_sub;
-    ros::CallbackQueue cb_queue;
+    ros::CallbackQueue cb_queue, cb_queue_timer;
     ros::Timer timer;
     AspinPtr aspin;
     RatePtr rate;
