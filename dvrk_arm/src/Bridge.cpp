@@ -31,11 +31,11 @@ void DVRK_Bridge::init(){
     ros::M_string s;
     ros::init(s, arm_name + "_interface_node");
 
-    n = new ros::NodeHandle;
+    n.reset(new ros::NodeHandle);
     n->setCallbackQueue(&cb_queue);
-    rate = new ros::Rate(1000);
+    rate.reset(new ros::Rate(1000));
     timer = n->createTimer(ros::Duration(), &DVRK_Bridge::timer_cb, this);
-    aspin = new ros::AsyncSpinner(0, &cb_queue);
+    aspin.reset(new ros::AsyncSpinner(0, &cb_queue));
 
     pose_sub = n->subscribe("/dvrk/" + arm_name + "/position_cartesian_current", 10, &DVRK_Bridge::pose_sub_cb, this);
     state_sub = n->subscribe("/dvrk/" + arm_name + "/robot_state", 10, &DVRK_Bridge::state_sub_cb, this);
@@ -183,9 +183,6 @@ bool DVRK_Bridge::_in_jnt_pos_mode(){
 }
 
 DVRK_Bridge::~DVRK_Bridge(){
-    delete n;
-    delete rate;
-    delete aspin;
 }
 
 

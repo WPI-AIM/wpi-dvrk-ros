@@ -40,10 +40,14 @@ public:
 
     bool _start_pubs;
 
+    typedef boost::shared_ptr<ros::NodeHandle> NodePtr;
+    typedef boost::shared_ptr<ros::Rate> RatePtr;
+    typedef boost::shared_ptr<ros::AsyncSpinner> AspinPtr;
+
 private:
     std::string arm_name;
 
-    ros::NodeHandle *n;
+    NodePtr n;
     ros::Publisher force_pub;
     ros::Publisher force_orientation_lock_pub;
     ros::Publisher state_pub;
@@ -55,9 +59,9 @@ private:
     ros::Subscriber state_sub;
     ros::CallbackQueue cb_queue;
     ros::Timer timer;
-    ros::AsyncSpinner* aspin;
+    AspinPtr aspin;
+    RatePtr rate;
 
-    ros::Rate *rate;
     double scale;
     bool _is_cnvFcn_set;
     std::vector<std::string> valid_arms;
