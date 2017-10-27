@@ -1,7 +1,5 @@
 #include "dvrk_arm/Arm.h"
 DVRK_Arm::DVRK_Arm(const std::string &arm_name): DVRK_Bridge(arm_name){
-    init();
-    assign_conversion_fcn(&DVRK_Arm::cisstPose_to_userTransform, this);
     originFramePtr.reset(new Frame);
     eeFramePtr.reset(new Frame);
     afxdTipFramePtr.reset(new Frame);
@@ -11,6 +9,9 @@ DVRK_Arm::DVRK_Arm(const std::string &arm_name): DVRK_Bridge(arm_name){
     frameptrVec.push_back(originFramePtr);
     frameptrVec.push_back(eeFramePtr);
     frameptrVec.push_back(afxdTipFramePtr);
+
+    init();
+    assign_conversion_fcn(&DVRK_Arm::cisstPose_to_userTransform, this);
 
 }
 
