@@ -26,9 +26,16 @@ When setting the positions or forces on the dvrk Manipulators, the frames are al
 the values w.r.t to the frames you set.
 
 ### Conversion Function
-The class **Dvrk_Bridge** handles all the ros-communication. The **cartesian pose callback** from the **cisst-saw** is reported via **geometry_msgs/PoseStamped** msg. The class **Dvrk_Bridge** accepts a conversion callback *member-function* that takes in **const geometry_msgs/PoseStamped &** as an argument as does all the conversion inside of it. 
+The class **DVRK_Bridge** handles all the ros-communication.**DVRK_Bridge** currently accepts Pose, Joint and Wrench member-function pointers that exposes data retrieved from the manipulator to DVRK_Arm class.
 
-    assign_conversion_fcn(&DVRK_Arm::cisstPose_to_userTransform, this);
+    //Function Signature (const geometry_msgs::PoseStamed&)
+    poseConversion.assign_conversion_fcn(&DVRK_Arm::cisstPose_to_userTransform, this);
+    //Function Signature (const sensor_msgs::JointState&)
+    jointConversion.assign_conversion_fcn(&DVRK_Arm::cisstJoint_to_userJoint, this);
+    //Function Signature (const geometry_msgs::WrenchStamed&)
+    wrenchConversion.assign_conversion_fcn(&DVRK_Arm::cisstPose_to_userWrench, this);
+    
+The class **Conversion** is templated to allow more data-types to be incorporated with ease.
     
 #### IMPORTANT
 While setting just the position of **Origin Tranfrom** or **Tip Transform**, the orientation is not altered, it remains whatever it was set before, or if it wasn't set before, it remains identity matrix. Likewise, when the only the orientation is set, the position remains un-altered.
