@@ -41,6 +41,7 @@ void DVRK_Bridge::init(){
     pose_sub = n->subscribe("/dvrk/" + arm_name + "/position_cartesian_current", 10, &DVRK_Bridge::pose_sub_cb, this);
     state_sub = n->subscribe("/dvrk/" + arm_name + "/robot_state", 10, &DVRK_Bridge::state_sub_cb, this);
     joint_sub = n->subscribe("/dvrk/" + arm_name + "/position_joint_current", 10, &DVRK_Bridge::joint_sub_cb, this);
+    wrench_sub = n->subscribe("/dvrk/" + arm_name + "/wrench_body_current", 10, &DVRK_Bridge::wrench_sub_cb, this);
 
     joint_pub = n->advertise<sensor_msgs::JointState>("/dvrk/" + arm_name + "/set_position_joint", 10);
     pose_pub  = n->advertise<geometry_msgs::Pose>("/dvrk/" + arm_name + "/set_position_cartesian", 10);
@@ -52,11 +53,11 @@ void DVRK_Bridge::init(){
 
     cmd_pose.pose.position.x = 0; cmd_pose.pose.position.y = 0; cmd_pose.pose.position.z = 0;
     cmd_pose.pose.orientation.x = 0; cmd_pose.pose.orientation.y = 0; cmd_pose.pose.orientation.z = 0; cmd_pose.pose.orientation.w = 1;
-    cmd_wrench.force.x = 0; cmd_wrench.force.y = 0; cmd_wrench.force.z = 0;
-    cmd_wrench.torque.x = 0; cmd_wrench.torque.y = 0; cmd_wrench.torque.z = 0;
+    cmd_wrench.wrench.force.x = 0; cmd_wrench.wrench.force.y = 0; cmd_wrench.wrench.force.z = 0;
+    cmd_wrench.wrench.torque.x = 0; cmd_wrench.wrench.torque.y = 0; cmd_wrench.wrench.torque.z = 0;
 
     DVRK_FootPedals::init(n);
-    _is_cnvFcn_set = false;
+    _is_pose_cnvFcn_set = false; _is_joint_cnvFcn_set = false; _is_wrench_cnvFcn_set = false;
     _start_pubs = false;
     sleep(1);
     aspin->start();
@@ -66,12 +67,23 @@ void DVRK_Bridge::init(){
 void DVRK_Bridge::joint_sub_cb(const sensor_msgs::JointStateConstPtr &msg){
     pre_joint = cur_joint;
     cur_joint = *msg;
+    if(_is_joint_cnvFcn_set){
+        conversion_function_joint(cur_joint);
+    }
 }
+
 void DVRK_Bridge::pose_sub_cb(const geometry_msgs::PoseStampedConstPtr &msg){
     pre_pose = cur_pose;
     cur_pose = *msg;
-    if(_is_cnvFcn_set){
-        conversion_function(cur_pose);
+    if(_is_pose_cnvFcn_set){
+        conversion_function_pose(cur_pose);
+    }
+}
+
+void DVRK_Bridge::wrench_sub_cb(const geometry_msgs::WrenchStampedConstPtr &msg){
+    cur_wrench = *msg;
+    if(_is_wrench_cnvFcn_set){
+        conversion_function_wrench(cur_wrench);
     }
 }
 
@@ -95,7 +107,7 @@ void DVRK_Bridge::timer_cb(const ros::TimerEvent& event){
             pose_pub.publish(cmd_pose.pose);
             break;
         case DVRK_EFFORT_CARTESIAN:
-            force_pub.publish(cmd_wrench);
+            force_pub.publish(cmd_wrench.wrench);
             break;
         default:
             break;
@@ -125,7 +137,7 @@ void DVRK_Bridge::set_cur_pose(const geometry_msgs::PoseStamped &pose){
 }
 
 void DVRK_Bridge::set_cur_wrench(const geometry_msgs::Wrench &wrench){
-    cmd_wrench = wrench;
+    cmd_wrench.wrench = wrench;
     _start_pubs = true;
 }
 

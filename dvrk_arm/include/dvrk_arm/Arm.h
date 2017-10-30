@@ -87,6 +87,8 @@ private:
     void init();
     void handle_frames();
     void cisstPose_to_userTransform(const geometry_msgs::PoseStamped &pose);
+    void cisstJoint_to_userJoint(const sensor_msgs::JointState &jnt);
+    void cisstWrench_to_userWrench(const geometry_msgs::WrenchStamped &wrench);
     void userPose_to_cisstPose(geometry_msgs::PoseStamped &pose);
     void move_arm_cartesian(tf::Transform trans);
     void set_arm_wrench(tf::Vector3 &force, tf::Vector3 &wrench);

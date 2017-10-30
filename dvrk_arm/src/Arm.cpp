@@ -12,6 +12,8 @@ DVRK_Arm::DVRK_Arm(const std::string &arm_name): DVRK_Bridge(arm_name){
 
     init();
     assign_conversion_fcn(&DVRK_Arm::cisstPose_to_userTransform, this);
+    assign_conversion_fcn(&DVRK_Arm::cisstJoint_to_userJoint, this);
+    assign_conversion_fcn(&DVRK_Arm::cisstWrench_to_userWrench, this);
 
 }
 
@@ -30,6 +32,14 @@ void DVRK_Arm::cisstPose_to_userTransform(const geometry_msgs::PoseStamped &pose
     eeFramePtr->trans = freeFramePtr->trans;
 
     handle_frames();
+}
+
+void DVRK_Arm::cisstJoint_to_userJoint(const sensor_msgs::JointState &jnt){
+
+}
+
+void DVRK_Arm::cisstWrench_to_userWrench(const geometry_msgs::WrenchStamped &wrench){
+
 }
 
 void DVRK_Arm::set_origin_frame(const tf::Vector3 &pos, const tf::Matrix3x3 &tf_mat){
