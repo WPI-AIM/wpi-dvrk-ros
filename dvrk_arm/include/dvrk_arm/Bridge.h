@@ -15,7 +15,7 @@
 #include "boost/function.hpp"
 #include "ros/callback_queue.h"
 #include "dvrk_arm/States.h"
-#include "boost/type_traits/is_same.hpp"
+#include "Conversion.h"
 
 class DVRK_Bridge: public States, public DVRK_FootPedals{
 public:
@@ -24,13 +24,6 @@ public:
 
     DVRK_Bridge(const std::string &arm_name, int bridge_frequnce = 1000);
     ~DVRK_Bridge();
-
-    template <class T>
-    void assign_conversion_fcn(void (T::*conversion_fcn)(const geometry_msgs::PoseStamped&), T *obj);
-    template <class T>
-    void assign_conversion_fcn(void (T::*conversion_fcn)(const sensor_msgs::JointState&), T *obj);
-    template <class T>
-    void assign_conversion_fcn(void (T::*conversion_fcn)(const geometry_msgs::WrenchStamped&), T *obj);
 
     void set_cur_pose(const geometry_msgs::PoseStamped &pose);
     void set_cur_wrench(const geometry_msgs::Wrench &wrench);
@@ -49,6 +42,10 @@ public:
     typedef boost::shared_ptr<ros::AsyncSpinner> AspinPtr;
 
     bool shutDown();
+
+    Conversion<const geometry_msgs::PoseStamped&> poseConversion;
+    Conversion<const sensor_msgs::JointState&> jointConversion;
+    Conversion<const geometry_msgs::WrenchStamped&> wrenchConversion;
 
 private:
     std::string arm_name;
@@ -71,7 +68,6 @@ private:
     int _freq;
 
     double scale;
-    bool _is_pose_cnvFcn_set, _is_joint_cnvFcn_set, _is_wrench_cnvFcn_set;
     std::vector<std::string> valid_arms;
     void init();
     void state_sub_cb(const std_msgs::StringConstPtr &msg);
@@ -85,30 +81,6 @@ private:
     sensor_msgs::JointState cur_joint, pre_joint, cmd_joint;
     std_msgs::String cur_state, state_cmd;
     geometry_msgs::WrenchStamped cur_wrench, cmd_wrench;
-
-
-    boost::function<void (const geometry_msgs::PoseStamped&)> conversion_function_pose;
-    boost::function<void (const sensor_msgs::JointState&)> conversion_function_joint;
-    boost::function<void (const geometry_msgs::WrenchStamped&)> conversion_function_wrench;
-
 };
-
-template <class T>
-void DVRK_Bridge::assign_conversion_fcn(void (T::*conversion_fcn)(const geometry_msgs::PoseStamped&), T *obj){
-    conversion_function_pose = boost::bind(conversion_fcn, obj, _1);
-    _is_pose_cnvFcn_set = true;
-}
-
-template <class T>
-void DVRK_Bridge::assign_conversion_fcn(void (T::*conversion_fcn)(const sensor_msgs::JointState&), T *obj){
-    conversion_function_joint = boost::bind(conversion_fcn, obj, _1);
-    _is_joint_cnvFcn_set = true;
-}
-
-template <class T>
-void DVRK_Bridge::assign_conversion_fcn(void (T::*conversion_fcn)(const geometry_msgs::WrenchStamped&), T *obj){
-    conversion_function_wrench = boost::bind(conversion_fcn, obj, _1);
-    _is_wrench_cnvFcn_set = true;
-}
 
 #endif

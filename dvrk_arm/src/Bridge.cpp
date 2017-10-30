@@ -57,7 +57,6 @@ void DVRK_Bridge::init(){
     cmd_wrench.wrench.torque.x = 0; cmd_wrench.wrench.torque.y = 0; cmd_wrench.wrench.torque.z = 0;
 
     DVRK_FootPedals::init(n);
-    _is_pose_cnvFcn_set = false; _is_joint_cnvFcn_set = false; _is_wrench_cnvFcn_set = false;
     _start_pubs = false;
     sleep(1);
     aspin->start();
@@ -67,23 +66,23 @@ void DVRK_Bridge::init(){
 void DVRK_Bridge::joint_sub_cb(const sensor_msgs::JointStateConstPtr &msg){
     pre_joint = cur_joint;
     cur_joint = *msg;
-    if(_is_joint_cnvFcn_set){
-        conversion_function_joint(cur_joint);
+    if(jointConversion._is_set){
+        jointConversion.fcn_handle(cur_joint);
     }
 }
 
 void DVRK_Bridge::pose_sub_cb(const geometry_msgs::PoseStampedConstPtr &msg){
     pre_pose = cur_pose;
     cur_pose = *msg;
-    if(_is_pose_cnvFcn_set){
-        conversion_function_pose(cur_pose);
+    if(poseConversion._is_set){
+        poseConversion.fcn_handle(cur_pose);
     }
 }
 
 void DVRK_Bridge::wrench_sub_cb(const geometry_msgs::WrenchStampedConstPtr &msg){
     cur_wrench = *msg;
-    if(_is_wrench_cnvFcn_set){
-        conversion_function_wrench(cur_wrench);
+    if(wrenchConversion._is_set){
+        wrenchConversion.fcn_handle(cur_wrench);
     }
 }
 

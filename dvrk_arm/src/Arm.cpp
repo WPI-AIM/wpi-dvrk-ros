@@ -11,9 +11,9 @@ DVRK_Arm::DVRK_Arm(const std::string &arm_name): DVRK_Bridge(arm_name){
     frameptrVec.push_back(afxdTipFramePtr);
 
     init();
-    assign_conversion_fcn(&DVRK_Arm::cisstPose_to_userTransform, this);
-    assign_conversion_fcn(&DVRK_Arm::cisstJoint_to_userJoint, this);
-    assign_conversion_fcn(&DVRK_Arm::cisstWrench_to_userWrench, this);
+    poseConversion.assign_conversion_fcn(&DVRK_Arm::cisstPose_to_userTransform, this);
+    jointConversion.assign_conversion_fcn(&DVRK_Arm::cisstJoint_to_userJoint, this);
+    wrenchConversion.assign_conversion_fcn(&DVRK_Arm::cisstWrench_to_userWrench, this);
 
 }
 
