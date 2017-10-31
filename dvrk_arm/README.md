@@ -17,10 +17,13 @@ Standalone, however, you do need a working **dvrk-ros** for anything useful from
     ...
 ### Origin and Tip Tranfroms
 Keeping in mind the intended use of the library for different applications and UI devices, we can 
-set the **Origin Transform**, such that all the **End Effector Transforms** (+ Position and Orientaiton, Forces and Moments)
-using the numerous overloaded functions are w.r.t the defined w.r.t Origin Transfrom. 
+set the **Origin Frame**, such that all the **End Effector Transforms** (+ Position and Orientaiton, Forces and Moments)
+using the numerous overloaded functions are w.r.t the **Origin Frame**. 
 
-Not only that, one might wants the self defined directional coordinates of the End Effector (i.e. where should the x,y and z unit vectors of the tip be pointing). For this purpose, the Tip Tranform can be set places another transform on the tip and form here on, each Tranfrom component is reported w.r.t to the tip tranfrom.
+Not only that, one might wants the self defined directional coordinates of the End Effector (i.e. where should the x,y and z unit vectors of the tip be pointing). For this purpose, a **Tip Frame** can be affixed on the **End Effector Frame** which will case the **Tip Frame** to be reported w.r.t the **Origin Frame**.
+
+#### Note:
+Keep in mind that the **Origin Frame is set w.r.t to the Default Origin used by CISST-SAW and Tip Frame is set w.r.t the End Effector Frame used by CISST-SAW for the specific manipulator**
 
 When setting the positions or forces on the dvrk Manipulators, the frames are already handeled so you just specify
 the values w.r.t to the frames you set.
