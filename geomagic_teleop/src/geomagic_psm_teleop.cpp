@@ -47,7 +47,7 @@ void Geomagic_Teleop::PosetoFrame(const geometry_msgs::Pose &pose, FramePtr fram
 }
 
 void Geomagic_Teleop::geomagic_pose_cb(const geometry_msgs::PoseStampedConstPtr msg){
-    pre_gFrame = cur_gFrame;
+    PosetoFrame(geomagic_pose_cur, pre_gFrame);
     geomagic_pose_pre = geomagic_pose_cur;
     geomagic_pose_cur = msg->pose;
     PosetoFrame(geomagic_pose_cur, cur_gFrame);
