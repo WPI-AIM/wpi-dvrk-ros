@@ -14,7 +14,7 @@ Geomagic_Teleop::Geomagic_Teleop(boost::shared_ptr<ros::NodeHandle> node):
     arm_psm.reset(new DVRK_Arm(_slave_name));
     cur_gFrame.reset(new Frame);
     pre_gFrame.reset(new Frame);
-    rotGeo2Psm.setRPY(-M_PI, 0, M_PI/2);
+    rotPsm2Geo.setRPY(-M_PI, 0, M_PI/2);
 
     geomagic_joy_sub = _node->subscribe("/" + _device_name + "/joy",10,&Geomagic_Teleop::geomagic_joy_cb, this);
     geomagic_pose_sub = _node->subscribe("/" + _device_name + "/pose",10,&Geomagic_Teleop::geomagic_pose_cb, this);
@@ -37,7 +37,7 @@ void Geomagic_Teleop::align_end_effectors(){
     ros::spinOnce();
     tf::Quaternion rot_psm;
     arm_psm->get_cur_orientation(rot_psm);
-    rotGeo2Psm = cur_gFrame->rot_quat.inverse() * rot_psm;
+    rotPsm2Geo = cur_gFrame->rot_quat.inverse() * rot_psm;
 //    tf::Transform psm_trans;
 //    tf::Quaternion psm_rot, geo_rot, affix_psm_rot;
 //    arm_psm->get_cur_transform(psm_trans);
@@ -101,7 +101,7 @@ void Geomagic_Teleop::run(){
     tf::Transform psmTrans;
     arm_psm->get_cur_transform(psmTrans);
     psmTrans.setOrigin(psmTrans.getOrigin() + scale*(cur_gFrame->trans.getOrigin() - pre_gFrame->trans.getOrigin()));
-    psmTrans.setRotation(cur_gFrame->trans.getRotation() * rotGeo2Psm);
+    psmTrans.setRotation(cur_gFrame->trans.getRotation() * rotPsm2Geo);
 
     if(_clutch || _coag){
         if(_first_trigger == false){
