@@ -26,6 +26,9 @@ Geomagic_Teleop::Geomagic_Teleop(boost::shared_ptr<ros::NodeHandle> node):
     omni_feedback.lock.resize(3);
     ros::spinOnce();
     arm_psm->set_mode(arm_psm->_m_cart_pos_mode);
+    tf::Quaternion temp_quat;
+    temp_quat.setRPY(-M_PI/2, M_PI, 0);
+    arm_psm->set_origin_frame_rot(temp_quat);
     sleep(1);
     scale = 0.01;
     align_end_effectors();
