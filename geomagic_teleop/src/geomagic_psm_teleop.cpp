@@ -1,63 +1,85 @@
 #include "geomagic_teleop/geomagic_psm_teleop.h"
 #include "ros/ros.h"
 #include "geometry_msgs/Pose.h"
-#include "geometry_msgs/PoseStamped.h"
-#include "std_msgs/String.h"
-#include "sensor_msgs/Joy.h"
-#include "sensor_msgs/JointState.h"
-#include "tf/LinearMath/Matrix3x3.h"
-#include "tf/transform_broadcaster.h"
-#include "tf/LinearMath/Transform.h"
-#include <string>
-#include <geomagic_control/OmniFeedback.h>
+#include "geomagic_teleop/geomagic_psm_teleop.h"
 
-#include <ros/package.h>
+Geomagic_Teleop::Geomagic_Teleop(boost::shared_ptr<ros::NodeHandle> node):
+    _node(node)
+{
+    _node->param(std::string("device_name"), _device_name, std::string("Geomagic"));
+    _node->param(std::string("arm"), _slave_name, std::string("PSM1"));
+    _node->param(std::string("rate"), _pub_rate, 1000);
 
-geometry_msgs::Pose psm_pose_cur;
-sensor_msgs::Joy geomagic_joy_cur;
-sensor_msgs::Joy geomagic_joy_pre;
-sensor_msgs::Joy geomagic_joy_cmd;
-geometry_msgs::Pose psm_pose_cmd;
-geometry_msgs::Pose geomagic_pose_cur;
-geometry_msgs::Pose geomagic_pose_pre;
-geometry_msgs::Pose geomagic_pose_cmd;
-sensor_msgs::JointState psm_jnt_cur;
+    rate.reset(new ros::Rate(_pub_rate));
+    arm_psm.reset(new DVRK_Arm(_slave_name));
+    cur_gFrame.reset(new Frame);
+    pre_gFrame.reset(new Frame);
+    rotGeo2Psm.setRPY(-M_PI, 0, M_PI/2);
 
+    geomagic_joy_sub = _node->subscribe("/" + _device_name + "/joy",10,&Geomagic_Teleop::geomagic_joy_cb, this);
+    geomagic_pose_sub = _node->subscribe("/" + _device_name + "/pose",10,&Geomagic_Teleop::geomagic_pose_cb, this);
+    geomagic_force_pub = _node->advertise<geomagic_control::OmniFeedback>("/" + _device_name + "/force_feedback",10);
 
-std_msgs::String psm_state_cur;
-geomagic_control::OmniFeedback omni_feedback;
-
-bool _coag_pressed = false;
-bool _clutch_pressed = false;
-
-
-double db = 0.0001;
-double precision = 1000;
-double scale = 0.01;
-
-
-void psm_pose_cb(const geometry_msgs::PoseStampedConstPtr msg){
-    psm_pose_cur = msg->pose;
+    geomagic_joy_cmd.axes.resize(6);
+    geomagic_joy_cur.axes.resize(6);
+    geomagic_joy_pre.axes.resize(6);
+    geomagic_joy_cur.buttons.resize(2);
+    omni_feedback.lock.resize(3);
+    _clutch = false; _coag = false; _first_trigger = false;
+    ros::spinOnce();
+    arm_psm->set_mode(arm_psm->_m_cart_pos_mode);
+    sleep(1);
+    scale = 0.01;
+    align_end_effectors();
 }
 
-void psm_jnt_cb(const sensor_msgs::JointStatePtr msg){
+void Geomagic_Teleop::align_end_effectors(){
+    ros::spinOnce();
+    tf::Quaternion rot_psm;
+    arm_psm->get_cur_orientation(rot_psm);
+    rotGeo2Psm = cur_gFrame->rot_quat.inverse() * rot_psm;
+//    tf::Transform psm_trans;
+//    tf::Quaternion psm_rot, geo_rot, affix_psm_rot;
+//    arm_psm->get_cur_transform(psm_trans);
+//    arm_psm->set_origin_frame(psm_trans);
+//    arm_psm->get_cur_orientation(psm_rot);
+//    tf::quaternionMsgToTF(geomagic_pose_cur.orientation, geo_rot);
+//    affix_psm_rot = psm_rot.inverse() * geo_rot;
+//    if(std::abs(affix_psm_rot.length() - 1) < 1e-6 ){
+//        arm_psm->affix_tip_frame_rot(affix_psm_rot);
+////        arm_psm->get_cur_transform(psm_trans);
+////        arm_psm->set_transform(psm_trans);
+//    }
+//    else{
+//        ROS_ERROR("GEO ROT NON VALID TO AFFIX TO PSM FRAME %f", affix_psm_rot.length());
+//    }
 }
 
-void geomagic_pose_cb(const geometry_msgs::PoseStampedConstPtr msg){
+void Geomagic_Teleop::PosetoFrame(const geometry_msgs::Pose &pose, FramePtr frame){
+    frame->trans.setOrigin(tf::Vector3(pose.position.x, pose.position.y, pose.position.z));
+    frame->trans.setRotation(tf::Quaternion(pose.orientation.x,pose.orientation.y,pose.orientation.z,pose.orientation.w));
+    frame->pos = frame->trans.getOrigin();
+    frame->rot_quat = frame->trans.getRotation();
+    frame->rot_mat.setRotation(frame->rot_quat);
+}
+
+void Geomagic_Teleop::geomagic_pose_cb(const geometry_msgs::PoseStampedConstPtr msg){
+    PosetoFrame(geomagic_pose_cur, pre_gFrame);
     geomagic_pose_pre = geomagic_pose_cur;
     geomagic_pose_cur = msg->pose;
+    PosetoFrame(geomagic_pose_cur, cur_gFrame);
+
 }
 
-void geomagic_joy_cb(const sensor_msgs::JoyConstPtr msg){
+void Geomagic_Teleop::geomagic_joy_cb(const sensor_msgs::JoyConstPtr msg){
         geomagic_joy_pre = geomagic_joy_cur;
         geomagic_joy_cur = *msg;
+        _coag = geomagic_joy_cur.buttons[0];
+        _clutch = geomagic_joy_cur.buttons[1];
 }
 
-void psm_state_cb(const std_msgs::StringConstPtr msg){
-    psm_state_cur = *msg;
-}
 
-void dead_band(sensor_msgs::Joy &msg){
+void Geomagic_Teleop::dead_band(sensor_msgs::Joy &msg){
     for(unsigned int i = 0 ; i<msg.axes.size() ; i++){
         double abs_pos = std::abs(msg.axes[i]);
         if(abs_pos < db){
@@ -69,183 +91,64 @@ void dead_band(sensor_msgs::Joy &msg){
     }
 }
 
-void clip(sensor_msgs::Joy &msg){
+void Geomagic_Teleop::clip(sensor_msgs::Joy &msg){
     for(unsigned int i = 0 ; i<msg.axes.size() ; i++){
         msg.axes[i] = (double)((int)(msg.axes[i] * precision))/precision;
     }
 }
 
+void Geomagic_Teleop::run(){
+    tf::Transform psmTrans;
+    arm_psm->get_cur_transform(psmTrans);
+    psmTrans.setOrigin(psmTrans.getOrigin() + scale*(cur_gFrame->trans.getOrigin() - pre_gFrame->trans.getOrigin()));
+    psmTrans.setRotation(cur_gFrame->trans.getRotation() * rotGeo2Psm);
+
+    if(_clutch || _coag){
+        if(_first_trigger == false){
+            _first_trigger = true;
+            for(u_int i = 0 ; i < 3 ; i++){
+                omni_feedback.lock[i] = false;
+            }
+        }
+        else{
+            omni_feedback.position.x = geomagic_joy_cur.axes[0];
+            omni_feedback.position.y = geomagic_joy_cur.axes[1];
+            omni_feedback.position.z = geomagic_joy_cur.axes[2];
+
+            omni_feedback.force.x = 0;
+            omni_feedback.force.y = 0;
+            omni_feedback.force.z = 0;
+
+            for(u_int i = 0 ; i < 3 ; i++){
+                omni_feedback.lock[i] = true;
+            }
+        }
+        if(_coag){
+            arm_psm->set_transform(psmTrans);
+        }
+    }
+    else{
+        _first_trigger = false;
+        align_end_effectors();
+    }
+    geomagic_force_pub.publish(omni_feedback);
+    ros::spinOnce();
+    rate->sleep();
+}
+
+Geomagic_Teleop::~Geomagic_Teleop(){
+
+}
 
 
 int main(int argc, char **argv){
 
     ros::init(argc, argv, "geomagic_teleop");
-    ros::NodeHandle node;
-    std::string slave_name= "";
-    std::string device_name= "";
-    int pub_rate;
-    node.param(std::string("arm"), slave_name, std::string("PSM1"));
-    node.param(std::string("rate"), pub_rate, 1000);
-    node.param(std::string("device_name"), device_name, std::string("Geomagic"));
-    ros::Rate rate(pub_rate);
-    tf::Transform trans_geomagic, trans_psm;
-    tf::Quaternion geo_rot, quat;
-    tf::TransformBroadcaster t_br;
+    boost::shared_ptr<ros::NodeHandle> node(new ros::NodeHandle);
+    Geomagic_Teleop geo_teleop(node);
 
-    std::string req_state = "DVRK_POSITION_CARTESIAN";
-
-
-    ros::Subscriber psm_pose_sub;
-    ros::Subscriber geomagic_joy_sub, geomagic_pose_sub;
-    ros::Subscriber psm_state_sub;
-    ros::Subscriber psm_jnt_state_sub;
-    ros::Publisher  psm_teleop;
-    ros::Publisher  psm_state_pub;
-    ros::Publisher  geomagic_force_pub;
-
-    tf::Quaternion R_geoTopsm;
-    tf::Matrix3x3 mat_geoTopsm;
-
-    // initialize joint current/command/msg_js
-    psm_jnt_cur.position.resize(7);
-
-    psm_pose_sub = node.subscribe("dvrk/" + slave_name + "/position_cartesian_current",10,psm_pose_cb);
-    psm_state_sub = node.subscribe("dvrk/" + slave_name + "/robot_state",10,psm_state_cb);
-    psm_jnt_state_sub = node.subscribe("dvrk/" + slave_name + "/state_joint_current",10,psm_jnt_cb);
-    psm_teleop = node.advertise<geometry_msgs::Pose>("/dvrk/" + slave_name + "/set_position_cartesian",10);
-    psm_state_pub = node.advertise<std_msgs::String>("/dvrk/" + slave_name + "/set_robot_state",10);
-
-    geomagic_joy_sub = node.subscribe("/" + device_name + "/joy",10,geomagic_joy_cb);
-    geomagic_pose_sub = node.subscribe("/" + device_name + "/pose",10,geomagic_pose_cb);
-    geomagic_force_pub = node.advertise<geomagic_control::OmniFeedback>("/" + device_name + "/force_feedback",10);
-
-    std_msgs::String state_msg;
-    state_msg.data = req_state.c_str();
-    ROS_INFO("Setting %s to %s state", slave_name.c_str(), req_state.c_str());
-    psm_state_pub.publish(state_msg);
-    ros::spinOnce();
-    rate.sleep();
-
-
-    geomagic_joy_cmd.axes.resize(6);
-    geomagic_joy_cur.axes.resize(6);
-    geomagic_joy_pre.axes.resize(6);
-    geomagic_joy_cur.buttons.resize(2);
-    omni_feedback.lock.resize(3);
-
-    mat_geoTopsm.setValue(0 , 1 , 0,
-                          1 , 0 , 0,
-                          0 , 0 ,-1);
-    mat_geoTopsm.getRotation(R_geoTopsm);
-
-    sleep(2);
-
-
-
-    int counter = 0;
-
-    while(node.ok()){
-        if (!strcmp(psm_state_cur.data.c_str(), req_state.c_str()))
-        {
-            geomagic_joy_cmd.axes[0] = geomagic_joy_cur.axes[0] - geomagic_joy_pre.axes[0];
-            geomagic_joy_cmd.axes[1] = geomagic_joy_cur.axes[1] - geomagic_joy_pre.axes[1];
-            geomagic_joy_cmd.axes[2] = geomagic_joy_cur.axes[2] - geomagic_joy_pre.axes[2];
-
-            //geomagic_joy_cmd.axes[0] = (geomagic_joy_cmd.axes[0]*precision);
-            //geomagic_joy_cmd.axes[0] = geomagic_joy_cmd.axes[0]/precision;
-            //dead_band(geomagic_joy_cmd);
-            //clip(geomagic_joy_cmd);
-
-            psm_pose_cmd.position.x = psm_pose_cur.position.x + (scale * geomagic_joy_cmd.axes[0]);
-            psm_pose_cmd.position.y = psm_pose_cur.position.y + (scale * geomagic_joy_cmd.axes[1]);
-            psm_pose_cmd.position.z = psm_pose_cur.position.z + (scale * geomagic_joy_cmd.axes[2]);
-
-            trans_geomagic.setOrigin(scale * tf::Vector3(-geomagic_joy_cur.axes[0], geomagic_joy_cur.axes[2], geomagic_joy_cur.axes[1]));
-            geo_rot.setRPY(geomagic_joy_cur.axes[3], geomagic_joy_cur.axes[4], geomagic_joy_cur.axes[5]);
-            trans_geomagic.setRotation(geo_rot);
-
-            quat = geo_rot * R_geoTopsm;
-            tf::quaternionTFToMsg(quat, psm_pose_cmd.orientation);
-
-            trans_psm.setOrigin(tf::Vector3(psm_pose_cmd.position.x,psm_pose_cmd.position.y,psm_pose_cmd.position.z));
-            trans_psm.setRotation(quat);
-
-
-            // Check if COAG is pressed. Grey Button
-
-            if(geomagic_joy_cur.buttons[0] == 1){
-                if(_coag_pressed == false){
-                    ROS_INFO("Coag Pressed");
-                    _coag_pressed = true;
-                    for(u_int i = 0 ; i < 3 ; i++){
-                        omni_feedback.lock[i] = false;
-                    }
-                }
-                else{
-                    omni_feedback.position.x = geomagic_joy_cur.axes[0];
-                    omni_feedback.position.y = geomagic_joy_cur.axes[1];
-                    omni_feedback.position.z = geomagic_joy_cur.axes[2];
-
-                    omni_feedback.force.x = 0;
-                    omni_feedback.force.y = 0;
-                    omni_feedback.force.z = 0;
-
-                    for(u_int i = 0 ; i < 3 ; i++){
-                        omni_feedback.lock[i] = true;
-                    }
-                }
-                psm_teleop.publish(psm_pose_cmd);
-            }
-            else{
-                _coag_pressed = false;
-                tf::Quaternion temp_quat;
-                tf::quaternionMsgToTF(psm_pose_cur.orientation, temp_quat);
-
-                R_geoTopsm = geo_rot.inverse() * temp_quat;
-            }
-
-            // Check if Clutch is Pressed. White Button
-            if(geomagic_joy_cur.buttons[1] == 1){
-                if(_clutch_pressed == false){
-                    ROS_INFO("Clutch Pressed");
-                    _clutch_pressed = true;
-
-                    for(u_int i = 0 ; i < 3 ; i++){
-                        omni_feedback.lock[i] = false;
-                    }
-                }
-                else{
-                    omni_feedback.position.x = geomagic_joy_cur.axes[0];
-                    omni_feedback.position.y = geomagic_joy_cur.axes[1];
-                    omni_feedback.position.z = geomagic_joy_cur.axes[2];
-
-                    omni_feedback.force.x = 0;
-                    omni_feedback.force.y = 0;
-                    omni_feedback.force.z = 0;
-
-                    for(u_int i = 0 ; i < 3 ; i++){
-                        omni_feedback.lock[i] = true;
-                    }
-                }
-            }
-            else{
-                _clutch_pressed = false;
-            }
-
-            geomagic_force_pub.publish(omni_feedback);
-            t_br.sendTransform(tf::StampedTransform(trans_geomagic,ros::Time::now(),"/world","/geomagic_position"));
-            t_br.sendTransform(tf::StampedTransform(trans_psm,ros::Time::now(),"/world","/teleoped_psm"));
-
-        }
-        else{
-            ROS_INFO("DVRK %s in %s, CURRENT STATE IS %s ", slave_name.c_str(), req_state.c_str(), psm_state_cur.data.c_str());
-            psm_state_pub.publish(state_msg);
-            sleep(2);
-        }
-        counter++;
-        ros::spinOnce();
-        rate.sleep();
-
+    while(node->ok()){
+        geo_teleop.run();
     }
     return 0;
 }

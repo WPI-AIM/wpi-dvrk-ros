@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   cisst_ros_bridge
   roslib
+  dvrk_arm
 )
 
 set (REQUIRED_CISST_LIBRARIES
