@@ -37,7 +37,7 @@ Geomagic_Teleop::Geomagic_Teleop(boost::shared_ptr<ros::NodeHandle> node):
 void Geomagic_Teleop::align_end_effectors(){
     ros::spinOnce();
     tf::Quaternion rot_psm;
-    arm_psm->get_cur_orientation(rot_psm);
+    arm_psm->measured_cp_ori(rot_psm);
     rotPsm2Geo = cur_gFrame->rot_quat.inverse() * rot_psm;
 }
 
@@ -85,7 +85,7 @@ void Geomagic_Teleop::clip(sensor_msgs::Joy &msg){
 
 void Geomagic_Teleop::run(){
     tf::Transform psmTrans;
-    arm_psm->get_cur_transform(psmTrans);
+    arm_psm->measured_cp(psmTrans);
     psmTrans.setOrigin(psmTrans.getOrigin() + scale*(cur_gFrame->trans.getOrigin() - pre_gFrame->trans.getOrigin()));
     psmTrans.setRotation(cur_gFrame->trans.getRotation() * rotPsm2Geo);
 
@@ -100,7 +100,7 @@ void Geomagic_Teleop::run(){
             omni_feedback.lock[i] = true;
         }
         if(_coag){
-            arm_psm->set_transform(psmTrans);
+            arm_psm->move_cp(psmTrans);
         }
     }
     else{
