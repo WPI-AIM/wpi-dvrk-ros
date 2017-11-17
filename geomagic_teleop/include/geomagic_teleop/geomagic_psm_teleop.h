@@ -52,7 +52,7 @@ public:
 
     boost::shared_ptr<DVRK_Arm> arm_psm;
     FramePtr cur_gFrame, pre_gFrame; //Current Frame and previous Frame
-    tf::Quaternion rotPsm2Geo;
+    tf::Quaternion rotPsm2Geo, rotGeoLast, rotPsmLast;
 };
 
 

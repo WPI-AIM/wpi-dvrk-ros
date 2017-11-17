@@ -27,8 +27,8 @@ Geomagic_Teleop::Geomagic_Teleop(boost::shared_ptr<ros::NodeHandle> node):
     ros::spinOnce();
     arm_psm->set_mode(arm_psm->_m_cart_pos_mode);
     tf::Quaternion temp_quat;
-    temp_quat.setRPY(-M_PI/2, M_PI, 0);
-    arm_psm->set_origin_frame_rot(temp_quat);
+    temp_quat.setRPY(0, 0, M_PI);
+    arm_psm->set_origin_frame_rot(temp_quat.inverse());
     sleep(1);
     scale = 0.01;
     align_end_effectors();
@@ -39,6 +39,8 @@ void Geomagic_Teleop::align_end_effectors(){
     tf::Quaternion rot_psm;
     arm_psm->measured_cp_ori(rot_psm);
     rotPsm2Geo = cur_gFrame->rot_quat.inverse() * rot_psm;
+    rotGeoLast = cur_gFrame->rot_quat;
+    arm_psm->measured_cp_ori(rotPsmLast);
 }
 
 void Geomagic_Teleop::PosetoFrame(const geometry_msgs::Pose &pose, FramePtr frame){
@@ -87,7 +89,7 @@ void Geomagic_Teleop::run(){
     tf::Transform psmTrans;
     arm_psm->measured_cp(psmTrans);
     psmTrans.setOrigin(psmTrans.getOrigin() + scale*(cur_gFrame->trans.getOrigin() - pre_gFrame->trans.getOrigin()));
-    psmTrans.setRotation(cur_gFrame->trans.getRotation() * rotPsm2Geo);
+    psmTrans.setRotation(rotPsmLast * rotGeoLast.inverse() * cur_gFrame->rot_quat);
 
     if(_clutch || _coag){     
         omni_feedback.position.x = geomagic_pose_cur.position.x;
