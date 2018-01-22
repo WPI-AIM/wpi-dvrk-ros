@@ -1,8 +1,0 @@
-<!-- Author: Adnan Munawar: Launch file for MTMs trajectory and motion planning nodes -->
-<launch>
-
-<!-- Launch PSMs motion planning, collision detection and intelligence node -->
-	<node name="psmMP" pkg="kinematics" type="psmHaptics_node" />
-<!-- Launch planning context with robot model-->
-  	<include file="$(find psm1_spr)/launch/demo.launch"/>
-</launch>
