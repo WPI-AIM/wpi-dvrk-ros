@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   cisst_ros_bridge
   roslib
   dvrk_arm
+  geomagic_control
 )
 
 set (REQUIRED_CISST_LIBRARIES
