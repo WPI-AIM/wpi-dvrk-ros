@@ -11,7 +11,7 @@
 #include "tf/transform_broadcaster.h"
 #include "tf/LinearMath/Transform.h"
 #include <string>
-#include <geomagic_control/OmniFeedback.h>
+#include <geomagic_control/DeviceFeedback.h>
 #include <ros/package.h>
 #include <dvrk_arm/Arm.h>
 #include <dvrk_arm/Frame.h>
@@ -23,7 +23,7 @@ public:
     Geomagic_Teleop(boost::shared_ptr<ros::NodeHandle> node);
     ~Geomagic_Teleop();
 
-    geomagic_control::OmniFeedback omni_feedback;
+    geomagic_control::DeviceFeedback device_feedback;
     sensor_msgs::Joy geomagic_joy_cur, geomagic_joy_pre, geomagic_joy_cmd;
     geometry_msgs::Pose geomagic_pose_cur, geomagic_pose_pre, geomagic_pose_cmd;
 

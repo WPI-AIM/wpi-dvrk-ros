@@ -17,13 +17,13 @@ Geomagic_Teleop::Geomagic_Teleop(boost::shared_ptr<ros::NodeHandle> node):
 
     geomagic_joy_sub = _node->subscribe("/" + _device_name + "/joy",10,&Geomagic_Teleop::geomagic_joy_cb, this);
     geomagic_pose_sub = _node->subscribe("/" + _device_name + "/pose",10,&Geomagic_Teleop::geomagic_pose_cb, this);
-    geomagic_force_pub = _node->advertise<geomagic_control::OmniFeedback>("/" + _device_name + "/force_feedback",10);
+    geomagic_force_pub = _node->advertise<geomagic_control::DeviceFeedback>("/" + _device_name + "/force_feedback",10);
 
     geomagic_joy_cmd.axes.resize(6);
     geomagic_joy_cur.axes.resize(6);
     geomagic_joy_pre.axes.resize(6);
     geomagic_joy_cur.buttons.resize(2);
-    omni_feedback.lock.resize(3);
+    device_feedback.lock.resize(3);
     ros::spinOnce();
     arm_psm->set_mode(arm_psm->_m_cart_pos_mode);
     tf::Quaternion temp_quat;
@@ -92,14 +92,14 @@ void Geomagic_Teleop::run(){
     psmTrans.setRotation(rotPsmLast * rotGeoLast.inverse() * cur_gFrame->rot_quat);
 
     if(_clutch || _coag){     
-        omni_feedback.position.x = geomagic_pose_cur.position.x;
-        omni_feedback.position.y = geomagic_pose_cur.position.y;
-        omni_feedback.position.z = geomagic_pose_cur.position.z;
+        device_feedback.position.x = geomagic_pose_cur.position.x;
+        device_feedback.position.y = geomagic_pose_cur.position.y;
+        device_feedback.position.z = geomagic_pose_cur.position.z;
 
-        omni_feedback.force.x = 0; omni_feedback.force.y = 0; omni_feedback.force.z = 0;
+        device_feedback.force.x = 0; device_feedback.force.y = 0; device_feedback.force.z = 0;
 
         for(u_int i = 0 ; i < 3 ; i++){
-            omni_feedback.lock[i] = true;
+            device_feedback.lock[i] = true;
         }
         if(_coag){
             arm_psm->move_cp(psmTrans);
@@ -109,7 +109,7 @@ void Geomagic_Teleop::run(){
         align_end_effectors();
     }
 
-    geomagic_force_pub.publish(omni_feedback);
+    geomagic_force_pub.publish(device_feedback);
     ros::spinOnce();
     rate->sleep();
 }
