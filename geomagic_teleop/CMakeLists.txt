@@ -149,6 +149,8 @@ include_directories(
 ## Declare a C++ executable
  add_executable(geomagic_teleop_node src/geomagic_psm_teleop.cpp include/geomagic_teleop/geomagic_psm_teleop.h)
 
+ add_dependencies(geomagic_teleop_node ${catkin_EXPORTED_TARGETS})
+
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(geomagic_teleop_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
